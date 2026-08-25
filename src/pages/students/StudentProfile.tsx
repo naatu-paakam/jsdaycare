@@ -142,6 +142,120 @@ function Input({ label, value, onChange, type = "text" }: { label: string; value
 }
 
 // ─── Add Contact Modal ────────────────────────────────────────────────────────
+// ─── Emergency contacts section ───────────────────────────────────────────────
+function EmergencyContactsSection({
+  studentId, contacts, canEdit, onChanged,
+}: {
+  studentId: string;
+  contacts: StudentEmergencyContact[];
+  canEdit: boolean;
+  onChanged: () => void;
+}) {
+  const [showAdd, setShowAdd]   = useState(false);
+  const [editId, setEditId]     = useState<string | null>(null);
+  const [form, setForm]         = useState({ full_name: "", relationship: "", phone: "" });
+  const [saving, setSaving]     = useState(false);
+
+  function startAdd() { setForm({ full_name: "", relationship: "", phone: "" }); setEditId(null); setShowAdd(true); }
+  function startEdit(c: StudentEmergencyContact) { setForm({ full_name: c.full_name, relationship: c.relationship ?? "", phone: c.phone ?? "" }); setEditId(c.id); setShowAdd(true); }
+
+  async function save() {
+    if (!form.full_name.trim()) return;
+    setSaving(true);
+    if (editId) {
+      await supabase.from("student_emergency_contacts").update(form).eq("id", editId);
+    } else {
+      await supabase.from("student_emergency_contacts").insert({ student_id: studentId, ...form });
+    }
+    setSaving(false); setShowAdd(false); onChanged();
+  }
+
+  async function remove(id: string) {
+    await supabase.from("student_emergency_contacts").delete().eq("id", id);
+    onChanged();
+  }
+
+  return (
+    <div className="card overflow-hidden">
+      <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <h3 className="font-semibold text-gray-900 text-sm">Emergency Contacts</h3>
+          <p className="text-xs text-gray-400 mt-0.5">Minimum 2 required. Called if primary contacts are unreachable.</p>
+        </div>
+        {canEdit && !showAdd && (
+          <button onClick={startAdd} className="text-xs text-indigo-600 border border-indigo-200 rounded px-2.5 py-1.5 flex items-center gap-1 hover:bg-indigo-50">
+            <Plus size={13} /> Add emergency contact
+          </button>
+        )}
+      </div>
+
+      {/* Inline add / edit form */}
+      {showAdd && (
+        <div className="px-5 py-4 border-b border-gray-100 bg-indigo-50 space-y-3">
+          <p className="text-xs font-medium text-indigo-700">{editId ? "Edit emergency contact" : "Add emergency contact"}</p>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Full name *</label>
+              <input className="input w-full text-sm" placeholder="Jane Smith" value={form.full_name} onChange={e => setForm(f => ({...f, full_name: e.target.value}))} />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Relationship</label>
+              <input className="input w-full text-sm" placeholder="Grandmother, Aunt…" value={form.relationship} onChange={e => setForm(f => ({...f, relationship: e.target.value}))} />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Phone</label>
+              <input className="input w-full text-sm" placeholder="+1 (555) 000-0000" value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))} />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={save} disabled={saving || !form.full_name.trim()} className="btn-primary text-xs px-3 py-1.5">{saving ? "Saving…" : editId ? "Save changes" : "Add contact"}</button>
+            <button onClick={() => setShowAdd(false)} className="btn-secondary text-xs px-3 py-1.5">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* List */}
+      {contacts.length === 0 && !showAdd ? (
+        <div className="px-5 py-6 text-center text-gray-400 text-sm">
+          No emergency contacts yet. {canEdit && "Add at least 2."}
+        </div>
+      ) : contacts.length > 0 && (
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50">
+              <th className="px-5 py-3 font-medium">Name</th>
+              <th className="px-5 py-3 font-medium">Relationship</th>
+              <th className="px-5 py-3 font-medium">Phone</th>
+              {canEdit && <th className="px-5 py-3 font-medium" />}
+            </tr>
+          </thead>
+          <tbody>
+            {contacts.map(c => (
+              <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50">
+                <td className="px-5 py-3 font-medium text-gray-900">{c.full_name}</td>
+                <td className="px-5 py-3 text-gray-600">{c.relationship || "—"}</td>
+                <td className="px-5 py-3 text-gray-600">{c.phone || "—"}</td>
+                {canEdit && (
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => startEdit(c)} className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
+                        <Pencil size={11} /> Edit
+                      </button>
+                      <button onClick={() => remove(c.id)} className="text-gray-300 hover:text-red-500 transition-colors" title="Delete">
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
 // ─── Custom immunization section ──────────────────────────────────────────────
 function CustomImmunizationSection({
   studentId, customRecords, canEdit, onChanged,
@@ -288,7 +402,7 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
   initial?: StudentContact;   // if provided → edit mode
   onClose: () => void; onSaved: () => void;
 }) {
-  const isEdit = !!initial;
+  const isEdit = !!initial?.id;  // true only when editing an existing contact (has a real id)
   const [form, setForm] = useState({
     full_name:         initial?.full_name         ?? "",
     type:              initial?.type              ?? "parent" as ContactType,
@@ -1074,32 +1188,13 @@ export default function StudentProfile() {
                 )}
               </div>
 
-              {/* ── Emergency Contacts ── */}
-              {emergency.length > 0 && (
-                <div className="card overflow-hidden">
-                  <div className="px-5 py-4 border-b border-gray-100">
-                    <h3 className="font-semibold text-gray-900 text-sm">Emergency Contacts</h3>
-                  </div>
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50">
-                        <th className="px-5 py-3 font-medium">Name</th>
-                        <th className="px-5 py-3 font-medium">Relationship</th>
-                        <th className="px-5 py-3 font-medium">Phone</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {emergency.map(e => (
-                        <tr key={e.id} className="border-b border-gray-50 hover:bg-gray-50">
-                          <td className="px-5 py-3 font-medium text-gray-900">{e.full_name}</td>
-                          <td className="px-5 py-3 text-gray-600">{e.relationship}</td>
-                          <td className="px-5 py-3 text-gray-600">{e.phone}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              {/* ── Emergency Contacts (editable by admin & parent) ── */}
+              <EmergencyContactsSection
+                studentId={student.id}
+                contacts={emergency}
+                canEdit={canEdit}
+                onChanged={loadAll}
+              />
             </div>
           );
         })()}

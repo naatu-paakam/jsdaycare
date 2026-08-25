@@ -99,7 +99,7 @@ test.describe("Student profile tabs", () => {
   test("TC-contacts-add-pickup-modal: Add pickup button opens modal with pickup date fields", async ({ page }) => {
     await page.getByRole("button", { name: /^contacts$/i }).click();
     await page.locator("h3:has-text('Contacts')").first().waitFor({ timeout: 8_000 });
-    await page.getByRole("button", { name: /add pickup/i }).click();
+    await page.getByRole('button', { name: /add pickup/i }).click();
     await expect(page.getByRole("heading", { name: /add contact/i })).toBeVisible({ timeout: 5_000 });
     await expect(page.getByText(/pickup authorization period/i)).toBeVisible();
     await expect(page.getByText("Valid From")).toBeVisible();
@@ -117,7 +117,7 @@ test.describe("Student profile tabs", () => {
   test("TC-contacts-photo-upload: Add contact modal has photo upload section", async ({ page }) => {
     await page.getByRole("button", { name: /^contacts$/i }).click();
     await page.locator("h3:has-text('Contacts')").first().waitFor({ timeout: 8_000 });
-    await page.getByRole("button", { name: /add pickup/i }).click();
+    await page.getByRole('button', { name: /add pickup/i }).click();
     await page.getByRole("heading", { name: /add contact/i }).waitFor({ timeout: 5_000 });
     await expect(page.getByText(/profile photo/i)).toBeVisible();
     await expect(page.getByText(/upload photo/i)).toBeVisible();
@@ -134,18 +134,20 @@ test.describe("Student profile tabs", () => {
     await expect(page.locator("button:has-text('Hide')").first()).toBeVisible();
   });
 
-  test("TC-contacts-add-contact-modal: Add a contact opens modal", async ({ page }) => {
+  test("TC-contacts-add-contact-modal: Add contact button opens modal", async ({ page }) => {
     await page.getByRole("button", { name: /^contacts$/i }).click();
-    await page.getByRole("button", { name: /add a contact/i }).click();
-    // Modal should appear with form fields
+    await page.locator("h3:has-text('Contacts')").first().waitFor({ timeout: 8_000 });
+    // "Add contact" button (admin) or "Add pickup" opens the ContactModal
+    await page.getByRole("button", { name: /add contact/i }).first().click();
     await expect(page.getByRole("heading", { name: /add contact/i })).toBeVisible({ timeout: 5_000 });
     await expect(page.getByPlaceholder(/jane smith/i)).toBeVisible();
     await expect(page.getByPlaceholder(/1234/i)).toBeVisible();
   });
 
-  test("TC-contacts-add-contact-cancel: Cancel closes the Add Contact modal", async ({ page }) => {
+  test("TC-contacts-add-contact-cancel: Cancel closes the contact modal", async ({ page }) => {
     await page.getByRole("button", { name: /^contacts$/i }).click();
-    await page.getByRole("button", { name: /add a contact/i }).click();
+    await page.locator("h3:has-text('Contacts')").first().waitFor({ timeout: 8_000 });
+    await page.getByRole("button", { name: /add contact/i }).first().click();
     await page.getByRole("heading", { name: /add contact/i }).waitFor({ timeout: 5_000 });
     await page.getByRole("button", { name: /^cancel$/i }).click();
     await expect(page.getByRole("heading", { name: /add contact/i })).not.toBeVisible();
@@ -153,10 +155,12 @@ test.describe("Student profile tabs", () => {
 
   test("TC-contacts-add-contact-validation: Add Contact requires name", async ({ page }) => {
     await page.getByRole("button", { name: /^contacts$/i }).click();
-    await page.getByRole("button", { name: /add a contact/i }).click();
+    await page.locator("h3:has-text('Contacts')").first().waitFor({ timeout: 8_000 });
+    // Open modal via Add contact (border button)
+    await page.locator("button:not(.btn-primary):has-text('Add contact')").click();
     await page.getByRole("heading", { name: /add contact/i }).waitFor({ timeout: 5_000 });
-    // Submit without filling name
-    await page.getByRole("button", { name: /^add contact$/i }).click();
+    // Submit without name
+    await page.locator("button.btn-primary:has-text('Add Contact')").click();
     await expect(page.getByText(/name is required/i)).toBeVisible();
   });
 
@@ -195,25 +199,24 @@ test.describe("Student profile tabs", () => {
     expect(count).toBeGreaterThan(0);
   });
 
-  test("TC-immunizations-custom-section: Custom Vaccines section is visible", async ({ page }) => {
+  test("TC-immunizations-custom-section: Custom Vaccines section heading is visible", async ({ page }) => {
     await page.getByRole("button", { name: /^immunizations$/i }).click();
-    await expect(page.getByText(/Custom.*Additional Vaccines/i)).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByRole("heading", { name: "Custom / Additional Vaccines" })).toBeVisible({ timeout: 8_000 });
   });
 
   test("TC-immunizations-custom-add: Add record button opens inline form", async ({ page }) => {
     await page.getByRole("button", { name: /^immunizations$/i }).click();
-    await page.getByText(/Custom.*Additional Vaccines/i).waitFor({ timeout: 8_000 });
-    await page.getByRole("button", { name: /add record/i }).click();
+    await page.getByRole("heading", { name: "Custom / Additional Vaccines" }).waitFor({ timeout: 8_000 });
+    await page.getByRole("button", { name: /add record/i }).first().click();
     await expect(page.getByPlaceholder(/typhoid/i)).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByRole("button", { name: /^add record$/i })).toBeVisible();
   });
 
   test("TC-immunizations-custom-validation: Add Record requires vaccine name", async ({ page }) => {
     await page.getByRole("button", { name: /^immunizations$/i }).click();
-    await page.getByText(/Custom.*Additional Vaccines/i).waitFor({ timeout: 8_000 });
-    await page.getByRole("button", { name: /add record/i }).click();
+    await page.getByRole("heading", { name: "Custom / Additional Vaccines" }).waitFor({ timeout: 8_000 });
+    await page.getByRole("button", { name: /add record/i }).first().click();
     await page.getByPlaceholder(/typhoid/i).waitFor({ timeout: 5_000 });
-    await page.getByRole("button", { name: /^add record$/i }).click();
+    await page.locator("button.btn-primary:has-text('Add Record')").click();
     await expect(page.getByText(/vaccine name is required/i)).toBeVisible();
   });
 
@@ -224,6 +227,25 @@ test.describe("Student profile tabs", () => {
     await expect(page).toHaveURL(url);
     // Date picker should appear
     await expect(page.locator('input[type="date"]').first()).toBeVisible({ timeout: 5_000 });
+  });
+
+  test("TC-emergency-contacts-editable: Contacts tab shows Emergency Contacts with Edit/Delete", async ({ page }) => {
+    await page.getByRole("button", { name: /^contacts$/i }).click();
+    await page.locator("h3:has-text('Emergency Contacts')").waitFor({ timeout: 8_000 });
+    // Edit and delete buttons should be visible
+    await expect(page.locator("button:has-text('Edit')").first()).toBeVisible();
+    await expect(page.locator('button[title="Delete"]').first()).toBeVisible();
+  });
+
+  test("TC-emergency-contacts-add: Add emergency contact inline form works", async ({ page }) => {
+    await page.getByRole("button", { name: /^contacts$/i }).click();
+    await page.locator("h3:has-text('Emergency Contacts')").waitFor({ timeout: 8_000 });
+    await page.getByRole("button", { name: /add emergency contact/i }).click();
+    await expect(page.getByPlaceholder(/jane smith/i)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByPlaceholder(/grandmother/i)).toBeVisible();
+    // Cancel
+    await page.getByRole("button", { name: /^cancel$/i }).click();
+    await expect(page.getByPlaceholder(/jane smith/i)).not.toBeVisible();
   });
 
   test("TC-documents-tab: Documents tab renders without navigating away", async ({ page }) => {
