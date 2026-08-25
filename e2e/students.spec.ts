@@ -69,11 +69,38 @@ test.describe("Student profile tabs", () => {
     await expect(page.locator("button:has-text('Edit')").first()).toBeVisible({ timeout: 5_000 });
   });
 
-  test("TC-contacts-tab: Contacts tab shows contacts table", async ({ page }) => {
+  test("TC-contacts-tab: Contacts tab shows Approved Pickup section and All Contacts", async ({ page }) => {
     await page.getByRole("button", { name: /^contacts$/i }).click();
-    // Wait for table with contact rows (strict: use the card heading)
-    await expect(page.locator("h3:has-text('Contacts')").first()).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByText("Approved Pickup List")).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByText("All Contacts")).toBeVisible();
     await expect(page.locator("table").first()).toBeVisible();
+  });
+
+  test("TC-contacts-approved-pickup-add: Add approved pickup button opens modal", async ({ page }) => {
+    await page.getByRole("button", { name: /^contacts$/i }).click();
+    await page.getByText("Approved Pickup List").waitFor({ timeout: 8_000 });
+    await page.getByRole("button", { name: /add approved pickup/i }).click();
+    await expect(page.getByRole("heading", { name: /add contact/i })).toBeVisible({ timeout: 5_000 });
+    // Pickup authorization date fields should be visible (can_pickup is pre-checked)
+    await expect(page.getByText(/pickup authorization period/i)).toBeVisible();
+  });
+
+  test("TC-contacts-approved-pickup-dates: Pickup modal shows valid from/to date fields", async ({ page }) => {
+    await page.getByRole("button", { name: /^contacts$/i }).click();
+    await page.getByText("Approved Pickup List").waitFor({ timeout: 8_000 });
+    await page.getByRole("button", { name: /add approved pickup/i }).click();
+    await page.getByText(/pickup authorization period/i).waitFor({ timeout: 5_000 });
+    await expect(page.getByText("Valid From")).toBeVisible();
+    await expect(page.getByText("Valid To")).toBeVisible();
+  });
+
+  test("TC-contacts-photo-upload: contact modal has photo upload", async ({ page }) => {
+    await page.getByRole("button", { name: /^contacts$/i }).click();
+    await page.getByText("Approved Pickup List").waitFor({ timeout: 8_000 });
+    await page.getByRole("button", { name: /add approved pickup/i }).click();
+    await page.getByRole("heading", { name: /add contact/i }).waitFor({ timeout: 5_000 });
+    await expect(page.getByText(/profile photo/i)).toBeVisible();
+    await expect(page.getByText(/upload photo/i)).toBeVisible();
   });
 
   test("TC-contacts-pin-reveal: admin can reveal PIN code", async ({ page }) => {
@@ -123,8 +150,51 @@ test.describe("Student profile tabs", () => {
   test("TC-immunizations-edit-dates: admin sees editable date inputs on immunizations", async ({ page }) => {
     await page.getByRole("button", { name: /^immunizations$/i }).click();
     await page.getByText(/Hep B/i).first().waitFor({ timeout: 8_000 });
-    // Edit date row should exist (inputs of type date)
     await expect(page.locator('input[type="date"]').first()).toBeVisible();
+  });
+
+  test("TC-immunizations-exempt: admin can toggle Exempt checkbox on vaccine", async ({ page }) => {
+    await page.getByRole("button", { name: /^immunizations$/i }).click();
+    await page.getByText(/Hep B/i).first().waitFor({ timeout: 8_000 });
+    const exemptBox = page.locator('input[type="checkbox"]').first();
+    await expect(exemptBox).toBeVisible();
+  });
+
+  test("TC-immunizations-skip: admin sees Skip checkbox per dose", async ({ page }) => {
+    await page.getByRole("button", { name: /^immunizations$/i }).click();
+    await page.getByText(/Hep B/i).first().waitFor({ timeout: 8_000 });
+    await expect(page.getByText("Skip").first()).toBeVisible();
+  });
+
+  test("TC-immunizations-delete: admin sees delete button on existing dose records", async ({ page }) => {
+    await page.getByRole("button", { name: /^immunizations$/i }).click();
+    await page.getByText(/Hep B/i).first().waitFor({ timeout: 8_000 });
+    // Trash2 delete buttons exist for existing dose records
+    const trashBtns = page.locator('button[title="Delete this dose record"]');
+    const count = await trashBtns.count();
+    expect(count).toBeGreaterThan(0);
+  });
+
+  test("TC-immunizations-custom-section: Custom Vaccines section is visible", async ({ page }) => {
+    await page.getByRole("button", { name: /^immunizations$/i }).click();
+    await expect(page.getByText(/Custom.*Additional Vaccines/i)).toBeVisible({ timeout: 8_000 });
+  });
+
+  test("TC-immunizations-custom-add: Add record button opens inline form", async ({ page }) => {
+    await page.getByRole("button", { name: /^immunizations$/i }).click();
+    await page.getByText(/Custom.*Additional Vaccines/i).waitFor({ timeout: 8_000 });
+    await page.getByRole("button", { name: /add record/i }).click();
+    await expect(page.getByPlaceholder(/typhoid/i)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByRole("button", { name: /^add record$/i })).toBeVisible();
+  });
+
+  test("TC-immunizations-custom-validation: Add Record requires vaccine name", async ({ page }) => {
+    await page.getByRole("button", { name: /^immunizations$/i }).click();
+    await page.getByText(/Custom.*Additional Vaccines/i).waitFor({ timeout: 8_000 });
+    await page.getByRole("button", { name: /add record/i }).click();
+    await page.getByPlaceholder(/typhoid/i).waitFor({ timeout: 5_000 });
+    await page.getByRole("button", { name: /^add record$/i }).click();
+    await expect(page.getByText(/vaccine name is required/i)).toBeVisible();
   });
 
   test("TC-daily-report-inline: Daily Report tab shows inline feed (not navigate away)", async ({ page }) => {

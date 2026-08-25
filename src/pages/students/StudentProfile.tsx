@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import {
   ArrowLeft, Eye, EyeOff, Plus, Shield, AlertTriangle,
   Pencil, X, Check, Coffee, Moon, MessageSquare, Image,
-  Pill, Heart, Activity as ActivityIcon, Star, UserCheck,
+  Pill, Heart, Activity as ActivityIcon, Star, UserCheck, Trash2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
@@ -142,38 +142,258 @@ function Input({ label, value, onChange, type = "text" }: { label: string; value
 }
 
 // ─── Add Contact Modal ────────────────────────────────────────────────────────
-function AddContactModal({ studentId, schoolId, onClose, onSaved }: {
-  studentId: string; schoolId: string; onClose: () => void; onSaved: () => void;
+// ─── Custom immunization section ──────────────────────────────────────────────
+function CustomImmunizationSection({
+  studentId, customRecords, canEdit, onChanged,
+}: {
+  studentId: string;
+  customRecords: StudentImmunization[];
+  canEdit: boolean;
+  onChanged: () => void;
 }) {
-  const [form, setForm] = useState({
-    full_name: "", type: "parent" as ContactType, email: "", phone: "",
-    is_primary: false, can_pickup: true, pin_code: "", portal_status: "not_signed_up" as PortalStatus,
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm]         = useState({ vaccine_name: "", dose_number: "1", administered_date: "", notes: "" });
+  const [saving, setSaving]     = useState(false);
+  const [error,  setError]      = useState("");
+
+  // Group custom records by vaccine name
+  const grouped: Record<string, StudentImmunization[]> = {};
+  customRecords.forEach(r => {
+    if (!grouped[r.vaccine_name]) grouped[r.vaccine_name] = [];
+    grouped[r.vaccine_name].push(r);
   });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+
+  async function addRecord() {
+    if (!form.vaccine_name.trim()) { setError("Vaccine name is required."); return; }
+    setSaving(true); setError("");
+    const { error: err } = await supabase.from("student_immunizations").insert({
+      student_id:        studentId,
+      vaccine_name:      form.vaccine_name.trim(),
+      dose_number:       parseInt(form.dose_number, 10),
+      administered_date: form.administered_date || null,
+      notes:             form.notes || null,
+      exempt: false, skipped: false,
+    });
+    setSaving(false);
+    if (err) { setError(err.message); return; }
+    setForm({ vaccine_name: "", dose_number: "1", administered_date: "", notes: "" });
+    setShowForm(false);
+    onChanged();
+  }
+
+  async function deleteRecord(recId: string) {
+    await supabase.from("student_immunizations").delete().eq("id", recId);
+    onChanged();
+  }
+
+  return (
+    <div className="card overflow-hidden">
+      <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+        <div>
+          <h3 className="font-semibold text-gray-900 text-sm">Custom / Additional Vaccines</h3>
+          <p className="text-xs text-gray-400 mt-0.5">Vaccines not on the CDC schedule (e.g. travel vaccines, school-required extras)</p>
+        </div>
+        {canEdit && !showForm && (
+          <button onClick={() => setShowForm(true)} className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
+            <Plus size={13} /> Add record
+          </button>
+        )}
+      </div>
+
+      {/* Add form */}
+      {showForm && (
+        <div className="px-5 py-4 border-b border-gray-100 bg-indigo-50 space-y-3">
+          {error && <p className="text-xs text-red-600 bg-red-50 rounded px-2 py-1">{error}</p>}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="col-span-2">
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Vaccine name *</label>
+              <input className="input w-full text-sm" placeholder="e.g. Typhoid, Meningococcal" value={form.vaccine_name} onChange={e => setForm(f => ({...f, vaccine_name: e.target.value}))} />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Dose #</label>
+              <input className="input w-full text-sm" type="number" min="1" max="10" value={form.dose_number} onChange={e => setForm(f => ({...f, dose_number: e.target.value}))} />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Date administered</label>
+              <input className="input w-full text-sm" type="date" value={form.administered_date} onChange={e => setForm(f => ({...f, administered_date: e.target.value}))} />
+            </div>
+            <div className="col-span-2 sm:col-span-4">
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Notes (optional)</label>
+              <input className="input w-full text-sm" placeholder="e.g. Required for school program" value={form.notes} onChange={e => setForm(f => ({...f, notes: e.target.value}))} />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={addRecord} disabled={saving} className="btn-primary text-xs px-3 py-1.5">{saving ? "Saving…" : "Add Record"}</button>
+            <button onClick={() => { setShowForm(false); setError(""); }} className="btn-secondary text-xs px-3 py-1.5">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Existing custom records */}
+      {Object.keys(grouped).length === 0 && !showForm ? (
+        <div className="px-5 py-6 text-center text-gray-400 text-sm">No custom records. {canEdit && 'Use "Add record" to log additional vaccines.'}</div>
+      ) : (
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50">
+              <th className="px-5 py-2 font-medium">Vaccine</th>
+              <th className="px-5 py-2 font-medium">Dose</th>
+              <th className="px-5 py-2 font-medium">Date</th>
+              <th className="px-5 py-2 font-medium">Notes</th>
+              {canEdit && <th className="px-5 py-2 font-medium" />}
+            </tr>
+          </thead>
+          <tbody>
+            {customRecords.map(r => (
+              <tr key={r.id} className="border-b border-gray-50 hover:bg-gray-50">
+                <td className="px-5 py-3 font-medium text-gray-900">{r.vaccine_name}</td>
+                <td className="px-5 py-3 text-gray-600">Dose {r.dose_number ?? "—"}</td>
+                <td className="px-5 py-3 text-gray-600">
+                  {r.administered_date
+                    ? <span className="px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-700 font-medium">{new Date(r.administered_date).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"2-digit"})}</span>
+                    : <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-500">No date</span>}
+                </td>
+                <td className="px-5 py-3 text-xs text-gray-500">{r.notes || "—"}</td>
+                {canEdit && (
+                  <td className="px-5 py-3">
+                    <button onClick={() => deleteRecord(r.id)}
+                      className="text-gray-300 hover:text-red-500 transition-colors" title="Delete record">
+                      <Trash2 size={14} />
+                    </button>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
+// ─── Contact avatar ───────────────────────────────────────────────────────────
+function ContactAvatar({ contact, size = 8 }: { contact: StudentContact; size?: number }) {
+  const cls = `w-${size} h-${size} rounded-full object-cover shrink-0`;
+  if (contact.photo_url) return <img src={contact.photo_url} alt={contact.full_name} className={cls} />;
+  return (
+    <div className={`${cls} bg-indigo-100 flex items-center justify-center text-indigo-700 font-semibold text-xs`}>
+      {contact.full_name?.[0]?.toUpperCase()}
+    </div>
+  );
+}
+
+// ─── Add / Edit Contact Modal ─────────────────────────────────────────────────
+function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
+  studentId: string; schoolId: string;
+  initial?: StudentContact;   // if provided → edit mode
+  onClose: () => void; onSaved: () => void;
+}) {
+  const isEdit = !!initial;
+  const [form, setForm] = useState({
+    full_name:         initial?.full_name         ?? "",
+    type:              initial?.type              ?? "parent" as ContactType,
+    email:             initial?.email             ?? "",
+    phone:             initial?.phone             ?? "",
+    is_primary:        initial?.is_primary        ?? false,
+    can_pickup:        initial?.can_pickup        ?? true,
+    pin_code:          initial?.pin_code          ?? "",
+    portal_status:     initial?.portal_status     ?? "not_signed_up" as PortalStatus,
+    pickup_valid_from: initial?.pickup_valid_from ?? "",
+    pickup_valid_to:   initial?.pickup_valid_to   ?? "",
+    photo_url:         initial?.photo_url         ?? "",
+  });
+  const [photoFile,  setPhotoFile]  = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string>(initial?.photo_url ?? "");
+  const [saving,  setSaving]  = useState(false);
+  const [error,   setError]   = useState("");
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  }
+
+  async function uploadPhoto(contactId: string): Promise<string | null> {
+    if (!photoFile) return form.photo_url || null;
+    const ext  = photoFile.name.split(".").pop();
+    const path = `${studentId}/${contactId}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("contact-photos")
+      .upload(path, photoFile, { upsert: true });
+    if (upErr) { setError(`Photo upload failed: ${upErr.message}`); return null; }
+    const { data } = supabase.storage.from("contact-photos").getPublicUrl(path);
+    return data.publicUrl;
+  }
 
   async function save() {
     if (!form.full_name.trim()) { setError("Name is required."); return; }
     if (form.pin_code && !/^\d{4}$/.test(form.pin_code)) { setError("PIN must be exactly 4 digits."); return; }
     setSaving(true);
-    const { error: err } = await supabase.from("student_contacts").insert({
+    setError("");
+
+    const payload = {
       student_id: studentId, school_id: schoolId,
-      ...form, pin_code: form.pin_code || null,
-    });
+      full_name:         form.full_name,
+      type:              form.type,
+      email:             form.email || null,
+      phone:             form.phone || null,
+      is_primary:        form.is_primary,
+      can_pickup:        form.can_pickup,
+      pin_code:          form.pin_code || null,
+      portal_status:     form.portal_status,
+      pickup_valid_from: form.can_pickup && form.pickup_valid_from ? form.pickup_valid_from : null,
+      pickup_valid_to:   form.can_pickup && form.pickup_valid_to   ? form.pickup_valid_to   : null,
+    };
+
+    let contactId = initial?.id ?? "";
+
+    if (isEdit) {
+      const { error: err } = await supabase.from("student_contacts").update(payload).eq("id", contactId);
+      if (err) { setError(err.message); setSaving(false); return; }
+    } else {
+      const { data, error: err } = await supabase.from("student_contacts").insert(payload).select("id").single();
+      if (err) { setError(err.message); setSaving(false); return; }
+      contactId = data.id;
+    }
+
+    if (photoFile) {
+      const url = await uploadPhoto(contactId);
+      if (url) await supabase.from("student_contacts").update({ photo_url: url }).eq("id", contactId);
+    }
+
     setSaving(false);
-    if (err) { setError(err.message); return; }
     onSaved();
   }
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md space-y-4 p-6">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto space-y-4 p-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-bold text-gray-900">Add Contact</h2>
+          <h2 className="font-bold text-gray-900">{isEdit ? "Edit Contact" : "Add Contact"}</h2>
           <button onClick={onClose}><X size={18} className="text-gray-400" /></button>
         </div>
 
         {error && <p className="text-sm text-red-600 bg-red-50 rounded px-3 py-2">{error}</p>}
+
+        {/* Photo upload */}
+        <div className="flex items-center gap-4">
+          {photoPreview ? (
+            <img src={photoPreview} alt="" className="w-16 h-16 rounded-full object-cover border-2 border-indigo-200" />
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl border-2 border-dashed border-indigo-300">
+              {form.full_name?.[0]?.toUpperCase() || "?"}
+            </div>
+          )}
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-1 block">Profile photo</label>
+            <label className="cursor-pointer btn-secondary text-xs px-3 py-1.5">
+              {photoPreview ? "Change photo" : "Upload photo"}
+              <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+            </label>
+            {form.can_pickup && <p className="text-xs text-amber-600 mt-1">⚠ Photo required for pickup authorization</p>}
+          </div>
+        </div>
 
         <div className="space-y-3">
           <div>
@@ -197,18 +417,23 @@ function AddContactModal({ studentId, schoolId, onClose, onSaved }: {
               </select>
             </div>
           </div>
-          <div>
-            <label className="text-xs font-medium text-gray-600 mb-1 block">Email</label>
-            <input className="input w-full" type="email" placeholder="jane@example.com" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))} />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-gray-600 mb-1 block">Phone</label>
-            <input className="input w-full" placeholder="+1 (555) 000-0000" value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))} />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Email</label>
+              <input className="input w-full" type="email" placeholder="jane@example.com" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))} />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Phone</label>
+              <input className="input w-full" placeholder="+1 (555) 000-0000" value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))} />
+            </div>
           </div>
           <div>
             <label className="text-xs font-medium text-gray-600 mb-1 block">4-digit PIN (for check-in)</label>
             <input className="input w-full font-mono" maxLength={4} placeholder="e.g. 1234" value={form.pin_code} onChange={e => setForm(f => ({...f, pin_code: e.target.value.replace(/\D/g,"")}))} />
           </div>
+
+          <hr className="border-gray-100" />
+
           <div className="flex gap-6">
             <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
               <input type="checkbox" checked={form.is_primary} onChange={e => setForm(f => ({...f, is_primary: e.target.checked}))} className="rounded" />
@@ -216,14 +441,32 @@ function AddContactModal({ studentId, schoolId, onClose, onSaved }: {
             </label>
             <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
               <input type="checkbox" checked={form.can_pickup} onChange={e => setForm(f => ({...f, can_pickup: e.target.checked}))} className="rounded" />
-              Can pickup
+              Approved for pickup
             </label>
           </div>
+
+          {/* Pickup date range — shown only when can_pickup is checked */}
+          {form.can_pickup && (
+            <div className="bg-indigo-50 rounded-lg p-4 space-y-3 border border-indigo-100">
+              <p className="text-xs font-medium text-indigo-700">Pickup Authorization Period (optional)</p>
+              <p className="text-xs text-indigo-500">Leave blank for permanent authorization. Set dates for temporary pickups (e.g. grandparent visiting for a week).</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Valid From</label>
+                  <input type="date" className="input w-full" value={form.pickup_valid_from} onChange={e => setForm(f => ({...f, pickup_valid_from: e.target.value}))} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Valid To</label>
+                  <input type="date" className="input w-full" value={form.pickup_valid_to} onChange={e => setForm(f => ({...f, pickup_valid_to: e.target.value}))} />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
           <button onClick={onClose} className="btn-secondary">Cancel</button>
-          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Saving…" : "Add Contact"}</button>
+          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Saving…" : isEdit ? "Save Changes" : "Add Contact"}</button>
         </div>
       </div>
     </div>
@@ -250,7 +493,7 @@ export default function StudentProfile() {
   const [tab,          setTab]          = useState<Tab>("profile");
   const [loading,      setLoading]      = useState(true);
   const [revealPin,    setRevealPin]    = useState<Record<string, boolean>>({});
-  const [showAddContact, setShowAddContact] = useState(false);
+  const [contactModal, setContactModal] = useState<{ open: boolean; contact?: StudentContact }>({ open: false });
 
   // Edit states — which section is being edited
   const [editSection, setEditSection] = useState<string | null>(null);
@@ -382,11 +625,12 @@ export default function StudentProfile() {
 
   return (
     <Layout>
-      {showAddContact && student.school_id && (
-        <AddContactModal
+      {contactModal.open && student.school_id && (
+        <ContactModal
           studentId={student.id} schoolId={student.school_id}
-          onClose={() => setShowAddContact(false)}
-          onSaved={() => { setShowAddContact(false); loadAll(); }}
+          initial={contactModal.contact}
+          onClose={() => setContactModal({ open: false })}
+          onSaved={() => { setContactModal({ open: false }); loadAll(); }}
         />
       )}
 
@@ -634,107 +878,211 @@ export default function StudentProfile() {
         )}
 
         {/* ── CONTACTS TAB ───────────────────────────────────────────────────── */}
-        {tab === "contacts" && (
-          <div className="space-y-5">
-            <div className="card overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900 text-sm">Contacts</h3>
-                {isAdmin && (
-                  <button onClick={() => setShowAddContact(true)}
-                    className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
-                    <Plus size={13} /> Add a contact
-                  </button>
+        {tab === "contacts" && (() => {
+          const pickupContacts = contacts.filter(c => c.can_pickup);
+          const otherContacts  = contacts.filter(c => !c.can_pickup);
+          const today = new Date().toISOString().split("T")[0];
+
+          function pickupStatus(c: StudentContact): { label: string; color: string } {
+            if (!c.pickup_valid_from && !c.pickup_valid_to) return { label: "Permanent", color: "bg-emerald-100 text-emerald-700" };
+            if (c.pickup_valid_to && c.pickup_valid_to < today) return { label: "Expired", color: "bg-red-100 text-red-700" };
+            if (c.pickup_valid_from && c.pickup_valid_from > today) return { label: "Future", color: "bg-amber-100 text-amber-700" };
+            return { label: "Active", color: "bg-emerald-100 text-emerald-700" };
+          }
+
+          return (
+            <div className="space-y-6">
+              {/* ── Approved Pickup List ── */}
+              <div className="card overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 text-sm">Approved Pickup List</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">People authorized to pick up this child. Photo required for identity verification.</p>
+                  </div>
+                  {canEdit && (
+                    <button onClick={() => setContactModal({ open: true })}
+                      className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1">
+                      <Plus size={13} /> Add approved pickup
+                    </button>
+                  )}
+                </div>
+
+                {pickupContacts.length === 0 ? (
+                  <div className="px-5 py-8 text-center text-gray-400 text-sm">
+                    No approved pickups yet — add one above
+                  </div>
+                ) : (
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50">
+                        <th className="px-5 py-3 font-medium">Contact</th>
+                        <th className="px-5 py-3 font-medium">Phone</th>
+                        <th className="px-5 py-3 font-medium">Email</th>
+                        <th className="px-5 py-3 font-medium">Valid Period</th>
+                        <th className="px-5 py-3 font-medium">Status</th>
+                        {isAdmin && <th className="px-5 py-3 font-medium">Check-In Code</th>}
+                        {canEdit && <th className="px-5 py-3 font-medium" />}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pickupContacts.map(c => {
+                        const ps = pickupStatus(c);
+                        return (
+                          <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50">
+                            <td className="px-5 py-3">
+                              <div className="flex items-center gap-3">
+                                {/* Photo with warning if missing */}
+                                <div className="relative">
+                                  <ContactAvatar contact={c} size={10} />
+                                  {!c.photo_url && (
+                                    <span title="Photo required for pickup" className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center">
+                                      <AlertTriangle size={9} className="text-white" />
+                                    </span>
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">
+                                    {c.full_name}
+                                    {c.is_primary && <span className="ml-1.5 text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full">Primary</span>}
+                                  </p>
+                                  <p className="text-xs text-gray-400 capitalize">{c.type}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-5 py-3 text-xs text-gray-600">{c.phone || "—"}</td>
+                            <td className="px-5 py-3 text-xs text-gray-600">{c.email || "—"}</td>
+                            <td className="px-5 py-3 text-xs text-gray-600">
+                              {c.pickup_valid_from || c.pickup_valid_to
+                                ? <>{c.pickup_valid_from ? fmt(c.pickup_valid_from) : "—"} → {c.pickup_valid_to ? fmt(c.pickup_valid_to) : "ongoing"}</>
+                                : <span className="text-gray-400">Permanent</span>}
+                            </td>
+                            <td className="px-5 py-3">
+                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${ps.color}`}>{ps.label}</span>
+                            </td>
+                            {isAdmin && (
+                              <td className="px-5 py-3">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-mono text-sm">{revealPin[c.id] ? (c.pin_code ?? "—") : "••••"}</span>
+                                  <button onClick={() => setRevealPin(p => ({...p, [c.id]: !p[c.id]}))}
+                                    className="text-xs text-indigo-600 border border-indigo-200 rounded px-1.5 py-0.5 flex items-center gap-1 hover:bg-indigo-50">
+                                    {revealPin[c.id] ? <><EyeOff size={10} />Hide</> : <><Eye size={10} />Reveal</>}
+                                  </button>
+                                </div>
+                              </td>
+                            )}
+                            {canEdit && (
+                              <td className="px-5 py-3">
+                                <button onClick={() => setContactModal({ open: true, contact: c })}
+                                  className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
+                                  <Pencil size={11} /> Edit
+                                </button>
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 )}
               </div>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50">
-                    <th className="px-5 py-3 font-medium">Contact</th>
-                    <th className="px-5 py-3 font-medium">Email</th>
-                    <th className="px-5 py-3 font-medium">Phone</th>
-                    <th className="px-5 py-3 font-medium">Can Pickup</th>
-                    {isAdmin && <th className="px-5 py-3 font-medium">Code</th>}
-                    <th className="px-5 py-3 font-medium">Portal</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {contacts.length === 0 ? (
-                    <tr><td colSpan={isAdmin ? 6 : 5} className="px-5 py-8 text-center text-gray-400">No contacts — add one above</td></tr>
-                  ) : contacts.map(c => (
-                    <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50">
-                      <td className="px-5 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-semibold text-xs shrink-0">
-                            {c.full_name?.[0]?.toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {c.full_name}
-                              {c.is_primary && <span className="ml-1.5 text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full">Primary</span>}
-                            </p>
-                            <p className="text-xs text-gray-400 capitalize">{c.type}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-3 text-gray-600 text-xs">{c.email || "—"}</td>
-                      <td className="px-5 py-3 text-gray-600 text-xs">{c.phone || "—"}</td>
-                      <td className="px-5 py-3">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${c.can_pickup ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
-                          {c.can_pickup ? "Yes" : "No"}
-                        </span>
-                      </td>
-                      {isAdmin && (
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-mono text-sm">{revealPin[c.id] ? (c.pin_code ?? "—") : "••••"}</span>
-                            <button onClick={() => setRevealPin(p => ({...p, [c.id]: !p[c.id]}))}
-                              className="text-xs text-indigo-600 border border-indigo-200 rounded px-1.5 py-0.5 flex items-center gap-1 hover:bg-indigo-50">
-                              {revealPin[c.id] ? <><EyeOff size={10} />Hide</> : <><Eye size={10} />Reveal</>}
-                            </button>
-                          </div>
-                        </td>
-                      )}
-                      <td className="px-5 py-3">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize
-                          ${c.portal_status === "signed_up" ? "bg-emerald-100 text-emerald-700" :
-                            c.portal_status === "invited"   ? "bg-amber-100 text-amber-700" :
-                            "bg-gray-100 text-gray-500"}`}>
-                          {(c.portal_status ?? "not_signed_up").replace(/_/g, " ")}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
 
-            {emergency.length > 0 && (
+              {/* ── All Contacts (non-pickup) ── */}
               <div className="card overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-100">
-                  <h3 className="font-semibold text-gray-900 text-sm">Emergency Contacts</h3>
+                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-900 text-sm">All Contacts</h3>
+                  {canEdit && (
+                    <button onClick={() => setContactModal({ open: true })}
+                      className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
+                      <Plus size={13} /> Add contact
+                    </button>
+                  )}
                 </div>
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50">
-                      <th className="px-5 py-3 font-medium">Name</th>
-                      <th className="px-5 py-3 font-medium">Relationship</th>
+                      <th className="px-5 py-3 font-medium">Contact</th>
+                      <th className="px-5 py-3 font-medium">Email</th>
                       <th className="px-5 py-3 font-medium">Phone</th>
+                      <th className="px-5 py-3 font-medium">Pickup</th>
+                      <th className="px-5 py-3 font-medium">Portal</th>
+                      {canEdit && <th className="px-5 py-3 font-medium" />}
                     </tr>
                   </thead>
                   <tbody>
-                    {emergency.map(e => (
-                      <tr key={e.id} className="border-b border-gray-50 hover:bg-gray-50">
-                        <td className="px-5 py-3 font-medium text-gray-900">{e.full_name}</td>
-                        <td className="px-5 py-3 text-gray-600">{e.relationship}</td>
-                        <td className="px-5 py-3 text-gray-600">{e.phone}</td>
+                    {contacts.length === 0 ? (
+                      <tr><td colSpan={6} className="px-5 py-6 text-center text-gray-400">No contacts added yet</td></tr>
+                    ) : contacts.map(c => (
+                      <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50">
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-3">
+                            <ContactAvatar contact={c} size={8} />
+                            <div>
+                              <p className="font-medium text-gray-900 text-sm">
+                                {c.full_name}
+                                {c.is_primary && <span className="ml-1.5 text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full">Primary</span>}
+                              </p>
+                              <p className="text-xs text-gray-400 capitalize">{c.type}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3 text-xs text-gray-600">{c.email || "—"}</td>
+                        <td className="px-5 py-3 text-xs text-gray-600">{c.phone || "—"}</td>
+                        <td className="px-5 py-3">
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${c.can_pickup ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
+                            {c.can_pickup ? "Approved" : "No"}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3">
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize
+                            ${c.portal_status === "signed_up" ? "bg-emerald-100 text-emerald-700" :
+                              c.portal_status === "invited"   ? "bg-amber-100 text-amber-700" :
+                              "bg-gray-100 text-gray-500"}`}>
+                            {(c.portal_status ?? "not_signed_up").replace(/_/g, " ")}
+                          </span>
+                        </td>
+                        {canEdit && (
+                          <td className="px-5 py-3">
+                            <button onClick={() => setContactModal({ open: true, contact: c })}
+                              className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
+                              <Pencil size={11} /> Edit
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            )}
-          </div>
-        )}
+
+              {/* ── Emergency Contacts ── */}
+              {emergency.length > 0 && (
+                <div className="card overflow-hidden">
+                  <div className="px-5 py-4 border-b border-gray-100">
+                    <h3 className="font-semibold text-gray-900 text-sm">Emergency Contacts</h3>
+                  </div>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50">
+                        <th className="px-5 py-3 font-medium">Name</th>
+                        <th className="px-5 py-3 font-medium">Relationship</th>
+                        <th className="px-5 py-3 font-medium">Phone</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {emergency.map(e => (
+                        <tr key={e.id} className="border-b border-gray-50 hover:bg-gray-50">
+                          <td className="px-5 py-3 font-medium text-gray-900">{e.full_name}</td>
+                          <td className="px-5 py-3 text-gray-600">{e.relationship}</td>
+                          <td className="px-5 py-3 text-gray-600">{e.phone}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* ── IMMUNIZATIONS TAB ──────────────────────────────────────────────── */}
         {tab === "immunizations" && (
@@ -746,6 +1094,20 @@ export default function StudentProfile() {
               <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-gray-200 inline-block" />Skipped</span>
               <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-200 inline-block" />Exempt</span>
             </div>
+
+            {/* Custom immunization add form */}
+            {canEdit && (() => {
+              const cdcNames = new Set(CDC_VACCINES.map(v => v.name));
+              const customRecs = immunizations.filter(i => !cdcNames.has(i.vaccine_name));
+              return (
+                <CustomImmunizationSection
+                  studentId={id!}
+                  customRecords={customRecs}
+                  canEdit={canEdit}
+                  onChanged={loadAll}
+                />
+              );
+            })()}
 
             {CDC_VACCINES.map(vaccine => {
               // Find any existing record to get vaccine-level exempt flag
@@ -844,15 +1206,28 @@ export default function StudentProfile() {
                                 disabled={rec?.skipped}
                                 onChange={e => updateDose(i + 1, { administered_date: e.target.value || null, skipped: false })}
                               />
-                              <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={rec?.skipped ?? false}
-                                  onChange={e => updateDose(i + 1, { skipped: e.target.checked, administered_date: e.target.checked ? null : (rec?.administered_date ?? null) })}
-                                  className="rounded"
-                                />
-                                Skip
-                              </label>
+                              <div className="flex items-center justify-between gap-1">
+                                <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={rec?.skipped ?? false}
+                                    onChange={e => updateDose(i + 1, { skipped: e.target.checked, administered_date: e.target.checked ? null : (rec?.administered_date ?? null) })}
+                                    className="rounded"
+                                  />
+                                  Skip
+                                </label>
+                                {rec && (
+                                  <button
+                                    title="Delete this dose record"
+                                    onClick={async () => {
+                                      await supabase.from("student_immunizations").delete().eq("id", rec.id);
+                                      loadAll();
+                                    }}
+                                    className="text-gray-300 hover:text-red-500 transition-colors">
+                                    <Trash2 size={11} />
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           );
                         })}

@@ -101,6 +101,8 @@ export interface StudentContact {
   photo_url: string | null;
   pin_code: string | null;
   portal_status: PortalStatus;
+  pickup_valid_from: string | null;
+  pickup_valid_to: string | null;
   created_at: string;
 }
 
