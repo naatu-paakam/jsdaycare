@@ -8,7 +8,9 @@
     "typecheck": "tsc",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "seed": "node scripts/seed.js",
+    "seed:reset": "node scripts/seed.js --reset"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
