@@ -8,6 +8,46 @@
 ## Overview
 The Paperwork section has 3 tabs: **Forms & Requests**, **Shared Files**, and **Sign-ups**. Together they replace paper packets, permission slips, and sign-up sheets.
 
+All forms, compliance checklists, and required documents are **school-specific and fully configurable by the admin**. Nothing is hardcoded — JS Joy Family Daycare sets up exactly what they need.
+
+---
+
+## School Settings — Forms & Compliance Configuration
+
+Accessible via **My School → Settings → Forms & Compliance**.
+
+### Enrollment Checklist (per school)
+Admin defines which forms/documents are required before a child's enrollment is considered complete.
+
+| Setting | Notes |
+|---|---|
+| Required forms | Toggle each form on/off as required for enrollment |
+| Required documents | e.g. Immunization records — required / optional / not applicable |
+| Grace period | How many days after start date before flagging incomplete items |
+| Enforcement | Warning only / Block enrollment activation |
+
+Example — JS Joy Family Daycare enrollment checklist:
+- [ ] Student & guardian information form — **Required**
+- [ ] Health history form — **Required**
+- [ ] Emergency authorization form — **Required**
+- [ ] Media release — **Required**
+- [ ] Enrollment agreement — **Required**
+- [ ] Immunization records — **Required**
+- [ ] Copy of birth certificate — **Optional**
+
+> Admin can add, remove, or rename any item in this list. The compliance dashboard tracks completion against this school-specific checklist — not a generic one.
+
+### Compliance Rules (per school)
+Admin configures what triggers a compliance alert on the dashboard.
+
+| Rule | Configurable? | Notes |
+|---|---|---|
+| Missing required form | Yes — choose which forms | Alert if a required form is unsigned/unsubmitted |
+| Immunization overdue | Yes — toggle on/off | Alert per vaccine dose based on CDC schedule |
+| Staff certification expiry | Yes — warning window (e.g. 30 / 60 / 90 days) | CPR, first aid, ECE credits |
+| Ratio violation | Yes — ratio rules per room | Alert when staff:child ratio is exceeded |
+| Document expiry | Yes — per doc type | e.g. immunization records older than X years |
+
 ---
 
 ## Tab 1: Forms & Requests
@@ -33,30 +73,37 @@ The Paperwork section has 3 tabs: **Forms & Requests**, **Shared Files**, and **
 
 ### Form Types
 
-#### Standard Forms (admin creates, parent signs)
-Pre-built templates for common daycare forms:
+#### School Forms (admin-owned templates, parent signs)
+Admin creates and manages their own form templates — no pre-loaded generic forms.
+System provides **starter templates** the admin can adopt, edit, or delete:
 
-| Form | Notes |
+| Starter Template | Notes |
 |---|---|
 | Student and guardian information | Enrollment basics — name, DOB, contacts, address |
 | Health history | Allergies, medications, medical conditions, doctor |
 | Media release | Permission to photograph/video the child |
 | Emergency authorization | Who can pick up, emergency medical consent |
-| Enrollment agreement | Terms, tuition acknowledgment, policies |
+| Enrollment agreement | Terms, tuition acknowledgment, policies (admin fills in school-specific text) |
 
-- Parent signs with typed name + timestamp (legally valid in most US states)
-- Admin reviews submissions and marks as Reviewed / Approved
-- Status lifecycle: Unshared → Shared (sent to parent) → Submitted → Reviewed → Closed
+- Admin can rename, edit fields, or delete any starter template
+- Admin can create entirely new forms from scratch
+- Parent signs with typed name + timestamp
+- Admin reviews submissions → marks Reviewed / Approved
+- Status lifecycle: Unshared → Shared → Submitted → Reviewed → Closed
 
-#### Custom Forms
-- Admin can build custom forms using field types: text, date, checkbox, dropdown, signature
+#### Custom Forms (form builder)
+- Field types: short text, long text, date, number, checkbox, dropdown (admin defines options), file upload, signature
+- Each field: label, required/optional, help text
+- Logic: show/hide a field based on another field's answer (e.g. "If allergies = Yes, show allergy detail field")
 - Assign to: all families / specific room / specific child
-- Set due date
+- Set due date; admin notified when submitted
 
 #### Requests
-- Admin sends a request to parents to provide specific information or take an action
-- Examples: "Please update your emergency contact", "Confirm your child's schedule for next month"
-- Parent responds in-app; admin marks complete
+- Admin sends a targeted request to one or more parents for a specific action
+- Examples: "Please update your emergency contact", "Confirm attendance for next week"
+- Parent acknowledges / responds in their portal; admin marks complete
+
+---
 
 ---
 
