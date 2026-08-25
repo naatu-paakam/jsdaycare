@@ -19,7 +19,6 @@ test.describe("Admin — left nav links", () => {
     const mySchool = page.getByRole("button", { name: /my school/i });
     await mySchool.click();
     await expect(page.getByRole("link", { name: /^students$/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /^parents$/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /^rooms$/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /^calendar$/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /^schedules$/i })).toBeVisible();
@@ -35,12 +34,11 @@ test.describe("Admin — left nav links", () => {
     await expect(page.getByRole("heading", { name: /students/i })).toBeVisible();
   });
 
-  test("TC-nav-parents: navigates to /parents", async ({ page }) => {
+  test("TC-nav-parents: Parents link removed (contacts managed per-student)", async ({ page }) => {
     await page.goto("/home");
     await page.getByRole("button", { name: /my school/i }).click();
-    await page.getByRole("link", { name: /^parents$/i }).click();
-    await expect(page).toHaveURL(/\/parents/);
-    await expect(page.getByRole("heading", { name: /parents/i })).toBeVisible();
+    // Parents link should NOT be in the sidebar (removed — contacts are per-student)
+    await expect(page.getByRole("link", { name: /^parents$/i })).not.toBeVisible();
   });
 
   test("TC-nav-rooms: navigates to /rooms", async ({ page }) => {

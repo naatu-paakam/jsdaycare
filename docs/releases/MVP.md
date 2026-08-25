@@ -1,94 +1,151 @@
-# MVP Release Scope — jsdaycare
+# MVP Release Scope — JsDayCare
 
-**Goal:** Fully operational daycare management app that JS Joy Family can use daily without paper.  
-**Target:** Internal staff + 1 pilot family before expanding enrollment
+**Status: In active development — Student feature area complete**
+**Stack:** React 18 + Vite + TypeScript + Tailwind + Supabase + Express
+**Dev:** http://localhost:5174 (`npm run dev`)
+**GitHub:** https://github.com/naatu-paakam/jsdaycare
 
 ---
 
-## In Scope
+## Feature Progress
 
-### 1. Child & Family Management
-- [ ] Add / edit / view child profiles (name, DOB, photo, allergies, medical notes)
-- [ ] Add up to 4 guardians per child with contact details
-- [ ] Authorized pickup list per child
-- [ ] Emergency contacts (min 2)
-- [ ] Document uploads: immunization records, enrollment agreement
-- [ ] Enrollment status: Active | Waitlist | Withdrawn
+| # | Feature Area | Status |
+|---|---|---|
+| 1 | Child & Family Management | ✅ Built |
+| 2 | Attendance Tracking | 🔲 UI wired, data loads, check-in buttons present |
+| 3 | Daily Activity Reports | 🔲 Inline feed on student profile; room feed working |
+| 4 | Staff Management | 🔲 List + profile pages built; clock-in not yet wired |
+| 5 | Classroom / Room Management | ✅ Built |
+| 6 | Scheduling + Menus | 🔲 Pages built; schedule entry not yet wired to DB |
+| 7 | Admin Dashboard | 🔲 Page built; live data queries in progress |
+| 8 | Forms & Compliance | 🔲 Page built; form signing not yet implemented |
 
-### 2. Attendance Tracking
-- [ ] Staff-triggered check-in / check-out per child
+---
+
+## Feature 1 — Child & Family Management ✅
+
+### Child Profile
+- [x] Full name, preferred name, DOB + auto-calculated age
+- [x] Gender, race, ethnicity
+- [x] Allergies (flagged prominently in red with ⚠)
+- [x] Notes, medications, doctor name + phone
+- [x] Profile photo (avatar initials fallback)
+- [x] Enrollment status: Active / Waitlist / Withdrawn / Graduated
+- [x] Start date, schedule days
+- [x] Student ID (internal)
+- [x] Meal type
+
+### Profile Tabs
+- [x] Profile tab — two-column layout (personal info, address, financial details, enrollment details — admin only)
+- [x] Contacts tab — unified contacts table
+- [x] Immunizations tab — CDC vaccine grid
+- [x] Daily Report tab — inline activity feed
+- [x] Documents tab — placeholder with link to Paperwork
+
+### Editing
+- [x] Personal information — editable by admin + parent
+- [x] Date of birth — included in edit form
+- [x] Address — editable by admin + parent
+- [x] Room assignment — admin only (dropdown of all rooms)
+- [x] School details (status, meal type, student ID) — admin only
+- [x] Enrollment details (all pipeline dates, sibling, programs) — admin only
+- [x] Financial details (subsidy) — admin only
+
+### Contacts
+- [x] Unified table: parent/guardian + approved pickup in one view
+- [x] Pickup contacts highlighted with green tint + status badge (Permanent / Active / Expired)
+- [x] Photo upload per contact (⚠ badge if missing on pickup contact)
+- [x] Check-in code Reveal/Hide — admin only, on every contact
+- [x] Send Invite link — admin, for contacts with email but no portal
+- [x] Add contact (admin) / Add pickup (admin + parent)
+- [x] Edit any contact (modal with all fields)
+- [x] Pickup valid from/to date range (temporary pickup authorization)
+- [x] PIN code (4-digit, per contact)
+- [x] Portal status: signed_up / invited / not_signed_up
+
+### Emergency Contacts
+- [x] View (all roles)
+- [x] Add inline form — admin + parent
+- [x] Edit inline — admin + parent
+- [x] Delete — admin + parent
+
+### Immunizations
+- [x] 11 CDC vaccines with dose-by-dose tracking
+- [x] Status per dose: Overdue (red) / Completed with date (green) / Skipped (gray)
+- [x] Exempt toggle per vaccine (amber header when set)
+- [x] Date picker per dose — editable by admin + parent
+- [x] Skip checkbox per dose (clears date)
+- [x] Delete dose record
+- [x] Custom / Additional vaccines — add (vaccine name, dose, date, notes) + delete
+
+---
+
+## Feature 5 — Rooms ✅
+
+- [x] Room list with student avatar cluster
+- [x] New Room modal
+- [x] Room detail — 3 tabs: Students, Parents, Feed
+- [x] Students tab: Check In / Mark Absent inline buttons
+- [x] Feed tab: consolidated activity feed with date filter, action type filter, Approve, Staff Only toggle
+- [x] Room name dropdown to switch rooms without going back
+
+---
+
+## Remaining MVP Features
+
+### Feature 2 — Attendance
+- [x] Staff-triggered Check In / Check Out (button present in room Students tab)
 - [ ] PIN-based check-in on shared tablet
-- [ ] Record who dropped off / picked up (from authorized list)
-- [ ] Per-room attendance view (color-coded status)
-- [ ] Mark child absent with reason
+- [ ] Record guardian who dropped off / picked up
 - [ ] Daily attendance CSV export
+- [ ] Absence reason on mark absent
 
-### 3. Daily Activity Reports
-- [ ] Meal log (breakfast, lunch, snack — what offered, how much eaten)
-- [ ] Nap log (start, end, quality)
-- [ ] Diaper / bathroom log
-- [ ] Mood & behavior note
-- [ ] Activities checklist
-- [ ] Photo attachments (up to 5 per child per day, via Supabase Storage)
-- [ ] Parent view: read daily report from parent portal
+### Feature 3 — Daily Activity Reports
+- [x] 12 activity types logged from room feed
+- [x] Activity timeline on student profile (inline, date-filterable)
+- [x] Staff Only flag hides entries from parents
+- [ ] "Mark report Done" → parent portal notification
+- [ ] Photo/video attachments stored in Supabase Storage
 
-### 4. Staff Management
-- [ ] Staff profiles (name, photo, role, certifications)
-- [ ] Room assignment per staff member
-- [ ] Staff check-in / check-out (clock in/out)
-- [ ] Staff-to-child ratio indicator per room (color-coded)
-- [ ] Configurable ratio rules by age group
+### Feature 4 — Staff Management
+- [x] Staff list with filters (room, role, status)
+- [x] Staff profile (personal info, emergency contact, medical, certifications)
+- [x] Check-in code reveal
+- [ ] Staff clock in/out
+- [ ] Staff-to-child ratio monitor (live per room)
 
-### 5. Classroom / Room Management
-- [ ] Create rooms with name, age range, capacity
-- [ ] Assign children and staff to rooms
-- [ ] Room dashboard: today's attendance + ratio status
-- [ ] Multi-room grid view for admin
+### Feature 6 — Scheduling + Menus
+- [x] Schedules page (weekly grid — staff + students)
+- [x] Menus page — food item library + weekly menu grid
+- [ ] Add staff/student schedule entries (wired to DB)
+- [ ] Menu templates + rotating meals
+- [ ] Menus feed into Food activity dropdown
 
-### 6. Scheduling
-- [ ] Daycare operating calendar (hours, holidays, closures)
-- [ ] Per-child weekly attendance schedule (which days they attend)
-- [ ] Staff weekly schedule
-- [ ] Expected attendance pre-populated from child schedule
+### Feature 7 — Admin Dashboard
+- [x] Today's stats (checked in, absent, expected, staff on duty)
+- [x] Current room ratios
+- [x] Today's activity coverage
+- [x] Compliance alerts section
+- [ ] Live data fully wired (currently some static placeholders)
+- [ ] Upcoming birthdays widget
 
-### 7. Admin Dashboard
-- [ ] Today's snapshot: enrolled, checked in, absent, staff on duty
-- [ ] Enrollment summary by room
-- [ ] Compliance alerts: missing docs, expiring certifications, ratio warnings
-- [ ] Quick actions: add child, record incident, export attendance
-
-### 8. Forms & Compliance
-- [ ] Digital enrollment agreement with typed-name signature + timestamp
-- [ ] Health history form
-- [ ] Media release form
-- [ ] Incident / injury report (with PDF export)
-- [ ] Permission slips (create, assign to children, track signature)
-- [ ] Audit log for all form actions
-- [ ] Monthly attendance summary report
-
----
-
-## Out of Scope for MVP
-- Parent messaging / in-app chat → R1
-- Push / email notifications → R1
-- Billing and invoicing → R1
-- Online payments → R1
-- QR code check-in (phase 2 of attendance) → R1
-
----
-
-## Roles Supported
-| Role | Access |
-|---|---|
-| Admin / Director | Full access |
-| Lead Teacher | Room view, attendance, daily reports |
-| Assistant / Aide | Daily report entry only |
-| Parent | View child profile + daily reports (read-only) |
+### Feature 8 — Forms & Compliance
+- [x] Forms list (Shared / Unshared / Closed filter, reviews needed)
+- [ ] Form builder (create custom forms)
+- [ ] Parent signing flow (typed signature + timestamp)
+- [ ] Incident report form
+- [ ] Sign-ups (Item / Time / Recurring / Time series)
+- [ ] Audit log
 
 ---
 
 ## Definition of Done
-- All 8 feature areas functional end-to-end
-- All MVP test scenarios passing (see [MVP-testing.md](MVP-testing.md))
-- Deployed to Netlify (staff URL + parent URL)
-- At least 1 real child enrolled and 1 full day of reports logged
+- [ ] All 8 feature areas functional end-to-end
+- [x] 60 Playwright tests passing (see [MVP-testing.md](MVP-testing.md))
+- [ ] Deployed to Netlify
+- [ ] At least 1 real child enrolled and 1 full day of reports logged
+
+---
+
+## Permissions reference
+See [../personas.md](../personas.md) for who can view/edit each section.

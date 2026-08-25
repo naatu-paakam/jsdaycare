@@ -21,7 +21,7 @@ const navItems: NavItem[] = [
     icon: <Building2 size={18} />,
     children: [
       { label: "Students", to: "/students", icon: <Baby size={18} /> },
-      { label: "Parents", to: "/parents", icon: <Users size={18} /> },
+      // Parents page removed — contact management is per-student in the student profile
       { label: "Rooms", to: "/rooms", icon: <DoorOpen size={18} /> },
       { label: "Calendar", to: "/calendar", icon: <Calendar size={18} /> },
       { label: "Schedules", to: "/schedule", icon: <Clock size={18} /> },
