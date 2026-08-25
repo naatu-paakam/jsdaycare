@@ -739,74 +739,132 @@ export default function StudentProfile() {
         {/* ── IMMUNIZATIONS TAB ──────────────────────────────────────────────── */}
         {tab === "immunizations" && (
           <div className="space-y-4">
-            <div className="flex items-center gap-4 text-xs text-gray-500">
+            {/* Legend */}
+            <div className="flex items-center gap-5 text-xs text-gray-500 flex-wrap">
               <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-red-200 inline-block" />Overdue</span>
               <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-emerald-200 inline-block" />Completed</span>
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-gray-100 inline-block border" />No record</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-gray-200 inline-block" />Skipped</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-200 inline-block" />Exempt</span>
             </div>
+
             {CDC_VACCINES.map(vaccine => {
-              const exempt = immunizations.find(i => i.vaccine_name === vaccine.name)?.exempt;
+              // Find any existing record to get vaccine-level exempt flag
+              const anyRec = immunizations.find(i => i.vaccine_name === vaccine.name);
+              const isExempt = anyRec?.exempt ?? false;
+
+              async function setExempt(checked: boolean) {
+                // Update all existing doses for this vaccine, or create dose 1 record
+                const existing = immunizations.filter(i => i.vaccine_name === vaccine.name);
+                if (existing.length > 0) {
+                  await supabase.from("student_immunizations").update({ exempt: checked }).in("id", existing.map(e => e.id));
+                } else {
+                  await supabase.from("student_immunizations").insert({ student_id: id!, vaccine_name: vaccine.name, dose_number: 1, exempt: checked, skipped: false });
+                }
+                loadAll();
+              }
+
+              async function updateDose(doseNum: number, patch: Partial<{ administered_date: string | null; skipped: boolean }>) {
+                const rec = immMap[`${vaccine.name}:${doseNum}`];
+                if (rec) {
+                  await supabase.from("student_immunizations").update(patch).eq("id", rec.id);
+                } else {
+                  await supabase.from("student_immunizations").insert({
+                    student_id: id!, vaccine_name: vaccine.name, dose_number: doseNum,
+                    administered_date: patch.administered_date ?? null,
+                    skipped: patch.skipped ?? false,
+                    exempt: isExempt,
+                  });
+                }
+                loadAll();
+              }
+
               return (
                 <div key={vaccine.name} className="card overflow-hidden">
-                  <div className={`px-5 py-2.5 flex items-center justify-between ${exempt ? "bg-amber-50" : "bg-indigo-900"}`}>
-                    <span className={`text-sm font-semibold ${exempt ? "text-amber-800" : "text-white"}`}>{vaccine.name}</span>
-                    {exempt && <span className="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full font-medium">Exempt</span>}
+                  {/* Vaccine header */}
+                  <div className={`px-5 py-3 flex items-center justify-between ${isExempt ? "bg-amber-50 border-b border-amber-100" : "bg-indigo-900"}`}>
+                    <span className={`text-sm font-semibold ${isExempt ? "text-amber-800" : "text-white"}`}>{vaccine.name}</span>
+                    {canEdit ? (
+                      <label className={`flex items-center gap-2 text-xs cursor-pointer select-none ${isExempt ? "text-amber-700" : "text-indigo-200"}`}>
+                        <input
+                          type="checkbox"
+                          checked={isExempt}
+                          onChange={e => setExempt(e.target.checked)}
+                          className="rounded"
+                        />
+                        Exempt
+                      </label>
+                    ) : isExempt ? (
+                      <span className="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full font-medium">Exempt</span>
+                    ) : null}
                   </div>
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="bg-gray-50 border-b border-gray-100">
-                        <td className="px-5 py-2 text-gray-400 font-medium w-36">Source</td>
-                        {Array.from({ length: vaccine.doses }, (_, i) => (
-                          <td key={i} className="px-4 py-2 text-gray-400 font-medium text-center">Dose {i + 1}</td>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {/* Read-only row */}
-                      <tr className="border-b border-gray-50">
-                        <td className="px-5 py-3 font-medium text-gray-700">Student record</td>
+
+                  {/* Dose columns */}
+                  <div className={`grid text-xs ${isExempt ? "opacity-50 pointer-events-none" : ""}`}
+                    style={{ gridTemplateColumns: `140px repeat(${vaccine.doses}, 1fr)` }}>
+
+                    {/* Column headers */}
+                    <div className="bg-gray-50 px-4 py-2 text-gray-400 font-medium border-b border-r border-gray-100" />
+                    {Array.from({ length: vaccine.doses }, (_, i) => (
+                      <div key={i} className="bg-gray-50 px-3 py-2 text-gray-400 font-medium text-center border-b border-r border-gray-100 last:border-r-0">
+                        Dose {i + 1}
+                      </div>
+                    ))}
+
+                    {/* Student record row — read-only status badges */}
+                    <div className="px-4 py-3 font-medium text-gray-700 border-b border-r border-gray-100 flex items-center">Student record</div>
+                    {Array.from({ length: vaccine.doses }, (_, i) => {
+                      const rec = immMap[`${vaccine.name}:${i + 1}`];
+                      let badge: React.ReactNode;
+                      if (rec?.skipped) {
+                        badge = <span className="px-2 py-0.5 rounded text-xs bg-gray-200 text-gray-600 font-medium">Skipped</span>;
+                      } else if (rec?.administered_date) {
+                        badge = <span className="px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-700 font-medium">{new Date(rec.administered_date).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"2-digit"})}</span>;
+                      } else {
+                        badge = <span className="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700 font-medium">Overdue</span>;
+                      }
+                      return (
+                        <div key={i} className="px-3 py-3 text-center border-b border-r border-gray-100 last:border-r-0 flex items-center justify-center">
+                          {badge}
+                        </div>
+                      );
+                    })}
+
+                    {/* Edit row — date picker + Skip checkbox (admin/parent only) */}
+                    {canEdit && (
+                      <>
+                        <div className="px-4 py-2 text-gray-400 border-b border-r border-gray-100 flex items-center">Edit dates</div>
                         {Array.from({ length: vaccine.doses }, (_, i) => {
                           const rec = immMap[`${vaccine.name}:${i + 1}`];
-                          if (!rec) return <td key={i} className="px-4 py-3 text-center"><span className="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700 font-medium">Overdue</span></td>;
-                          if (rec.administered_date) return <td key={i} className="px-4 py-3 text-center"><span className="px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-700 font-medium">{new Date(rec.administered_date).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"2-digit"})}</span></td>;
-                          return <td key={i} className="px-4 py-3 text-center text-gray-300">—</td>;
-                        })}
-                      </tr>
-                      {/* Editable date inputs for admin/parent */}
-                      {canEdit && (
-                        <tr className="border-b border-gray-50 bg-gray-50/50">
-                          <td className="px-5 py-2 text-gray-400 text-xs">Edit dates</td>
-                          {Array.from({ length: vaccine.doses }, (_, i) => {
-                            const rec = immMap[`${vaccine.name}:${i + 1}`];
-                            return (
-                              <td key={i} className="px-3 py-2 text-center">
+                          return (
+                            <div key={i} className="px-3 py-2 border-b border-r border-gray-100 last:border-r-0 space-y-1.5">
+                              <input
+                                type="date"
+                                className="border border-gray-200 rounded px-1.5 py-0.5 text-xs w-full focus:outline-none focus:border-indigo-400 disabled:opacity-40"
+                                value={rec?.administered_date ?? ""}
+                                disabled={rec?.skipped}
+                                onChange={e => updateDose(i + 1, { administered_date: e.target.value || null, skipped: false })}
+                              />
+                              <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
                                 <input
-                                  type="date"
-                                  className="border border-gray-200 rounded px-1.5 py-0.5 text-xs w-full max-w-[120px] focus:outline-none focus:border-indigo-400"
-                                  value={rec?.administered_date ?? ""}
-                                  onChange={async e => {
-                                    const date = e.target.value;
-                                    if (rec) {
-                                      await supabase.from("student_immunizations").update({ administered_date: date || null }).eq("id", rec.id);
-                                    } else {
-                                      await supabase.from("student_immunizations").insert({ student_id: id!, vaccine_name: vaccine.name, dose_number: i + 1, administered_date: date || null, exempt: false });
-                                    }
-                                    loadAll();
-                                  }}
+                                  type="checkbox"
+                                  checked={rec?.skipped ?? false}
+                                  onChange={e => updateDose(i + 1, { skipped: e.target.checked, administered_date: e.target.checked ? null : (rec?.administered_date ?? null) })}
+                                  className="rounded"
                                 />
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      )}
-                      <tr>
-                        <td className="px-5 py-2 text-gray-400">CDC schedule</td>
-                        {vaccine.schedule.map((s, i) => (
-                          <td key={i} className="px-4 py-2 text-center text-gray-400">{s}</td>
-                        ))}
-                      </tr>
-                    </tbody>
-                  </table>
+                                Skip
+                              </label>
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+
+                    {/* CDC recommended schedule row */}
+                    <div className="px-4 py-2 text-gray-400 border-r border-gray-100 flex items-center">CDC schedule</div>
+                    {vaccine.schedule.map((s, i) => (
+                      <div key={i} className="px-3 py-2 text-center text-gray-400 border-r border-gray-100 last:border-r-0">{s}</div>
+                    ))}
+                  </div>
                 </div>
               );
             })}

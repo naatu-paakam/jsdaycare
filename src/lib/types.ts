@@ -144,6 +144,7 @@ export interface StudentImmunization {
   dose_number: number | null;
   administered_date: string | null;
   exempt: boolean;
+  skipped: boolean;
   notes: string | null;
 }
 
