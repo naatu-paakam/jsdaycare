@@ -23,20 +23,14 @@ test("TC-add-student-form: clicking Add Student shows form with Name and DOB fie
 
 test("TC-student-profile: clicking student name loads profile with tabs", async ({ page }) => {
   await page.goto("/students");
-  // Wait for table to load
-  await page.waitForSelector("table", { timeout: 10_000 });
+  // Wait for a real data row — not the loading placeholder (which spans all cols)
+  const realRow = page.locator("table tbody tr").filter({ hasNot: page.locator("td[colspan]") }).first();
+  await realRow.waitFor({ state: "visible", timeout: 10_000 });
 
-  const firstStudentLink = page.locator("table tbody tr:first-child td:first-child a");
-  const count = await firstStudentLink.count();
-  if (count === 0) {
-    test.skip();
-    return;
-  }
-
+  const firstStudentLink = realRow.locator("td:first-child a");
   await firstStudentLink.click();
   await page.waitForURL("**/students/**", { timeout: 10_000 });
 
-  // Profile and Contacts tabs
-  await expect(page.getByRole("tab", { name: /profile/i }).or(page.getByText(/profile/i))).toBeVisible();
-  await expect(page.getByRole("tab", { name: /contacts/i }).or(page.getByText(/contacts/i))).toBeVisible();
+  await expect(page.getByText(/profile/i).first()).toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText(/contacts/i).first()).toBeVisible();
 });

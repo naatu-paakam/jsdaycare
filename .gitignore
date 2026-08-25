@@ -5,3 +5,4 @@ dist/
 *.log
 .claude
 supabase/.temp/
+.notes

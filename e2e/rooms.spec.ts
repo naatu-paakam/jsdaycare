@@ -13,47 +13,32 @@ test("TC-room-list: /rooms loads with heading and New Room button", async ({ pag
 
 test("TC-room-detail: room detail shows Students, Parents, Feed tabs", async ({ page }) => {
   await page.goto("/rooms");
-  await page.waitForTimeout(2000); // wait for rooms to load
-
-  // Find first room link
+  // Wait for room cards to load from Supabase
   const roomLink = page.locator('a[href^="/rooms/"]').first();
-  const count = await roomLink.count();
-  if (count === 0) {
-    test.skip(); // No rooms seeded yet
-    return;
-  }
+  await roomLink.waitFor({ state: "visible", timeout: 10_000 });
 
   await roomLink.click();
   await page.waitForURL("**/rooms/**", { timeout: 10_000 });
 
-  // Tabs: "Students (N)", "Parents", "Feed"
-  await expect(page.getByRole("button", { name: /students/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /students/i })).toBeVisible({ timeout: 8_000 });
   await expect(page.getByRole("button", { name: /parents/i })).toBeVisible();
   await expect(page.getByRole("button", { name: /feed/i })).toBeVisible();
 });
 
 test("TC-checkin-buttons: room Students tab has Check in and Mark absent buttons", async ({ page }) => {
   await page.goto("/rooms");
-  await page.waitForTimeout(2000);
+  // Wait for all room links, then pick "Toddlers" which has active students
+  await page.locator('a[href^="/rooms/"]').first().waitFor({ state: "visible", timeout: 10_000 });
 
-  const roomLink = page.locator('a[href^="/rooms/"]').first();
-  const count = await roomLink.count();
-  if (count === 0) {
-    test.skip();
-    return;
-  }
+  const toddlerLink = page.locator('a[href^="/rooms/"]', { hasText: /toddler/i });
+  const count = await toddlerLink.count();
+  if (count === 0) { test.skip(); return; }
 
-  await roomLink.click();
+  await toddlerLink.click();
   await page.waitForURL("**/rooms/**", { timeout: 10_000 });
 
-  // Students tab is active by default
-  // If there are students, check in / mark absent buttons should be visible
-  const studentRows = page.locator("table tbody tr");
-  const rowCount = await studentRows.count();
-  if (rowCount === 0 || (await studentRows.first().textContent())?.includes("No students")) {
-    test.skip();
-    return;
-  }
+  // Wait for at least one real student row (not the loading/empty placeholder)
+  await expect(page.locator("table tbody tr").filter({ hasNot: page.locator("td[colspan]") }).first()).toBeVisible({ timeout: 8_000 });
 
   await expect(page.getByRole("button", { name: /check in/i }).first()).toBeVisible();
   await expect(page.getByRole("button", { name: /mark absent/i }).first()).toBeVisible();
