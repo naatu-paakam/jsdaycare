@@ -140,7 +140,7 @@ export default function RoomList() {
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-indigo-600">{room.students.length}</p>
+                    <p className="text-2xl font-bold text-orange-500">{room.students.length}</p>
                     <p className="text-xs text-gray-400">{room.capacity ? `/ ${room.capacity}` : "students"}</p>
                   </div>
                 </div>
@@ -151,7 +151,7 @@ export default function RoomList() {
                     s.photo_url ? (
                       <img key={s.id} src={s.photo_url} alt="" className="w-7 h-7 rounded-full object-cover border-2 border-white" />
                     ) : (
-                      <div key={s.id} className="w-7 h-7 rounded-full bg-indigo-100 border-2 border-white flex items-center justify-center text-indigo-600 font-semibold text-[10px]">
+                      <div key={s.id} className="w-7 h-7 rounded-full bg-orange-100 border-2 border-white flex items-center justify-center text-orange-500 font-semibold text-[10px]">
                         {s.first_name[0]}{s.last_name[0]}
                       </div>
                     )

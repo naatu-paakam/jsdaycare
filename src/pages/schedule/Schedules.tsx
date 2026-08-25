@@ -15,7 +15,7 @@ export default function Schedules() {
         <div className="grid grid-cols-2 gap-4">
           <div className="card p-6">
             <div className="flex items-center gap-2 mb-4">
-              <Calendar size={18} className="text-indigo-600" />
+              <Calendar size={18} className="text-orange-500" />
               <h2 className="font-semibold text-gray-900">Staff Schedules</h2>
             </div>
             <p className="text-sm text-gray-400">Staff scheduling by room and day of week. Full scheduler coming soon.</p>

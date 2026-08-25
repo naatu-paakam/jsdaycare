@@ -46,8 +46,8 @@ const ACTIVITY_ICONS: Record<ActivityType, React.ReactNode> = {
 };
 
 const ACTIVITY_COLORS: Record<ActivityType, string> = {
-  photo:        "bg-indigo-100 text-indigo-600",
-  video:        "bg-indigo-100 text-indigo-600",
+  photo:        "bg-orange-100 text-orange-500",
+  video:        "bg-orange-100 text-orange-500",
   food:         "bg-emerald-100 text-emerald-600",
   nap:          "bg-blue-100 text-blue-600",
   potty:        "bg-teal-100 text-teal-600",
@@ -114,14 +114,14 @@ function Section({
           {badge && <span className="text-xs text-gray-400 flex items-center gap-1"><Shield size={10} />{badge}</span>}
         </div>
         {canEdit && !editing && (
-          <button onClick={onEdit} className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
+          <button onClick={onEdit} className="text-xs text-orange-500 hover:underline flex items-center gap-1">
             <Pencil size={12} /> Edit
           </button>
         )}
         {editing && (
           <div className="flex gap-2">
             <button onClick={onCancel} className="text-xs text-gray-500 hover:text-gray-800 flex items-center gap-1"><X size={12} /> Cancel</button>
-            <button onClick={onSave} disabled={saving} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+            <button onClick={onSave} disabled={saving} className="text-xs text-orange-500 hover:text-orange-700 font-medium flex items-center gap-1">
               <Check size={12} />{saving ? "Saving…" : "Save"}
             </button>
           </div>
@@ -183,7 +183,7 @@ function EmergencyContactsSection({
           <p className="text-xs text-gray-400 mt-0.5">Minimum 2 required. Called if primary contacts are unreachable.</p>
         </div>
         {canEdit && !showAdd && (
-          <button onClick={startAdd} className="text-xs text-indigo-600 border border-indigo-200 rounded px-2.5 py-1.5 flex items-center gap-1 hover:bg-indigo-50">
+          <button onClick={startAdd} className="text-xs text-orange-500 border border-orange-200 rounded px-2.5 py-1.5 flex items-center gap-1 hover:bg-orange-50">
             <Plus size={13} /> Add emergency contact
           </button>
         )}
@@ -191,8 +191,8 @@ function EmergencyContactsSection({
 
       {/* Inline add / edit form */}
       {showAdd && (
-        <div className="px-5 py-4 border-b border-gray-100 bg-indigo-50 space-y-3">
-          <p className="text-xs font-medium text-indigo-700">{editId ? "Edit emergency contact" : "Add emergency contact"}</p>
+        <div className="px-5 py-4 border-b border-gray-100 bg-orange-50 space-y-3">
+          <p className="text-xs font-medium text-orange-600">{editId ? "Edit emergency contact" : "Add emergency contact"}</p>
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="text-xs font-medium text-gray-600 mb-1 block">Full name *</label>
@@ -238,7 +238,7 @@ function EmergencyContactsSection({
                 {canEdit && (
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
-                      <button onClick={() => startEdit(c)} className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
+                      <button onClick={() => startEdit(c)} className="text-xs text-orange-500 hover:underline flex items-center gap-1">
                         <Pencil size={11} /> Edit
                       </button>
                       <button onClick={() => remove(c.id)} className="text-gray-300 hover:text-red-500 transition-colors" title="Delete">
@@ -308,7 +308,7 @@ function CustomImmunizationSection({
           <p className="text-xs text-gray-400 mt-0.5">Vaccines not on the CDC schedule (e.g. travel vaccines, school-required extras)</p>
         </div>
         {canEdit && !showForm && (
-          <button onClick={() => setShowForm(true)} className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
+          <button onClick={() => setShowForm(true)} className="text-xs text-orange-500 hover:underline flex items-center gap-1">
             <Plus size={13} /> Add record
           </button>
         )}
@@ -316,7 +316,7 @@ function CustomImmunizationSection({
 
       {/* Add form */}
       {showForm && (
-        <div className="px-5 py-4 border-b border-gray-100 bg-indigo-50 space-y-3">
+        <div className="px-5 py-4 border-b border-gray-100 bg-orange-50 space-y-3">
           {error && <p className="text-xs text-red-600 bg-red-50 rounded px-2 py-1">{error}</p>}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="col-span-2">
@@ -390,7 +390,7 @@ function ContactAvatar({ contact, size = 8 }: { contact: StudentContact; size?: 
   const cls = `w-${size} h-${size} rounded-full object-cover shrink-0`;
   if (contact.photo_url) return <img src={contact.photo_url} alt={contact.full_name} className={cls} />;
   return (
-    <div className={`${cls} bg-indigo-100 flex items-center justify-center text-indigo-700 font-semibold text-xs`}>
+    <div className={`${cls} bg-orange-100 flex items-center justify-center text-orange-600 font-semibold text-xs`}>
       {contact.full_name?.[0]?.toUpperCase()}
     </div>
   );
@@ -493,9 +493,9 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
         {/* Photo upload */}
         <div className="flex items-center gap-4">
           {photoPreview ? (
-            <img src={photoPreview} alt="" className="w-16 h-16 rounded-full object-cover border-2 border-indigo-200" />
+            <img src={photoPreview} alt="" className="w-16 h-16 rounded-full object-cover border-2 border-orange-200" />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl border-2 border-dashed border-indigo-300">
+            <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 font-bold text-xl border-2 border-dashed border-orange-200">
               {form.full_name?.[0]?.toUpperCase() || "?"}
             </div>
           )}
@@ -561,9 +561,9 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
 
           {/* Pickup date range — shown only when can_pickup is checked */}
           {form.can_pickup && (
-            <div className="bg-indigo-50 rounded-lg p-4 space-y-3 border border-indigo-100">
-              <p className="text-xs font-medium text-indigo-700">Pickup Authorization Period (optional)</p>
-              <p className="text-xs text-indigo-500">Leave blank for permanent authorization. Set dates for temporary pickups (e.g. grandparent visiting for a week).</p>
+            <div className="bg-orange-50 rounded-lg p-4 space-y-3 border border-orange-100">
+              <p className="text-xs font-medium text-orange-600">Pickup Authorization Period (optional)</p>
+              <p className="text-xs text-orange-500">Leave blank for permanent authorization. Set dates for temporary pickups (e.g. grandparent visiting for a week).</p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-gray-600 mb-1 block">Valid From</label>
@@ -773,7 +773,7 @@ export default function StudentProfile() {
 
         {/* Header */}
         <div className="card p-5 flex items-center gap-5">
-          <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl shrink-0">
+          <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 font-bold text-xl shrink-0">
             {student.first_name[0]}{student.last_name[0]}
           </div>
           <div className="flex-1">
@@ -795,7 +795,7 @@ export default function StudentProfile() {
             </div>
             <p className="text-sm text-gray-500 mt-0.5">
               {student.dob && <>Born {fmt(student.dob)} · Age {age(student.dob)}</>}
-              {room && <span className="ml-3 text-indigo-600">📍 {room.name}</span>}
+              {room && <span className="ml-3 text-orange-500">📍 {room.name}</span>}
             </p>
           </div>
         </div>
@@ -805,7 +805,7 @@ export default function StudentProfile() {
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px whitespace-nowrap
-                ${tab === t.id ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-800"}`}>
+                ${tab === t.id ? "border-orange-500 text-orange-500" : "border-transparent text-gray-500 hover:text-gray-800"}`}>
               {t.label}
             </button>
           ))}
@@ -1073,7 +1073,7 @@ export default function StudentProfile() {
                   <div className="flex gap-2">
                     {isAdmin && (
                       <button onClick={() => setContactModal({ open: true })}
-                        className="text-xs text-indigo-600 border border-indigo-200 rounded px-2.5 py-1.5 flex items-center gap-1 hover:bg-indigo-50">
+                        className="text-xs text-orange-500 border border-orange-200 rounded px-2.5 py-1.5 flex items-center gap-1 hover:bg-orange-50">
                         <Plus size={13} /> Add contact
                       </button>
                     )}
@@ -1119,7 +1119,7 @@ export default function StudentProfile() {
                                 <div>
                                   <p className="font-medium text-gray-900 text-sm flex items-center gap-1 flex-wrap">
                                     {c.full_name}
-                                    {c.is_primary && <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full">Primary</span>}
+                                    {c.is_primary && <span className="text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full">Primary</span>}
                                   </p>
                                   <p className="text-xs text-gray-400 capitalize">{c.type}</p>
                                 </div>
@@ -1149,7 +1149,7 @@ export default function StudentProfile() {
                                 <div className="flex items-center gap-1.5">
                                   <span className="font-mono text-sm">{revealPin[c.id] ? (c.pin_code ?? "—") : "••••"}</span>
                                   <button onClick={() => setRevealPin(p => ({...p, [c.id]: !p[c.id]}))}
-                                    className="text-xs text-indigo-600 border border-indigo-200 rounded px-1.5 py-0.5 flex items-center gap-1 hover:bg-indigo-50 shrink-0">
+                                    className="text-xs text-orange-500 border border-orange-200 rounded px-1.5 py-0.5 flex items-center gap-1 hover:bg-orange-50 shrink-0">
                                     {revealPin[c.id] ? <><EyeOff size={9} />Hide</> : <><Eye size={9} />Reveal</>}
                                   </button>
                                 </div>
@@ -1165,7 +1165,7 @@ export default function StudentProfile() {
                                   {(c.portal_status ?? "not_signed_up").replace(/_/g, " ")}
                                 </span>
                                 {isAdmin && c.portal_status !== "signed_up" && c.email && (
-                                  <button onClick={() => sendInvite(c)} className="text-xs text-indigo-600 hover:underline w-fit">
+                                  <button onClick={() => sendInvite(c)} className="text-xs text-orange-500 hover:underline w-fit">
                                     Send invite →
                                   </button>
                                 )}
@@ -1175,7 +1175,7 @@ export default function StudentProfile() {
                             {canEdit && (
                               <td className="px-4 py-3">
                                 <button onClick={() => setContactModal({ open: true, contact: c })}
-                                  className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
+                                  className="text-xs text-orange-500 hover:underline flex items-center gap-1">
                                   <Pencil size={11} /> Edit
                                 </button>
                               </td>
@@ -1258,10 +1258,10 @@ export default function StudentProfile() {
               return (
                 <div key={vaccine.name} className="card overflow-hidden">
                   {/* Vaccine header */}
-                  <div className={`px-5 py-3 flex items-center justify-between ${isExempt ? "bg-amber-50 border-b border-amber-100" : "bg-indigo-900"}`}>
+                  <div className={`px-5 py-3 flex items-center justify-between ${isExempt ? "bg-amber-50 border-b border-amber-100" : "bg-orange-900"}`}>
                     <span className={`text-sm font-semibold ${isExempt ? "text-amber-800" : "text-white"}`}>{vaccine.name}</span>
                     {canEdit ? (
-                      <label className={`flex items-center gap-2 text-xs cursor-pointer select-none ${isExempt ? "text-amber-700" : "text-indigo-200"}`}>
+                      <label className={`flex items-center gap-2 text-xs cursor-pointer select-none ${isExempt ? "text-amber-700" : "text-orange-200"}`}>
                         <input
                           type="checkbox"
                           checked={isExempt}
@@ -1316,7 +1316,7 @@ export default function StudentProfile() {
                             <div key={i} className="px-3 py-2 border-b border-r border-gray-100 last:border-r-0 space-y-1.5">
                               <input
                                 type="date"
-                                className="border border-gray-200 rounded px-1.5 py-0.5 text-xs w-full focus:outline-none focus:border-indigo-400 disabled:opacity-40"
+                                className="border border-gray-200 rounded px-1.5 py-0.5 text-xs w-full focus:outline-none focus:border-orange-300 disabled:opacity-40"
                                 value={rec?.administered_date ?? ""}
                                 disabled={rec?.skipped}
                                 onChange={e => updateDose(i + 1, { administered_date: e.target.value || null, skipped: false })}
@@ -1413,7 +1413,7 @@ export default function StudentProfile() {
           <div className="card p-10 text-center text-gray-400 space-y-2">
             <p className="text-sm font-medium text-gray-600">Documents</p>
             <p className="text-sm">Immunization records, signed forms, and medical action plans.</p>
-            <Link to="/paperwork" className="text-sm text-indigo-600 hover:underline inline-block mt-2">
+            <Link to="/paperwork" className="text-sm text-orange-500 hover:underline inline-block mt-2">
               View all forms in Paperwork →
             </Link>
           </div>

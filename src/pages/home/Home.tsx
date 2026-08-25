@@ -177,7 +177,7 @@ export default function Home() {
           {/* Room Ratios */}
           <div className="lg:col-span-2 card">
             <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-              <DoorOpen size={16} className="text-indigo-600" />
+              <DoorOpen size={16} className="text-orange-500" />
               <h2 className="font-semibold text-gray-900 text-sm">Current Room Ratios</h2>
             </div>
             <div className="overflow-x-auto">

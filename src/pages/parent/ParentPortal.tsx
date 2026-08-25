@@ -58,11 +58,11 @@ export default function ParentPortal() {
   const child = children.find(c => c.id === selectedChild);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-purple-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
             <Baby size={18} className="text-white" />
           </div>
           <div>
@@ -100,7 +100,7 @@ export default function ParentPortal() {
                     key={c.id}
                     onClick={() => setSelectedChild(c.id)}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
-                      ${selectedChild === c.id ? "bg-indigo-600 text-white" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}
+                      ${selectedChild === c.id ? "bg-orange-500 text-white" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}
                   >
                     {c.first_name}
                   </button>
@@ -114,7 +114,7 @@ export default function ParentPortal() {
                 {child.photo_url ? (
                   <img src={child.photo_url} alt="" className="w-14 h-14 rounded-full object-cover" />
                 ) : (
-                  <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl">
+                  <div className="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 font-bold text-xl">
                     {child.first_name[0]}{child.last_name[0]}
                   </div>
                 )}
@@ -134,7 +134,7 @@ export default function ParentPortal() {
             {/* Today's activities */}
             <div className="card">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-                <Activity size={16} className="text-indigo-600" />
+                <Activity size={16} className="text-orange-500" />
                 <h3 className="font-semibold text-gray-900 text-sm">Today's Activity Feed</h3>
                 <span className="text-xs text-gray-400 ml-auto">
                   {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
@@ -147,7 +147,7 @@ export default function ParentPortal() {
                   activities.map(a => (
                     <div key={a.id} className="bg-gray-50 rounded-lg p-3">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wide capitalize">
+                        <span className="text-xs font-semibold text-orange-500 uppercase tracking-wide capitalize">
                           {a.activity_type.replace("_", " ")}
                         </span>
                         <span className="text-xs text-gray-400">

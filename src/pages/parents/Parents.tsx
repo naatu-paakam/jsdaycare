@@ -79,13 +79,13 @@ export default function Parents() {
                 <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50">
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-semibold text-xs">
+                      <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-semibold text-xs">
                         {c.full_name?.[0]?.toUpperCase()}
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">{c.full_name}</p>
                         {c.email && (
-                          <a href={`mailto:${c.email}`} className="text-xs text-indigo-600 flex items-center gap-1 hover:underline">
+                          <a href={`mailto:${c.email}`} className="text-xs text-orange-500 flex items-center gap-1 hover:underline">
                             <Mail size={11} />{c.email}
                           </a>
                         )}
@@ -95,7 +95,7 @@ export default function Parents() {
                   <td className="px-5 py-3 text-gray-600 capitalize">{c.type}</td>
                   <td className="px-5 py-3">
                     {c.student ? (
-                      <a href={`/students/${c.student.id}`} className="text-indigo-600 hover:underline flex items-center gap-1">
+                      <a href={`/students/${c.student.id}`} className="text-orange-500 hover:underline flex items-center gap-1">
                         {c.student.first_name} {c.student.last_name}
                         <ExternalLink size={11} />
                       </a>

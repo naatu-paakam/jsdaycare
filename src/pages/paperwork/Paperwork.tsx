@@ -58,7 +58,7 @@ export default function Paperwork() {
               key={t}
               onClick={() => setTab(t)}
               className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px capitalize
-                ${tab === t ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-800"}`}
+                ${tab === t ? "border-orange-500 text-orange-500" : "border-transparent text-gray-500 hover:text-gray-800"}`}
             >
               {t}
             </button>
@@ -77,7 +77,7 @@ export default function Paperwork() {
           <div className="space-y-3">
             {filtered.map(form => (
               <div key={form.id} className="card p-5 flex items-start gap-4 hover:shadow-sm transition-shadow">
-                <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600">
+                <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center text-orange-500">
                   <FileText size={18} />
                 </div>
                 <div className="flex-1">

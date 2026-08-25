@@ -57,12 +57,12 @@ export default function StaffList() {
                         <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-semibold text-xs">
                           {s.full_name?.[0] ?? "?"}
                         </div>
-                        <span className="font-medium text-gray-900 group-hover:text-indigo-600">{s.full_name ?? "Unnamed"}</span>
+                        <span className="font-medium text-gray-900 group-hover:text-orange-500">{s.full_name ?? "Unnamed"}</span>
                       </Link>
                     </td>
                     <td className="px-5 py-3">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium capitalize
-                        ${s.role === "admin" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-600"}`}>
+                        ${s.role === "admin" ? "bg-orange-100 text-orange-600" : "bg-gray-100 text-gray-600"}`}>
                         {s.role}
                       </span>
                     </td>

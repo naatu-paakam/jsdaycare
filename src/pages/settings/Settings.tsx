@@ -69,7 +69,7 @@ export default function Settings() {
             {[["Infants (0–12 mo)", "1:4"],["Toddlers (12–36 mo)", "1:6"],["Pre-K (3–5 yr)", "1:10"]].map(([label, ratio]) => (
               <div key={label} className="py-2.5 flex justify-between items-center">
                 <span className="text-gray-700">{label}</span>
-                <span className="font-mono text-indigo-600 font-medium">{ratio}</span>
+                <span className="font-mono text-orange-500 font-medium">{ratio}</span>
               </div>
             ))}
           </div>
@@ -79,7 +79,7 @@ export default function Settings() {
         <div className="card p-6 space-y-4">
           <h2 className="font-semibold text-gray-800">Forms & Compliance</h2>
           <p className="text-sm text-gray-500">Manage required enrollment forms and compliance alert rules in <strong>Paperwork → Settings</strong>.</p>
-          <a href="/paperwork" className="text-sm text-indigo-600 hover:underline">Go to Paperwork →</a>
+          <a href="/paperwork" className="text-sm text-orange-500 hover:underline">Go to Paperwork →</a>
         </div>
 
         {/* Account */}

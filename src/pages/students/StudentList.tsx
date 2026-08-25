@@ -142,11 +142,11 @@ export default function StudentList() {
                         {student.photo_url ? (
                           <img src={student.photo_url} alt="" className="w-8 h-8 rounded-full object-cover" />
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold text-xs">
+                          <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 font-semibold text-xs">
                             {student.first_name[0]}{student.last_name[0]}
                           </div>
                         )}
-                        <span className="font-medium text-gray-900 group-hover:text-indigo-600 transition-colors">
+                        <span className="font-medium text-gray-900 group-hover:text-orange-500 transition-colors">
                           {student.first_name} {student.last_name}
                           {student.preferred_name && <span className="text-gray-400 font-normal ml-1">"{student.preferred_name}"</span>}
                         </span>

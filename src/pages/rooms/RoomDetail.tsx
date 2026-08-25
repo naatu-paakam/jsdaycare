@@ -163,7 +163,7 @@ export default function RoomDetail() {
               key={t.id}
               onClick={() => setTab(t.id)}
               className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px
-                ${tab === t.id ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-800"}`}
+                ${tab === t.id ? "border-orange-500 text-orange-500" : "border-transparent text-gray-500 hover:text-gray-800"}`}
             >
               {t.label}
             </button>
@@ -191,10 +191,10 @@ export default function RoomDetail() {
                       <tr key={s.id} className="border-b border-gray-50 hover:bg-gray-50">
                         <td className="px-5 py-3">
                           <Link to={`/students/${s.id}`} className="flex items-center gap-3 group">
-                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold text-xs">
+                            <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 font-semibold text-xs">
                               {s.first_name[0]}{s.last_name[0]}
                             </div>
-                            <span className="font-medium text-gray-900 group-hover:text-indigo-600">{s.first_name} {s.last_name}</span>
+                            <span className="font-medium text-gray-900 group-hover:text-orange-500">{s.first_name} {s.last_name}</span>
                           </Link>
                         </td>
                         <td className="px-5 py-3">
@@ -246,7 +246,7 @@ export default function RoomDetail() {
             ) : (
               contacts.map(c => (
                 <div key={c.id} className="card p-4 flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold">
+                  <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 font-bold">
                     {c.full_name[0]}
                   </div>
                   <div className="flex-1">
@@ -286,7 +286,7 @@ export default function RoomDetail() {
                 <div key={a.id} className={`card p-4 ${a.staff_only ? "border-l-4 border-l-amber-400" : ""}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-indigo-500">{ACTIVITY_ICONS[a.activity_type]}</span>
+                      <span className="text-orange-500">{ACTIVITY_ICONS[a.activity_type]}</span>
                       <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide capitalize">
                         {a.activity_type.replace("_", " ")}
                       </span>

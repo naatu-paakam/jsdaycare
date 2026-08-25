@@ -66,7 +66,7 @@ export default function Reporting() {
 
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: "Active Students", value: totalStudents, icon: <Users size={20} />, color: "text-indigo-600 bg-indigo-50" },
+            { label: "Active Students", value: totalStudents, icon: <Users size={20} />, color: "text-orange-500 bg-orange-50" },
             { label: "Avg Daily Check-ins", value: avgCheckin, icon: <TrendingUp size={20} />, color: "text-emerald-600 bg-emerald-50" },
             { label: "Days Tracked", value: stats.length, icon: <Calendar size={20} />, color: "text-purple-600 bg-purple-50" },
           ].map(c => (
@@ -80,7 +80,7 @@ export default function Reporting() {
 
         <div className="card">
           <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-            <BarChart2 size={16} className="text-indigo-600" />
+            <BarChart2 size={16} className="text-orange-500" />
             <h2 className="font-semibold text-gray-900 text-sm">Attendance — Last 7 Days</h2>
           </div>
           <div className="overflow-x-auto">
@@ -112,7 +112,7 @@ export default function Reporting() {
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-2">
                             <div className="w-24 bg-gray-200 rounded-full h-1.5">
-                              <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: `${pct}%` }} />
+                              <div className="bg-orange-500 h-1.5 rounded-full" style={{ width: `${pct}%` }} />
                             </div>
                             <span className="text-gray-600">{pct}%</span>
                           </div>

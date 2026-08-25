@@ -8,7 +8,7 @@ import { SchoolCalendar, CalendarEventType } from "@/lib/types";
 const EVENT_COLORS: Record<CalendarEventType, string> = {
   holiday: "bg-red-100 text-red-700 border-red-200",
   closure:  "bg-orange-100 text-orange-700 border-orange-200",
-  event:    "bg-indigo-100 text-indigo-700 border-indigo-200",
+  event:    "bg-orange-100 text-orange-600 border-orange-200",
 };
 
 function daysInMonth(year: number, month: number) {
@@ -89,7 +89,7 @@ export default function CalendarPage() {
           <button onClick={() => { const d = new Date(viewYear, viewMonth - 1); setViewYear(d.getFullYear()); setViewMonth(d.getMonth()); }} className="p-1 rounded hover:bg-gray-100"><ChevronLeft size={18} /></button>
           <span className="text-base font-semibold text-gray-900 w-44 text-center">{monthLabel}</span>
           <button onClick={() => { const d = new Date(viewYear, viewMonth + 1); setViewYear(d.getFullYear()); setViewMonth(d.getMonth()); }} className="p-1 rounded hover:bg-gray-100"><ChevronRight size={18} /></button>
-          <button onClick={() => { setViewYear(today.getFullYear()); setViewMonth(today.getMonth()); }} className="text-xs text-indigo-600 hover:underline ml-2">Today</button>
+          <button onClick={() => { setViewYear(today.getFullYear()); setViewMonth(today.getMonth()); }} className="text-xs text-orange-500 hover:underline ml-2">Today</button>
         </div>
 
         {/* Grid */}
@@ -107,7 +107,7 @@ export default function CalendarPage() {
                 <div key={i} className={`min-h-[90px] p-1.5 border-r border-b border-gray-100 ${day === null ? "bg-gray-50" : ""}`}>
                   {day !== null && (
                     <>
-                      <span className={`inline-flex w-6 h-6 items-center justify-center text-xs font-medium rounded-full mb-1 ${isToday ? "bg-indigo-600 text-white" : "text-gray-700"}`}>{day}</span>
+                      <span className={`inline-flex w-6 h-6 items-center justify-center text-xs font-medium rounded-full mb-1 ${isToday ? "bg-orange-500 text-white" : "text-gray-700"}`}>{day}</span>
                       <div className="space-y-0.5">
                         {dayEvents.map(e => (
                           <div key={e.id} className={`text-xs px-1.5 py-0.5 rounded border flex items-start justify-between gap-1 ${EVENT_COLORS[e.event_type as CalendarEventType] ?? ""}`}>

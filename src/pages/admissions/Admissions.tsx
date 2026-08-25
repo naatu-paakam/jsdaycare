@@ -76,7 +76,7 @@ export default function Admissions() {
         <div className="flex gap-2">
           {(["waitlist","all"] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors capitalize ${filter === f ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors capitalize ${filter === f ? "bg-orange-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
               {f === "all" ? "All Students" : "Waitlist Only"}
             </button>
           ))}
@@ -103,7 +103,7 @@ export default function Admissions() {
                 return (
                   <tr key={s.id} className="border-b border-gray-50 hover:bg-gray-50">
                     <td className="px-5 py-3">
-                      <Link to={`/students/${s.id}`} className="font-medium text-gray-900 hover:text-indigo-600">
+                      <Link to={`/students/${s.id}`} className="font-medium text-gray-900 hover:text-orange-500">
                         {s.first_name} {s.last_name}
                       </Link>
                       {s.dob && <p className="text-xs text-gray-400">{new Date(s.dob).toLocaleDateString()}</p>}

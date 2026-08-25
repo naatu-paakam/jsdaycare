@@ -5,6 +5,8 @@ import {
   UtensilsCrossed, Settings, UserCheck, FileText, BarChart2,
   ChevronDown, ChevronRight, Building2, Baby, LogOut
 } from "lucide-react";
+
+const JS_JOY_LOGO = "https://cdn.builder.io/api/v1/image/assets%2F3e5d7cba4a39442dbacdba18064de92b%2F0ced3e0a6e0146d68409ab1369061a2d?format=webp&width=64";
 import { useAuth } from "@/lib/auth";
 
 interface NavItem {
@@ -55,7 +57,7 @@ function NavItemRow({ item, depth = 0 }: { item: NavItem; depth?: number }) {
         <button
           onClick={() => setOpen(o => !o)}
           className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-            ${open ? "text-indigo-600 bg-indigo-50" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"}`}
+            ${open ? "text-orange-500 bg-orange-50" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"}`}
           style={{ paddingLeft: `${12 + depth * 16}px` }}
         >
           <span className="text-gray-400">{item.icon}</span>
@@ -79,7 +81,7 @@ function NavItemRow({ item, depth = 0 }: { item: NavItem; depth?: number }) {
       className={({ isActive }) =>
         `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
         ${isActive
-          ? "text-indigo-700 bg-indigo-50 font-semibold"
+          ? "text-orange-700 bg-orange-50 font-semibold"
           : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
         }`
       }
@@ -109,8 +111,8 @@ export default function Sidebar() {
       {/* Logo + school switcher */}
       <div className="px-4 py-4 border-b border-gray-100">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
-            <Baby size={15} className="text-white" />
+          <div className="w-7 h-7 bg-orange-500 rounded-lg flex items-center justify-center shrink-0">
+            <img src={JS_JOY_LOGO} alt="JS Joy Family" className="w-6 h-6 object-contain rounded" />
           </div>
           <span className="font-bold text-gray-900 text-sm">JsDayCare</span>
         </div>
@@ -120,10 +122,10 @@ export default function Sidebar() {
           <button
             onClick={() => multiSchool && setSchoolOpen(o => !o)}
             className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors
-              ${multiSchool ? "hover:bg-indigo-50 cursor-pointer text-indigo-700 bg-indigo-50/60" : "cursor-default text-gray-600"}`}
+              ${multiSchool ? "hover:bg-orange-50 cursor-pointer text-orange-700 bg-orange-50/60" : "cursor-default text-gray-600"}`}
           >
             <span className="flex items-center gap-1.5 truncate">
-              <Building2 size={13} className="shrink-0 text-indigo-500" />
+              <Building2 size={13} className="shrink-0 text-orange-400" />
               <span className="truncate">{school?.name ?? "My School"}</span>
             </span>
             {multiSchool && (
@@ -139,11 +141,11 @@ export default function Sidebar() {
                   key={s.id}
                   onClick={async () => { await switchSchool(s.id); setSchoolOpen(false); }}
                   className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center gap-2
-                    ${s.id === school?.id ? "bg-indigo-50 text-indigo-700 font-semibold" : "text-gray-700 hover:bg-gray-50"}`}
+                    ${s.id === school?.id ? "bg-orange-50 text-orange-700 font-semibold" : "text-gray-700 hover:bg-gray-50"}`}
                 >
                   <Building2 size={11} className="shrink-0" />
                   <span className="truncate">{s.name}</span>
-                  {s.id === school?.id && <span className="ml-auto text-indigo-500 text-xs">✓</span>}
+                  {s.id === school?.id && <span className="ml-auto text-orange-400 text-xs">✓</span>}
                 </button>
               ))}
             </div>
@@ -161,7 +163,7 @@ export default function Sidebar() {
       {/* User */}
       <div className="border-t border-gray-100 px-3 py-3">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-semibold text-sm">
+          <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 font-semibold text-sm">
             {profile?.full_name?.[0]?.toUpperCase() ?? "?"}
           </div>
           <div className="flex-1 min-w-0">
