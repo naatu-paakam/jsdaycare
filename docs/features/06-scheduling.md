@@ -82,15 +82,29 @@ Two sections in the weekly grid:
 ## Menus (under My School nav)
 School meal menus are managed here and tie into the Food activity type in daily reports.
 
-| Field | Notes |
-|---|---|
-| Week | Which week the menu applies to |
-| Meal type | Breakfast / Lunch / Snack |
-| Day | Mon – Fri |
-| Items | What is being served (free text or configurable list) |
+### Food Item Library
+- Reusable list of food items (e.g. "Brown rice", "Apple slices", "Whole milk")
+- Admin builds and maintains the library
+- Items are tagged: Grain / Protein / Fruit / Vegetable / Dairy / Other
+- Allergy flags per item (contains nuts, gluten, dairy, etc.)
+- When staff log a Food activity, Meal items dropdown pulls from the library
 
-- When staff log a Food activity, Meal items dropdown pulls from today's menu
-- Admin sets the weekly menu in advance
+### Menu Templates
+- Save a named menu template (e.g. "Week A", "Week B")
+- Template has meal slots: Breakfast / Lunch / AM Snack / PM Snack per day (Mon–Fri)
+- Each slot filled from Food Item Library
+- Reuse templates across weeks
+
+### Rotating Meals
+- Set a rotation cycle (e.g. 2-week rotation: Week A → Week B → repeat)
+- System auto-fills the upcoming week's menu from the rotation
+- Admin can override individual days as needed
+
+### Weekly Menu View
+- Calendar-style grid: days (Mon–Fri) × meal slots (Breakfast, Lunch, AM Snack, PM Snack)
+- Each cell shows items for that day/meal
+- Print-friendly view for posting in the kitchen / on bulletin board
+- When staff log a Food activity, Meal items dropdown pulls from today's active menu
 
 ---
 
