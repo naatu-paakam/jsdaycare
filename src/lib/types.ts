@@ -1,5 +1,5 @@
 // ============================================================
-// Core Types for JsDayCare
+// Core Types for DayCarePortal
 // ============================================================
 
 export type Role = "admin" | "staff" | "parent";

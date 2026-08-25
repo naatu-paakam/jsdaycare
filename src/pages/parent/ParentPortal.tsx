@@ -66,7 +66,7 @@ export default function ParentPortal() {
             <Baby size={18} className="text-white" />
           </div>
           <div>
-            <span className="font-bold text-gray-900">JsDayCare</span>
+            <span className="font-bold text-gray-900">DayCarePortal</span>
             <span className="text-gray-400 ml-2 text-sm">Parent Portal</span>
           </div>
         </div>

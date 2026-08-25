@@ -48,7 +48,7 @@ export default function Login() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-500 rounded-2xl mb-4">
             <Baby size={32} className="text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">JsDayCare</h1>
+          <h1 className="text-2xl font-bold text-gray-900">DayCarePortal</h1>
           <p className="text-gray-500 mt-1 text-sm">Sign in to your account</p>
         </div>
 

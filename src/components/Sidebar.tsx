@@ -111,10 +111,10 @@ export default function Sidebar() {
       {/* Logo + school switcher */}
       <div className="px-4 py-4 border-b border-gray-100">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-7 h-7 bg-orange-500 rounded-lg flex items-center justify-center shrink-0">
-            <img src={JS_JOY_LOGO} alt="JS Joy Family" className="w-6 h-6 object-contain rounded" />
+          <div className="w-8 h-8 shrink-0">
+            <img src={JS_JOY_LOGO} alt="JS Joy Family" className="w-8 h-8 object-contain rounded-full" />
           </div>
-          <span className="font-bold text-gray-900 text-sm">JsDayCare</span>
+          <span className="font-bold text-gray-900 text-sm">DayCarePortal</span>
         </div>
 
         {/* School switcher — shown always; dropdown only if multiple schools */}
