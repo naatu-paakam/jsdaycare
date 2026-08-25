@@ -11,7 +11,7 @@ test("TC-room-list: /rooms loads with heading and New Room button", async ({ pag
   await expect(page.getByRole("button", { name: /new room/i })).toBeVisible();
 });
 
-test("TC-room-detail: room detail shows Students, Parents, Feed tabs", async ({ page }) => {
+test("TC-room-detail: room detail shows Students and Feed tabs (no Parents)", async ({ page }) => {
   await page.goto("/rooms");
   // Wait for room cards to load from Supabase
   const roomLink = page.locator('a[href^="/rooms/"]').first();
@@ -21,8 +21,8 @@ test("TC-room-detail: room detail shows Students, Parents, Feed tabs", async ({ 
   await page.waitForURL("**/rooms/**", { timeout: 10_000 });
 
   await expect(page.getByRole("button", { name: /students/i })).toBeVisible({ timeout: 8_000 });
-  await expect(page.getByRole("button", { name: /parents/i })).toBeVisible();
   await expect(page.getByRole("button", { name: /feed/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^parents$/i })).not.toBeVisible();
 });
 
 test("TC-checkin-buttons: room Students tab has Check in and Mark absent buttons", async ({ page }) => {
