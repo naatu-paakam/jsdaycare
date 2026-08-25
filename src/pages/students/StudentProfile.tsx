@@ -485,6 +485,8 @@ export default function StudentProfile() {
 
   const [student,      setStudent]      = useState<Student | null>(null);
   const [room,         setRoom]         = useState<Room | null>(null);
+  const [allRooms,     setAllRooms]     = useState<Room[]>([]);
+  const [draftRoom,    setDraftRoom]    = useState<string>("");
   const [contacts,     setContacts]     = useState<StudentContact[]>([]);
   const [emergency,    setEmergency]    = useState<StudentEmergencyContact[]>([]);
   const [enrollment,   setEnrollment]   = useState<StudentEnrollmentDetails | null>(null);
@@ -522,11 +524,27 @@ export default function StudentProfile() {
     ]);
     setStudent(s); setContacts(c ?? []); setEmergency(e ?? []);
     setEnrollment(enr ?? null); setImmunizations(imm ?? []);
+    // Fetch current homeroom
     if (s?.homeroom_id) {
       const { data: r } = await supabase.from("rooms").select("*").eq("id", s.homeroom_id).single();
       setRoom(r);
+    } else {
+      setRoom(null);
+    }
+    // Always fetch all rooms so admin can reassign
+    if (authProfile?.school_id) {
+      const { data: rooms } = await supabase.from("rooms").select("*").eq("school_id", authProfile.school_id).order("name");
+      setAllRooms(rooms ?? []);
     }
     setLoading(false);
+  }
+
+  async function saveRoom() {
+    setSaving(true);
+    await supabase.from("students").update({ homeroom_id: draftRoom || null }).eq("id", id!);
+    await loadAll();
+    setEditSection(null);
+    setSaving(false);
   }
 
   async function loadActivities(date: string) {
@@ -790,14 +808,49 @@ export default function StudentProfile() {
 
             {/* Right column */}
             <div className="space-y-5">
-              {/* Rooms — admin only */}
+              {/* Rooms — admin only, editable */}
               {isAdmin && (
-                <Section title="Rooms" badge="Not visible to parents" canEdit={false}
-                  editing={false} onEdit={() => {}} onSave={() => {}} onCancel={() => {}}>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field label="Homeroom" value={room?.name} />
-                    <Field label="Others"   value="—" />
-                  </div>
+                <Section title="Rooms" badge="Not visible to parents" canEdit={isAdmin}
+                  editing={editSection === "room"} saving={saving}
+                  onEdit={() => { setDraftRoom(student.homeroom_id ?? ""); setEditSection("room"); }}
+                  onSave={saveRoom} onCancel={() => setEditSection(null)}>
+                  {editSection === "room" ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs text-gray-400 uppercase tracking-wide font-medium mb-1 block">Homeroom</label>
+                        <select
+                          className="input w-full"
+                          value={draftRoom}
+                          onChange={e => setDraftRoom(e.target.value)}
+                        >
+                          <option value="">— No room assigned —</option>
+                          {allRooms.map(r => (
+                            <option key={r.id} value={r.id}>{r.name}</option>
+                          ))}
+                        </select>
+                        {draftRoom && (() => {
+                          const selected = allRooms.find(r => r.id === draftRoom);
+                          return selected ? (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Age {selected.age_range_min_months ?? "?"}–{selected.age_range_max_months ?? "?"} months · Capacity {selected.capacity ?? "?"} · Ratio 1:{selected.ratio_children ?? "?"}
+                            </p>
+                          ) : null;
+                        })()}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Field label="Homeroom" value={room?.name} />
+                        {room && (
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            Age {room.age_range_min_months ?? "?"}–{room.age_range_max_months ?? "?"} mo · Cap {room.capacity ?? "?"}
+                          </p>
+                        )}
+                      </div>
+                      <Field label="Others" value="—" />
+                    </div>
+                  )}
                 </Section>
               )}
 
@@ -879,8 +932,6 @@ export default function StudentProfile() {
 
         {/* ── CONTACTS TAB ───────────────────────────────────────────────────── */}
         {tab === "contacts" && (() => {
-          const pickupContacts = contacts.filter(c => c.can_pickup);
-          const otherContacts  = contacts.filter(c => !c.can_pickup);
           const today = new Date().toISOString().split("T")[0];
 
           function pickupStatus(c: StudentContact): { label: string; color: string } {
@@ -890,88 +941,125 @@ export default function StudentProfile() {
             return { label: "Active", color: "bg-emerald-100 text-emerald-700" };
           }
 
+          async function sendInvite(c: StudentContact) {
+            // Mark as invited — in production this would trigger an email
+            await supabase.from("student_contacts").update({ portal_status: "invited" }).eq("id", c.id);
+            loadAll();
+          }
+
           return (
             <div className="space-y-6">
-              {/* ── Approved Pickup List ── */}
+              {/* ── All Contacts — single unified table ── */}
               <div className="card overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                   <div>
-                    <h3 className="font-semibold text-gray-900 text-sm">Approved Pickup List</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">People authorized to pick up this child. Photo required for identity verification.</p>
+                    <h3 className="font-semibold text-gray-900 text-sm">Contacts</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">Parents, guardians, and approved pickup people. Pickup rows are highlighted.</p>
                   </div>
-                  {canEdit && (
-                    <button onClick={() => setContactModal({ open: true })}
-                      className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1">
-                      <Plus size={13} /> Add approved pickup
-                    </button>
-                  )}
+                  <div className="flex gap-2">
+                    {isAdmin && (
+                      <button onClick={() => setContactModal({ open: true })}
+                        className="text-xs text-indigo-600 border border-indigo-200 rounded px-2.5 py-1.5 flex items-center gap-1 hover:bg-indigo-50">
+                        <Plus size={13} /> Add contact
+                      </button>
+                    )}
+                    {canEdit && (
+                      <button onClick={() => setContactModal({ open: true, contact: { can_pickup: true } as StudentContact })}
+                        className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1">
+                        <Plus size={13} /> Add pickup
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                {pickupContacts.length === 0 ? (
-                  <div className="px-5 py-8 text-center text-gray-400 text-sm">
-                    No approved pickups yet — add one above
-                  </div>
+                {contacts.length === 0 ? (
+                  <div className="px-5 py-8 text-center text-gray-400 text-sm">No contacts yet</div>
                 ) : (
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50">
-                        <th className="px-5 py-3 font-medium">Contact</th>
-                        <th className="px-5 py-3 font-medium">Phone</th>
-                        <th className="px-5 py-3 font-medium">Email</th>
-                        <th className="px-5 py-3 font-medium">Valid Period</th>
-                        <th className="px-5 py-3 font-medium">Status</th>
-                        {isAdmin && <th className="px-5 py-3 font-medium">Check-In Code</th>}
-                        {canEdit && <th className="px-5 py-3 font-medium" />}
+                        <th className="px-4 py-3 font-medium">Contact</th>
+                        <th className="px-4 py-3 font-medium">Phone / Email</th>
+                        <th className="px-4 py-3 font-medium">Pickup / Valid period</th>
+                        {isAdmin && <th className="px-4 py-3 font-medium">Check-in code</th>}
+                        <th className="px-4 py-3 font-medium">Portal</th>
+                        {canEdit && <th className="px-4 py-3 font-medium" />}
                       </tr>
                     </thead>
                     <tbody>
-                      {pickupContacts.map(c => {
-                        const ps = pickupStatus(c);
+                      {contacts.map(c => {
+                        const ps = c.can_pickup ? pickupStatus(c) : null;
                         return (
-                          <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50">
-                            <td className="px-5 py-3">
+                          <tr key={c.id} className={`border-b border-gray-50 hover:bg-gray-50 ${c.can_pickup ? "bg-emerald-50/40" : ""}`}>
+                            {/* Name + photo */}
+                            <td className="px-4 py-3">
                               <div className="flex items-center gap-3">
-                                {/* Photo with warning if missing */}
                                 <div className="relative">
-                                  <ContactAvatar contact={c} size={10} />
-                                  {!c.photo_url && (
-                                    <span title="Photo required for pickup" className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center">
-                                      <AlertTriangle size={9} className="text-white" />
+                                  <ContactAvatar contact={c} size={9} />
+                                  {c.can_pickup && !c.photo_url && (
+                                    <span title="Photo required for pickup" className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-amber-400 rounded-full flex items-center justify-center">
+                                      <AlertTriangle size={8} className="text-white" />
                                     </span>
                                   )}
                                 </div>
                                 <div>
-                                  <p className="font-medium text-gray-900">
+                                  <p className="font-medium text-gray-900 text-sm flex items-center gap-1 flex-wrap">
                                     {c.full_name}
-                                    {c.is_primary && <span className="ml-1.5 text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full">Primary</span>}
+                                    {c.is_primary && <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full">Primary</span>}
                                   </p>
                                   <p className="text-xs text-gray-400 capitalize">{c.type}</p>
                                 </div>
                               </div>
                             </td>
-                            <td className="px-5 py-3 text-xs text-gray-600">{c.phone || "—"}</td>
-                            <td className="px-5 py-3 text-xs text-gray-600">{c.email || "—"}</td>
-                            <td className="px-5 py-3 text-xs text-gray-600">
-                              {c.pickup_valid_from || c.pickup_valid_to
-                                ? <>{c.pickup_valid_from ? fmt(c.pickup_valid_from) : "—"} → {c.pickup_valid_to ? fmt(c.pickup_valid_to) : "ongoing"}</>
-                                : <span className="text-gray-400">Permanent</span>}
+                            {/* Phone / Email */}
+                            <td className="px-4 py-3 text-xs text-gray-600">
+                              <div>{c.phone || "—"}</div>
+                              <div className="text-gray-400">{c.email || ""}</div>
                             </td>
-                            <td className="px-5 py-3">
-                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${ps.color}`}>{ps.label}</span>
+                            {/* Pickup + valid period */}
+                            <td className="px-4 py-3 text-xs">
+                              {c.can_pickup ? (
+                                <div className="space-y-0.5">
+                                  {ps && <span className={`inline-flex text-xs font-medium px-2 py-0.5 rounded-full ${ps.color}`}>{ps.label}</span>}
+                                  <div className="text-gray-500">
+                                    {c.pickup_valid_from || c.pickup_valid_to
+                                      ? <>{c.pickup_valid_from ? fmt(c.pickup_valid_from) : "—"} → {c.pickup_valid_to ? fmt(c.pickup_valid_to) : "ongoing"}</>
+                                      : "Permanent"}
+                                  </div>
+                                </div>
+                              ) : <span className="text-gray-300">—</span>}
                             </td>
+                            {/* Check-in code (admin only) */}
                             {isAdmin && (
-                              <td className="px-5 py-3">
+                              <td className="px-4 py-3">
                                 <div className="flex items-center gap-1.5">
                                   <span className="font-mono text-sm">{revealPin[c.id] ? (c.pin_code ?? "—") : "••••"}</span>
                                   <button onClick={() => setRevealPin(p => ({...p, [c.id]: !p[c.id]}))}
-                                    className="text-xs text-indigo-600 border border-indigo-200 rounded px-1.5 py-0.5 flex items-center gap-1 hover:bg-indigo-50">
-                                    {revealPin[c.id] ? <><EyeOff size={10} />Hide</> : <><Eye size={10} />Reveal</>}
+                                    className="text-xs text-indigo-600 border border-indigo-200 rounded px-1.5 py-0.5 flex items-center gap-1 hover:bg-indigo-50 shrink-0">
+                                    {revealPin[c.id] ? <><EyeOff size={9} />Hide</> : <><Eye size={9} />Reveal</>}
                                   </button>
                                 </div>
                               </td>
                             )}
+                            {/* Portal + Send Invite */}
+                            <td className="px-4 py-3">
+                              <div className="flex flex-col gap-1">
+                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize w-fit
+                                  ${c.portal_status === "signed_up" ? "bg-emerald-100 text-emerald-700" :
+                                    c.portal_status === "invited"   ? "bg-amber-100 text-amber-700" :
+                                    "bg-gray-100 text-gray-500"}`}>
+                                  {(c.portal_status ?? "not_signed_up").replace(/_/g, " ")}
+                                </span>
+                                {isAdmin && c.portal_status !== "signed_up" && c.email && (
+                                  <button onClick={() => sendInvite(c)} className="text-xs text-indigo-600 hover:underline w-fit">
+                                    Send invite →
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                            {/* Edit */}
                             {canEdit && (
-                              <td className="px-5 py-3">
+                              <td className="px-4 py-3">
                                 <button onClick={() => setContactModal({ open: true, contact: c })}
                                   className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
                                   <Pencil size={11} /> Edit
@@ -984,74 +1072,6 @@ export default function StudentProfile() {
                     </tbody>
                   </table>
                 )}
-              </div>
-
-              {/* ── All Contacts (non-pickup) ── */}
-              <div className="card overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                  <h3 className="font-semibold text-gray-900 text-sm">All Contacts</h3>
-                  {canEdit && (
-                    <button onClick={() => setContactModal({ open: true })}
-                      className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
-                      <Plus size={13} /> Add contact
-                    </button>
-                  )}
-                </div>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50">
-                      <th className="px-5 py-3 font-medium">Contact</th>
-                      <th className="px-5 py-3 font-medium">Email</th>
-                      <th className="px-5 py-3 font-medium">Phone</th>
-                      <th className="px-5 py-3 font-medium">Pickup</th>
-                      <th className="px-5 py-3 font-medium">Portal</th>
-                      {canEdit && <th className="px-5 py-3 font-medium" />}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {contacts.length === 0 ? (
-                      <tr><td colSpan={6} className="px-5 py-6 text-center text-gray-400">No contacts added yet</td></tr>
-                    ) : contacts.map(c => (
-                      <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50">
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-3">
-                            <ContactAvatar contact={c} size={8} />
-                            <div>
-                              <p className="font-medium text-gray-900 text-sm">
-                                {c.full_name}
-                                {c.is_primary && <span className="ml-1.5 text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full">Primary</span>}
-                              </p>
-                              <p className="text-xs text-gray-400 capitalize">{c.type}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-5 py-3 text-xs text-gray-600">{c.email || "—"}</td>
-                        <td className="px-5 py-3 text-xs text-gray-600">{c.phone || "—"}</td>
-                        <td className="px-5 py-3">
-                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${c.can_pickup ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
-                            {c.can_pickup ? "Approved" : "No"}
-                          </span>
-                        </td>
-                        <td className="px-5 py-3">
-                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize
-                            ${c.portal_status === "signed_up" ? "bg-emerald-100 text-emerald-700" :
-                              c.portal_status === "invited"   ? "bg-amber-100 text-amber-700" :
-                              "bg-gray-100 text-gray-500"}`}>
-                            {(c.portal_status ?? "not_signed_up").replace(/_/g, " ")}
-                          </span>
-                        </td>
-                        {canEdit && (
-                          <td className="px-5 py-3">
-                            <button onClick={() => setContactModal({ open: true, contact: c })}
-                              className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
-                              <Pencil size={11} /> Edit
-                            </button>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
 
               {/* ── Emergency Contacts ── */}

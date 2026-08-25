@@ -45,6 +45,21 @@ test.describe("Student profile tabs", () => {
     await expect(page.getByText("Enrollment details")).toBeVisible();
   });
 
+  test("TC-rooms-section-edit: admin can edit room assignment via dropdown", async ({ page }) => {
+    await page.getByText("Rooms").waitFor({ timeout: 8_000 });
+    // Click Edit on the Rooms section
+    const roomsSection = page.locator("div.card").filter({ hasText: "Rooms" }).first();
+    await roomsSection.locator("button:has-text('Edit')").click();
+    // Dropdown with room options should appear
+    const select = roomsSection.locator("select");
+    await expect(select).toBeVisible({ timeout: 5_000 });
+    const opts = await select.locator("option").count();
+    expect(opts).toBeGreaterThan(1); // at least "No room" + real rooms
+    // Cancel
+    await roomsSection.locator("button:has-text('Cancel')").click();
+    await expect(select).not.toBeVisible();
+  });
+
   test("TC-profile-tab-edit-button: admin sees Edit buttons on profile sections", async ({ page }) => {
     await page.getByText("Personal information").waitFor({ timeout: 8_000 });
     // Edit links are text-only "Edit" with a Pencil icon — match by containing text
@@ -69,35 +84,40 @@ test.describe("Student profile tabs", () => {
     await expect(page.locator("button:has-text('Edit')").first()).toBeVisible({ timeout: 5_000 });
   });
 
-  test("TC-contacts-tab: Contacts tab shows Approved Pickup section and All Contacts", async ({ page }) => {
+  test("TC-contacts-tab: Contacts tab shows unified table with all contacts", async ({ page }) => {
     await page.getByRole("button", { name: /^contacts$/i }).click();
-    await expect(page.getByText("Approved Pickup List")).toBeVisible({ timeout: 8_000 });
-    await expect(page.getByText("All Contacts")).toBeVisible();
+    await expect(page.getByText("Contacts").first()).toBeVisible({ timeout: 8_000 });
     await expect(page.locator("table").first()).toBeVisible();
   });
 
-  test("TC-contacts-approved-pickup-add: Add approved pickup button opens modal", async ({ page }) => {
+  test("TC-contacts-checkin-code-all: Check-in code Reveal shown for all contacts (admin)", async ({ page }) => {
     await page.getByRole("button", { name: /^contacts$/i }).click();
-    await page.getByText("Approved Pickup List").waitFor({ timeout: 8_000 });
-    await page.getByRole("button", { name: /add approved pickup/i }).click();
-    await expect(page.getByRole("heading", { name: /add contact/i })).toBeVisible({ timeout: 5_000 });
-    // Pickup authorization date fields should be visible (can_pickup is pre-checked)
-    await expect(page.getByText(/pickup authorization period/i)).toBeVisible();
+    await page.locator("h3:has-text('Contacts')").first().waitFor({ timeout: 8_000 });
+    await expect(page.locator("button:has-text('Reveal')").first()).toBeVisible();
   });
 
-  test("TC-contacts-approved-pickup-dates: Pickup modal shows valid from/to date fields", async ({ page }) => {
+  test("TC-contacts-add-pickup-modal: Add pickup button opens modal with pickup date fields", async ({ page }) => {
     await page.getByRole("button", { name: /^contacts$/i }).click();
-    await page.getByText("Approved Pickup List").waitFor({ timeout: 8_000 });
-    await page.getByRole("button", { name: /add approved pickup/i }).click();
-    await page.getByText(/pickup authorization period/i).waitFor({ timeout: 5_000 });
+    await page.locator("h3:has-text('Contacts')").first().waitFor({ timeout: 8_000 });
+    await page.getByRole("button", { name: /add pickup/i }).click();
+    await expect(page.getByRole("heading", { name: /add contact/i })).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText(/pickup authorization period/i)).toBeVisible();
     await expect(page.getByText("Valid From")).toBeVisible();
     await expect(page.getByText("Valid To")).toBeVisible();
   });
 
-  test("TC-contacts-photo-upload: contact modal has photo upload", async ({ page }) => {
+  test("TC-contacts-send-invite: Send invite shown for contacts without portal access", async ({ page }) => {
     await page.getByRole("button", { name: /^contacts$/i }).click();
-    await page.getByText("Approved Pickup List").waitFor({ timeout: 8_000 });
-    await page.getByRole("button", { name: /add approved pickup/i }).click();
+    await page.locator("h3:has-text('Contacts')").first().waitFor({ timeout: 8_000 });
+    const inviteLinks = page.getByText("Send invite →");
+    const count = await inviteLinks.count();
+    expect(count).toBeGreaterThan(0);
+  });
+
+  test("TC-contacts-photo-upload: Add contact modal has photo upload section", async ({ page }) => {
+    await page.getByRole("button", { name: /^contacts$/i }).click();
+    await page.locator("h3:has-text('Contacts')").first().waitFor({ timeout: 8_000 });
+    await page.getByRole("button", { name: /add pickup/i }).click();
     await page.getByRole("heading", { name: /add contact/i }).waitFor({ timeout: 5_000 });
     await expect(page.getByText(/profile photo/i)).toBeVisible();
     await expect(page.getByText(/upload photo/i)).toBeVisible();

@@ -15,6 +15,7 @@ const PORTAL_BADGE: Record<string, string> = {
   not_signed_up:"bg-gray-100 text-gray-500",
 };
 
+// /parents page = school-wide portal access overview (not per-student contact list)
 export default function Parents() {
   const { profile } = useAuth();
   const [contacts, setContacts] = useState<ContactRow[]>([]);
