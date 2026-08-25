@@ -16,7 +16,8 @@ test.describe("Admin — left nav links", () => {
 
   test("TC-sidebar-myschool: My School expands", async ({ page }) => {
     await page.goto("/home");
-    const mySchool = page.getByRole("button", { name: /my school/i });
+    // The school section button shows actual school name (or "My School" as fallback)
+    const mySchool = page.locator("nav button").filter({ hasText: /js joy|my school/i }).first();
     await mySchool.click();
     await expect(page.getByRole("link", { name: /^students$/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /^rooms$/i })).toBeVisible();
@@ -28,7 +29,7 @@ test.describe("Admin — left nav links", () => {
 
   test("TC-nav-students: navigates to /students", async ({ page }) => {
     await page.goto("/home");
-    await page.getByRole("button", { name: /my school/i }).click();
+    await page.locator("nav button").filter({ hasText: /js joy|my school/i }).first().click();
     await page.getByRole("link", { name: /^students$/i }).click();
     await expect(page).toHaveURL(/\/students/);
     await expect(page.getByRole("heading", { name: /students/i })).toBeVisible();
@@ -36,14 +37,14 @@ test.describe("Admin — left nav links", () => {
 
   test("TC-nav-parents: Parents link removed (contacts managed per-student)", async ({ page }) => {
     await page.goto("/home");
-    await page.getByRole("button", { name: /my school/i }).click();
+    await page.locator("nav button").filter({ hasText: /js joy|my school/i }).first().click();
     // Parents link should NOT be in the sidebar (removed — contacts are per-student)
     await expect(page.getByRole("link", { name: /^parents$/i })).not.toBeVisible();
   });
 
   test("TC-nav-rooms: navigates to /rooms", async ({ page }) => {
     await page.goto("/home");
-    await page.getByRole("button", { name: /my school/i }).click();
+    await page.locator("nav button").filter({ hasText: /js joy|my school/i }).first().click();
     await page.getByRole("link", { name: /^rooms$/i }).click();
     await expect(page).toHaveURL(/\/rooms/);
     await expect(page.getByRole("heading", { name: /rooms/i })).toBeVisible();
@@ -51,7 +52,7 @@ test.describe("Admin — left nav links", () => {
 
   test("TC-nav-calendar: navigates to /calendar", async ({ page }) => {
     await page.goto("/home");
-    await page.getByRole("button", { name: /my school/i }).click();
+    await page.locator("nav button").filter({ hasText: /js joy|my school/i }).first().click();
     await page.getByRole("link", { name: /^calendar$/i }).click();
     await expect(page).toHaveURL(/\/calendar/);
     await expect(page.getByRole("heading", { name: /calendar/i })).toBeVisible();
@@ -59,7 +60,7 @@ test.describe("Admin — left nav links", () => {
 
   test("TC-nav-schedules: navigates to /schedule", async ({ page }) => {
     await page.goto("/home");
-    await page.getByRole("button", { name: /my school/i }).click();
+    await page.locator("nav button").filter({ hasText: /js joy|my school/i }).first().click();
     await page.getByRole("link", { name: /^schedules$/i }).click();
     await expect(page).toHaveURL(/\/schedule/);
     await expect(page.getByRole("heading", { name: "Schedules", exact: true })).toBeVisible({ timeout: 8_000 });
@@ -67,7 +68,7 @@ test.describe("Admin — left nav links", () => {
 
   test("TC-nav-menus: navigates to /menus", async ({ page }) => {
     await page.goto("/home");
-    await page.getByRole("button", { name: /my school/i }).click();
+    await page.locator("nav button").filter({ hasText: /js joy|my school/i }).first().click();
     await page.getByRole("link", { name: /^menus$/i }).click();
     await expect(page).toHaveURL(/\/menus/);
     await expect(page.getByRole("heading", { name: /menus/i })).toBeVisible();
@@ -75,7 +76,7 @@ test.describe("Admin — left nav links", () => {
 
   test("TC-nav-settings: navigates to /settings", async ({ page }) => {
     await page.goto("/home");
-    await page.getByRole("button", { name: /my school/i }).click();
+    await page.locator("nav button").filter({ hasText: /js joy|my school/i }).first().click();
     await page.getByRole("link", { name: /^settings$/i }).click();
     await expect(page).toHaveURL(/\/settings/);
     await expect(page.getByRole("heading", { name: /settings/i })).toBeVisible();
@@ -121,14 +122,14 @@ test.describe("Teacher — nav and access", () => {
   });
 
   test("TC-teacher-sees-students: can navigate to /students", async ({ page }) => {
-    await page.getByRole("button", { name: /my school/i }).click();
+    await page.locator("nav button").filter({ hasText: /js joy|my school/i }).first().click();
     await page.getByRole("link", { name: /^students$/i }).click();
     await expect(page).toHaveURL(/\/students/);
     await expect(page.getByRole("heading", { name: /students/i })).toBeVisible();
   });
 
   test("TC-teacher-sees-rooms: can navigate to /rooms", async ({ page }) => {
-    await page.getByRole("button", { name: /my school/i }).click();
+    await page.locator("nav button").filter({ hasText: /js joy|my school/i }).first().click();
     await page.getByRole("link", { name: /^rooms$/i }).click();
     await expect(page).toHaveURL(/\/rooms/);
     await expect(page.getByRole("heading", { name: /rooms/i })).toBeVisible();
@@ -158,4 +159,41 @@ test.describe("Parent — portal and access", () => {
     await page.goto("/students");
     await expect(page).not.toHaveURL(/\/students/, { timeout: 5_000 });
   });
+});
+
+// ─── Settings — school name change preserves data ─────────────────────────────
+
+test("TC-settings-school-name-change: renaming school preserves students and rooms", async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto("/settings");
+  await page.getByRole("heading", { name: /settings/i }).waitFor({ timeout: 8_000 });
+
+  // Wait for school name to load into input (non-empty)
+  const nameInput = page.locator('input').first();
+  await expect(nameInput).not.toHaveValue("", { timeout: 8_000 });
+  const originalName = await nameInput.inputValue();
+
+  // Change the name — school UUID stays the same, only name changes
+  await nameInput.fill("JS Joy Family Daycare (Test Rename)");
+  await page.getByRole("button", { name: /save changes/i }).click();
+  // Button briefly shows "Saved!" then reverts to "Save Changes"
+  await expect(nameInput).toHaveValue("JS Joy Family Daycare (Test Rename)", { timeout: 5_000 });
+
+  // Verify /students page still loads — UUID unchanged so all data is intact
+  await page.goto("/students");
+  await expect(page.getByRole("heading", { name: /students/i })).toBeVisible({ timeout: 8_000 });
+  await expect(page.locator("table")).toBeVisible();
+
+  // Restore original name
+  await page.goto("/settings");
+  await expect(page.locator('input').first()).not.toHaveValue("", { timeout: 8_000 });
+  await page.locator('input').first().fill(originalName);
+  await page.getByRole("button", { name: /save changes/i }).click();
+  await expect(page.locator('input').first()).toHaveValue(originalName, { timeout: 5_000 });
+});
+
+test("TC-sidebar-school-name: sidebar shows actual school name (not generic 'My School')", async ({ page }) => {
+  await loginAsAdmin(page);
+  // Sidebar should display the real school name
+  await expect(page.locator("nav").getByText(/js joy/i)).toBeVisible({ timeout: 10_000 });
 });

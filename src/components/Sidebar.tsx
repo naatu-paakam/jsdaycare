@@ -92,23 +92,62 @@ function NavItemRow({ item, depth = 0 }: { item: NavItem; depth?: number }) {
 }
 
 export default function Sidebar() {
-  const { profile, school, signOut } = useAuth();
-  // Replace "My School" label with actual school name
+  const { profile, school, allSchools, switchSchool, signOut } = useAuth();
+  const [schoolOpen, setSchoolOpen] = useState(false);
+
+  // Replace "My School" label with actual school name in nav
   const resolvedNav = navItems.map(item =>
     item.label === "My School" && school?.name
       ? { ...item, label: school.name }
       : item
   );
 
+  const multiSchool = allSchools.length > 1;
+
   return (
     <aside className="w-60 shrink-0 h-screen flex flex-col bg-white border-r border-gray-200">
-      {/* Logo */}
-      <div className="px-4 py-5 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <Baby size={18} className="text-white" />
+      {/* Logo + school switcher */}
+      <div className="px-4 py-4 border-b border-gray-100">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
+            <Baby size={15} className="text-white" />
           </div>
-          <span className="font-bold text-gray-900 text-base">JsDayCare</span>
+          <span className="font-bold text-gray-900 text-sm">JsDayCare</span>
+        </div>
+
+        {/* School switcher — shown always; dropdown only if multiple schools */}
+        <div className="relative">
+          <button
+            onClick={() => multiSchool && setSchoolOpen(o => !o)}
+            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors
+              ${multiSchool ? "hover:bg-indigo-50 cursor-pointer text-indigo-700 bg-indigo-50/60" : "cursor-default text-gray-600"}`}
+          >
+            <span className="flex items-center gap-1.5 truncate">
+              <Building2 size={13} className="shrink-0 text-indigo-500" />
+              <span className="truncate">{school?.name ?? "My School"}</span>
+            </span>
+            {multiSchool && (
+              schoolOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />
+            )}
+          </button>
+
+          {/* School dropdown */}
+          {multiSchool && schoolOpen && (
+            <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1">
+              {allSchools.map(s => (
+                <button
+                  key={s.id}
+                  onClick={async () => { await switchSchool(s.id); setSchoolOpen(false); }}
+                  className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center gap-2
+                    ${s.id === school?.id ? "bg-indigo-50 text-indigo-700 font-semibold" : "text-gray-700 hover:bg-gray-50"}`}
+                >
+                  <Building2 size={11} className="shrink-0" />
+                  <span className="truncate">{s.name}</span>
+                  {s.id === school?.id && <span className="ml-auto text-indigo-500 text-xs">✓</span>}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
