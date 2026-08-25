@@ -14,6 +14,11 @@ import Schedules from "@/pages/schedule/Schedules";
 import Paperwork from "@/pages/paperwork/Paperwork";
 import Reporting from "@/pages/reporting/Reporting";
 import ParentPortal from "@/pages/parent/ParentPortal";
+import Parents from "@/pages/parents/Parents";
+import CalendarPage from "@/pages/calendar/Calendar";
+import Menus from "@/pages/menus/Menus";
+import Settings from "@/pages/settings/Settings";
+import Admissions from "@/pages/admissions/Admissions";
 
 export default function App() {
   return (
@@ -34,6 +39,11 @@ export default function App() {
         <Route path="/paperwork" element={<ProtectedRoute allowedRoles={["admin"]}><Paperwork /></ProtectedRoute>} />
         <Route path="/reporting" element={<ProtectedRoute allowedRoles={["admin"]}><Reporting /></ProtectedRoute>} />
         <Route path="/reporting/attendance" element={<ProtectedRoute allowedRoles={["admin"]}><Reporting /></ProtectedRoute>} />
+        <Route path="/parents" element={<ProtectedRoute allowedRoles={["admin","staff"]}><Parents /></ProtectedRoute>} />
+        <Route path="/calendar" element={<ProtectedRoute allowedRoles={["admin","staff"]}><CalendarPage /></ProtectedRoute>} />
+        <Route path="/menus" element={<ProtectedRoute allowedRoles={["admin","staff"]}><Menus /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute allowedRoles={["admin"]}><Settings /></ProtectedRoute>} />
+        <Route path="/admissions" element={<ProtectedRoute allowedRoles={["admin"]}><Admissions /></ProtectedRoute>} />
 
         {/* Parent route */}
         <Route path="/parent" element={<ProtectedRoute allowedRoles={["parent"]}><ParentPortal /></ProtectedRoute>} />
