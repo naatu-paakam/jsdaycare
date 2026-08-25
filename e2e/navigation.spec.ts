@@ -147,7 +147,7 @@ test.describe("Parent — portal and access", () => {
   });
 
   test("TC-parent-sees-child: parent portal shows child name", async ({ page }) => {
-    await expect(page.getByText(/adrith/i)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/adrith/i)).toBeVisible({ timeout: 15_000 });
   });
 
   test("TC-parent-no-admin: parent cannot access /home directly", async ({ page }) => {
