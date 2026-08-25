@@ -102,7 +102,7 @@ export default function Sidebar() {
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
             <Baby size={18} className="text-white" />
           </div>
-          <span className="font-bold text-gray-900 text-base">JSDaycare</span>
+          <span className="font-bold text-gray-900 text-base">JsDayCare</span>
         </div>
       </div>
 
