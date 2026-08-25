@@ -1,34 +1,69 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Eye, EyeOff, Plus, Shield, AlertTriangle } from "lucide-react";
+import {
+  ArrowLeft, Eye, EyeOff, Plus, Shield, AlertTriangle,
+  Pencil, X, Check, Coffee, Moon, MessageSquare, Image,
+  Pill, Heart, Activity as ActivityIcon, Star, UserCheck,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import Layout from "@/components/Layout";
 import {
   Student, StudentContact, StudentEmergencyContact,
   StudentImmunization, StudentEnrollmentDetails, Room,
+  Activity, ActivityType, ContactType, PortalStatus,
 } from "@/lib/types";
 
 // ─── CDC Vaccine schedule ─────────────────────────────────────────────────────
 const CDC_VACCINES = [
-  { name: "Hep B — Hepatitis B",                 doses: 3,  schedule: ["Birth","1-2 mos","6-18 mos"] },
-  { name: "DTaP — Diphtheria, Tetanus, Pertussis",doses: 5, schedule: ["2 mos","4 mos","6 mos","15-18 mos","4-6 yrs"] },
-  { name: "Hib — Haemophilus Influenzae Type B",  doses: 4,  schedule: ["2 mos","4 mos","6 mos","12-15 mos"] },
-  { name: "PCV — Pneumococcal Conjugate",         doses: 4,  schedule: ["2 mos","4 mos","6 mos","12-15 mos"] },
-  { name: "Polio",                                doses: 4,  schedule: ["2 mos","4 mos","6-18 mos","4-6 yrs"] },
-  { name: "Rotavirus",                            doses: 3,  schedule: ["2 mos","4 mos","6 mos"] },
-  { name: "Covid — Coronavirus",                  doses: 2,  schedule: ["6 mos","6-8 wks later"] },
-  { name: "Flu — Seasonal Influenza",             doses: 1,  schedule: ["Yearly"] },
-  { name: "MMR — Measles, Mumps, Rubella",        doses: 2,  schedule: ["12-15 mos","4-6 yrs"] },
-  { name: "VAR — Varicella",                      doses: 2,  schedule: ["12-15 mos","4-6 yrs"] },
-  { name: "Hep A — Hepatitis A",                  doses: 2,  schedule: ["12-23 mos","6-18 mos later"] },
+  { name: "Hep B — Hepatitis B",                  doses: 3, schedule: ["Birth","1-2 mos","6-18 mos"] },
+  { name: "DTaP — Diphtheria, Tetanus, Pertussis", doses: 5, schedule: ["2 mos","4 mos","6 mos","15-18 mos","4-6 yrs"] },
+  { name: "Hib — Haemophilus Influenzae Type B",   doses: 4, schedule: ["2 mos","4 mos","6 mos","12-15 mos"] },
+  { name: "PCV — Pneumococcal Conjugate",          doses: 4, schedule: ["2 mos","4 mos","6 mos","12-15 mos"] },
+  { name: "Polio",                                 doses: 4, schedule: ["2 mos","4 mos","6-18 mos","4-6 yrs"] },
+  { name: "Rotavirus",                             doses: 3, schedule: ["2 mos","4 mos","6 mos"] },
+  { name: "Covid — Coronavirus",                   doses: 2, schedule: ["6 mos","6-8 wks later"] },
+  { name: "Flu — Seasonal Influenza",              doses: 1, schedule: ["Yearly"] },
+  { name: "MMR — Measles, Mumps, Rubella",         doses: 2, schedule: ["12-15 mos","4-6 yrs"] },
+  { name: "VAR — Varicella",                       doses: 2, schedule: ["12-15 mos","4-6 yrs"] },
+  { name: "Hep A — Hepatitis A",                   doses: 2, schedule: ["12-23 mos","6-18 mos later"] },
 ];
+
+// ─── Activity icons ───────────────────────────────────────────────────────────
+const ACTIVITY_ICONS: Record<ActivityType, React.ReactNode> = {
+  photo:        <Image size={14} />,
+  video:        <Image size={14} />,
+  food:         <Coffee size={14} />,
+  nap:          <Moon size={14} />,
+  potty:        <MessageSquare size={14} />,
+  note:         <MessageSquare size={14} />,
+  kudos:        <Star size={14} />,
+  meds:         <Pill size={14} />,
+  name_to_face: <UserCheck size={14} />,
+  incident:     <AlertTriangle size={14} />,
+  health_check: <Heart size={14} />,
+  observation:  <ActivityIcon size={14} />,
+};
+
+const ACTIVITY_COLORS: Record<ActivityType, string> = {
+  photo:        "bg-indigo-100 text-indigo-600",
+  video:        "bg-indigo-100 text-indigo-600",
+  food:         "bg-emerald-100 text-emerald-600",
+  nap:          "bg-blue-100 text-blue-600",
+  potty:        "bg-teal-100 text-teal-600",
+  note:         "bg-gray-100 text-gray-600",
+  kudos:        "bg-yellow-100 text-yellow-600",
+  meds:         "bg-orange-100 text-orange-600",
+  name_to_face: "bg-purple-100 text-purple-600",
+  incident:     "bg-red-100 text-red-600",
+  health_check: "bg-pink-100 text-pink-600",
+  observation:  "bg-cyan-100 text-cyan-600",
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function age(dob: string | null) {
   if (!dob) return "—";
-  const diff = Date.now() - new Date(dob).getTime();
-  const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30.44));
+  const months = Math.floor((Date.now() - new Date(dob).getTime()) / (1000 * 60 * 60 * 24 * 30.44));
   if (months < 24) return `${months} months`;
   const y = Math.floor(months / 12), m = months % 12;
   return m > 0 ? `${y}y ${m}mo` : `${y} years`;
@@ -39,30 +74,158 @@ function fmt(d: string | null) {
   return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function Field({ label, value, warn }: { label: string; value?: string | null; warn?: boolean }) {
+function activitySummary(a: Activity) {
+  const d = a.data ?? {};
+  const name = `${a.activity_type.charAt(0).toUpperCase()}${a.activity_type.slice(1).replace(/_/g, " ")}`;
+  if (a.activity_type === "food")
+    return `${d.meal_type ? String(d.meal_type).replace(/_/g, " ") : "Meal"} — ${d.food_quantity ?? ""} ${d.food_type === "bottle" ? "(bottle)" : ""}`.trim();
+  if (a.activity_type === "nap")
+    return d.nap_status === "started" ? "Nap started" : "Nap ended";
+  if (a.activity_type === "potty")
+    return `Potty — ${d.potty_type ?? ""}`;
+  if (a.activity_type === "health_check")
+    return d.health_temp ? `Temp: ${d.health_temp}°F` : "Health check";
+  return a.notes ? `${name}: ${a.notes.slice(0, 60)}${a.notes.length > 60 ? "…" : ""}` : name;
+}
+
+// ─── Inline editable field ────────────────────────────────────────────────────
+function Field({ label, value }: { label: string; value?: string | null }) {
   return (
     <div>
       <p className="text-xs text-gray-400 uppercase tracking-wide font-medium mb-0.5">{label}</p>
-      {warn && value ? (
-        <p className="text-sm font-medium text-red-700 bg-red-50 rounded px-2 py-1 flex items-center gap-1.5">
-          <AlertTriangle size={12} />{value}
-        </p>
-      ) : (
-        <p className="text-sm text-gray-900">{value || "—"}</p>
-      )}
+      <p className="text-sm text-gray-900">{value || "—"}</p>
     </div>
   );
 }
 
-function SectionHeader({ title, badge }: { title: string; badge?: string }) {
+// ─── Section wrapper with Edit toggle ────────────────────────────────────────
+function Section({
+  title, badge, canEdit, editing, onEdit, onSave, onCancel, saving, children,
+}: {
+  title: string; badge?: string; canEdit: boolean;
+  editing: boolean; onEdit: () => void; onSave: () => void; onCancel: () => void;
+  saving?: boolean; children: React.ReactNode;
+}) {
   return (
-    <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-4">
-      <h3 className="font-semibold text-gray-900 text-sm">{title}</h3>
-      {badge && (
-        <span className="text-xs text-gray-400 flex items-center gap-1">
-          <Shield size={11} />{badge}
-        </span>
-      )}
+    <div className="card p-5">
+      <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-4">
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold text-gray-900 text-sm">{title}</h3>
+          {badge && <span className="text-xs text-gray-400 flex items-center gap-1"><Shield size={10} />{badge}</span>}
+        </div>
+        {canEdit && !editing && (
+          <button onClick={onEdit} className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
+            <Pencil size={12} /> Edit
+          </button>
+        )}
+        {editing && (
+          <div className="flex gap-2">
+            <button onClick={onCancel} className="text-xs text-gray-500 hover:text-gray-800 flex items-center gap-1"><X size={12} /> Cancel</button>
+            <button onClick={onSave} disabled={saving} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+              <Check size={12} />{saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        )}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Input({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
+  return (
+    <div>
+      <label className="text-xs text-gray-400 uppercase tracking-wide font-medium mb-0.5 block">{label}</label>
+      <input type={type} value={value} onChange={e => onChange(e.target.value)} className="input w-full text-sm" />
+    </div>
+  );
+}
+
+// ─── Add Contact Modal ────────────────────────────────────────────────────────
+function AddContactModal({ studentId, schoolId, onClose, onSaved }: {
+  studentId: string; schoolId: string; onClose: () => void; onSaved: () => void;
+}) {
+  const [form, setForm] = useState({
+    full_name: "", type: "parent" as ContactType, email: "", phone: "",
+    is_primary: false, can_pickup: true, pin_code: "", portal_status: "not_signed_up" as PortalStatus,
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function save() {
+    if (!form.full_name.trim()) { setError("Name is required."); return; }
+    if (form.pin_code && !/^\d{4}$/.test(form.pin_code)) { setError("PIN must be exactly 4 digits."); return; }
+    setSaving(true);
+    const { error: err } = await supabase.from("student_contacts").insert({
+      student_id: studentId, school_id: schoolId,
+      ...form, pin_code: form.pin_code || null,
+    });
+    setSaving(false);
+    if (err) { setError(err.message); return; }
+    onSaved();
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md space-y-4 p-6">
+        <div className="flex items-center justify-between">
+          <h2 className="font-bold text-gray-900">Add Contact</h2>
+          <button onClick={onClose}><X size={18} className="text-gray-400" /></button>
+        </div>
+
+        {error && <p className="text-sm text-red-600 bg-red-50 rounded px-3 py-2">{error}</p>}
+
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-1 block">Full Name *</label>
+            <input className="input w-full" placeholder="Jane Smith" value={form.full_name} onChange={e => setForm(f => ({...f, full_name: e.target.value}))} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Type</label>
+              <select className="input w-full" value={form.type} onChange={e => setForm(f => ({...f, type: e.target.value as ContactType}))}>
+                <option value="parent">Parent</option>
+                <option value="guardian">Guardian</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Portal Status</label>
+              <select className="input w-full" value={form.portal_status} onChange={e => setForm(f => ({...f, portal_status: e.target.value as PortalStatus}))}>
+                <option value="not_signed_up">Not signed up</option>
+                <option value="invited">Invited</option>
+                <option value="signed_up">Signed up</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-1 block">Email</label>
+            <input className="input w-full" type="email" placeholder="jane@example.com" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))} />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-1 block">Phone</label>
+            <input className="input w-full" placeholder="+1 (555) 000-0000" value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))} />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-1 block">4-digit PIN (for check-in)</label>
+            <input className="input w-full font-mono" maxLength={4} placeholder="e.g. 1234" value={form.pin_code} onChange={e => setForm(f => ({...f, pin_code: e.target.value.replace(/\D/g,"")}))} />
+          </div>
+          <div className="flex gap-6">
+            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input type="checkbox" checked={form.is_primary} onChange={e => setForm(f => ({...f, is_primary: e.target.checked}))} className="rounded" />
+              Primary contact
+            </label>
+            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input type="checkbox" checked={form.can_pickup} onChange={e => setForm(f => ({...f, can_pickup: e.target.checked}))} className="rounded" />
+              Can pickup
+            </label>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <button onClick={onClose} className="btn-secondary">Cancel</button>
+          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Saving…" : "Add Contact"}</button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -73,41 +236,135 @@ type Tab = "profile" | "contacts" | "immunizations" | "daily_report" | "document
 export default function StudentProfile() {
   const { id } = useParams<{ id: string }>();
   const { profile: authProfile } = useAuth();
-  const isAdmin = authProfile?.role === "admin";
+  const isAdmin   = authProfile?.role === "admin";
+  const isParent  = authProfile?.role === "parent";
+  const canEdit   = isAdmin || isParent;
 
-  const [student, setStudent]       = useState<Student | null>(null);
-  const [room, setRoom]             = useState<Room | null>(null);
-  const [contacts, setContacts]     = useState<StudentContact[]>([]);
-  const [emergency, setEmergency]   = useState<StudentEmergencyContact[]>([]);
-  const [enrollment, setEnrollment] = useState<StudentEnrollmentDetails | null>(null);
-  const [immunizations, setImmunizations] = useState<StudentImmunization[]>([]);
-  const [tab, setTab]               = useState<Tab>("profile");
-  const [loading, setLoading]       = useState(true);
-  const [revealPin, setRevealPin]   = useState<Record<string, boolean>>({});
+  const [student,      setStudent]      = useState<Student | null>(null);
+  const [room,         setRoom]         = useState<Room | null>(null);
+  const [contacts,     setContacts]     = useState<StudentContact[]>([]);
+  const [emergency,    setEmergency]    = useState<StudentEmergencyContact[]>([]);
+  const [enrollment,   setEnrollment]   = useState<StudentEnrollmentDetails | null>(null);
+  const [immunizations,setImmunizations]= useState<StudentImmunization[]>([]);
+  const [activities,   setActivities]   = useState<Activity[]>([]);
+  const [tab,          setTab]          = useState<Tab>("profile");
+  const [loading,      setLoading]      = useState(true);
+  const [revealPin,    setRevealPin]    = useState<Record<string, boolean>>({});
+  const [showAddContact, setShowAddContact] = useState(false);
+
+  // Edit states — which section is being edited
+  const [editSection, setEditSection] = useState<string | null>(null);
+  const [saving,      setSaving]      = useState(false);
+
+  // Edit draft values
+  const [draftPersonal,   setDraftPersonal]   = useState<Partial<Student>>({});
+  const [draftAddress,    setDraftAddress]    = useState<Record<string, string>>({});
+  const [draftSchool,     setDraftSchool]     = useState<Partial<Student>>({});
+  const [draftEnrollment, setDraftEnrollment] = useState<Partial<StudentEnrollmentDetails>>({});
+  const [draftFinancial,  setDraftFinancial]  = useState<Partial<StudentEnrollmentDetails>>({});
+  const [feedDate, setFeedDate] = useState(new Date().toISOString().split("T")[0]);
 
   useEffect(() => {
     if (!id) return;
-    Promise.all([
-      supabase.from("students").select("*").eq("id", id).single(),
-      supabase.from("student_contacts").select("*").eq("student_id", id).order("is_primary", { ascending: false }),
-      supabase.from("student_emergency_contacts").select("*").eq("student_id", id),
-      supabase.from("student_enrollment_details").select("*").eq("student_id", id).single(),
-      supabase.from("student_immunizations").select("*").eq("student_id", id).order("vaccine_name"),
-    ]).then(([{ data: s }, { data: c }, { data: e }, { data: enr }, { data: imm }]) => {
-      setStudent(s);
-      setContacts(c ?? []);
-      setEmergency(e ?? []);
-      setEnrollment(enr ?? null);
-      setImmunizations(imm ?? []);
-      if (s?.homeroom_id) {
-        supabase.from("rooms").select("*").eq("id", s.homeroom_id).single()
-          .then(({ data: r }) => setRoom(r));
-      }
-      setLoading(false);
-    });
+    loadAll();
   }, [id]);
 
-  if (loading) return <Layout><div className="p-10 text-center text-gray-400">Loading student profile...</div></Layout>;
+  async function loadAll() {
+    const [{ data: s }, { data: c }, { data: e }, { data: enr }, { data: imm }] = await Promise.all([
+      supabase.from("students").select("*").eq("id", id!).single(),
+      supabase.from("student_contacts").select("*").eq("student_id", id!).order("is_primary", { ascending: false }),
+      supabase.from("student_emergency_contacts").select("*").eq("student_id", id!),
+      supabase.from("student_enrollment_details").select("*").eq("student_id", id!).single(),
+      supabase.from("student_immunizations").select("*").eq("student_id", id!).order("vaccine_name"),
+    ]);
+    setStudent(s); setContacts(c ?? []); setEmergency(e ?? []);
+    setEnrollment(enr ?? null); setImmunizations(imm ?? []);
+    if (s?.homeroom_id) {
+      const { data: r } = await supabase.from("rooms").select("*").eq("id", s.homeroom_id).single();
+      setRoom(r);
+    }
+    setLoading(false);
+  }
+
+  async function loadActivities(date: string) {
+    const { data } = await supabase.from("activities")
+      .select("*")
+      .eq("student_id", id!)
+      .eq("activity_date", date)
+      .order("activity_time", { ascending: false });
+    setActivities(data ?? []);
+  }
+
+  useEffect(() => { if (tab === "daily_report") loadActivities(feedDate); }, [tab, feedDate]);
+
+  // ── Save helpers ────────────────────────────────────────────────────────────
+  async function savePersonal() {
+    setSaving(true);
+    await supabase.from("students").update(draftPersonal).eq("id", id!);
+    await loadAll(); setEditSection(null); setSaving(false);
+  }
+
+  async function saveAddress() {
+    setSaving(true);
+    await supabase.from("students").update({ address: draftAddress }).eq("id", id!);
+    await loadAll(); setEditSection(null); setSaving(false);
+  }
+
+  async function saveSchool() {
+    setSaving(true);
+    await supabase.from("students").update(draftSchool).eq("id", id!);
+    await loadAll(); setEditSection(null); setSaving(false);
+  }
+
+  async function saveEnrollment() {
+    setSaving(true);
+    await supabase.from("student_enrollment_details").upsert({ student_id: id!, ...draftEnrollment }, { onConflict: "student_id" });
+    await loadAll(); setEditSection(null); setSaving(false);
+  }
+
+  async function saveFinancial() {
+    setSaving(true);
+    await supabase.from("student_enrollment_details").upsert({ student_id: id!, ...draftFinancial }, { onConflict: "student_id" });
+    await loadAll(); setEditSection(null); setSaving(false);
+  }
+
+  function startEdit(section: string) {
+    if (!student) return;
+    if (section === "personal") setDraftPersonal({
+      first_name: student.first_name, last_name: student.last_name,
+      preferred_name: student.preferred_name ?? "", dob: student.dob ?? "",
+      gender: student.gender ?? "", race: student.race ?? "",
+      ethnicity: student.ethnicity ?? "", allergies: student.allergies ?? "",
+      notes: student.notes ?? "", medications: student.medications ?? "",
+      doctor_name: student.doctor_name ?? "", doctor_phone: student.doctor_phone ?? "",
+    });
+    if (section === "address") {
+      const a = (student.address as Record<string, string>) ?? {};
+      setDraftAddress({ street: a.street ?? "", city: a.city ?? "", state: a.state ?? "", zip: a.zip ?? "" });
+    }
+    if (section === "school") setDraftSchool({
+      enrollment_status: student.enrollment_status,
+      meal_type: student.meal_type ?? "",
+      student_id_internal: student.student_id_internal ?? "",
+    });
+    if (section === "enrollment") setDraftEnrollment({
+      first_contact_date: enrollment?.first_contact_date ?? "",
+      toured_date: enrollment?.toured_date ?? "",
+      paperwork_date: enrollment?.paperwork_date ?? "",
+      desired_start_date: enrollment?.desired_start_date ?? "",
+      graduation_date: enrollment?.graduation_date ?? "",
+      sibling_name: enrollment?.sibling_name ?? "",
+      programs: enrollment?.programs ?? "",
+      additional_details: enrollment?.additional_details ?? "",
+    });
+    if (section === "financial") setDraftFinancial({
+      subsidy: enrollment?.subsidy ?? false,
+      subsidy_details: enrollment?.subsidy_details ?? "",
+    });
+    setEditSection(section);
+  }
+
+  if (loading) return <Layout><div className="p-10 text-center text-gray-400">Loading student profile…</div></Layout>;
   if (!student) return <Layout><div className="p-10 text-center text-gray-400">Student not found</div></Layout>;
 
   const TABS: { id: Tab; label: string }[] = [
@@ -118,37 +375,40 @@ export default function StudentProfile() {
     { id: "documents",     label: "Documents" },
   ];
 
-  // Build immunization lookup: vaccine+dose → record
   const immMap: Record<string, StudentImmunization> = {};
   immunizations.forEach(i => { immMap[`${i.vaccine_name}:${i.dose_number}`] = i; });
 
+  const addr = (student.address as Record<string, string>) ?? {};
+
   return (
     <Layout>
+      {showAddContact && student.school_id && (
+        <AddContactModal
+          studentId={student.id} schoolId={student.school_id}
+          onClose={() => setShowAddContact(false)}
+          onSaved={() => { setShowAddContact(false); loadAll(); }}
+        />
+      )}
+
       <div className="p-6 max-w-6xl mx-auto space-y-5">
-        {/* Back */}
         <Link to="/students" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800">
           <ArrowLeft size={15} /> Back to Students
         </Link>
 
-        {/* Header card */}
+        {/* Header */}
         <div className="card p-5 flex items-center gap-5">
-          {student.photo_url ? (
-            <img src={student.photo_url} alt="" className="w-16 h-16 rounded-full object-cover shrink-0" />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl shrink-0">
-              {student.first_name[0]}{student.last_name[0]}
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
+          <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl shrink-0">
+            {student.first_name[0]}{student.last_name[0]}
+          </div>
+          <div className="flex-1">
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-xl font-bold text-gray-900">
                 {student.first_name} {student.last_name}
-                {student.preferred_name && <span className="text-gray-400 font-normal text-base ml-2">"{student.preferred_name}"</span>}
+                {student.preferred_name && <span className="text-gray-400 font-normal ml-2">"{student.preferred_name}"</span>}
               </h1>
               <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full capitalize
                 ${student.enrollment_status === "active"   ? "bg-emerald-100 text-emerald-700" :
-                  student.enrollment_status === "waitlist" ? "bg-amber-100 text-amber-700" :
-                  "bg-gray-100 text-gray-600"}`}>
+                  student.enrollment_status === "waitlist" ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-600"}`}>
                 {student.enrollment_status}
               </span>
               {student.allergies && student.allergies !== "None" && (
@@ -165,7 +425,7 @@ export default function StudentProfile() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-0 border-b border-gray-200">
+        <div className="flex border-b border-gray-200 overflow-x-auto">
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px whitespace-nowrap
@@ -175,58 +435,112 @@ export default function StudentProfile() {
           ))}
         </div>
 
-        {/* ── PROFILE TAB ──────────────────────────────────────────────────────── */}
+        {/* ── PROFILE TAB ────────────────────────────────────────────────────── */}
         {tab === "profile" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {/* Left column */}
             <div className="space-y-5">
-              {/* Personal info */}
-              <div className="card p-5">
-                <SectionHeader title="Personal information" />
-                <div className="grid grid-cols-2 gap-4">
-                  <Field label="Name"      value={`${student.first_name} ${student.last_name}`} />
-                  <Field label="Birthday"  value={fmt(student.dob)} />
-                  <Field label="Age"       value={age(student.dob)} />
-                  <Field label="Gender"    value={student.gender} />
-                  <Field label="Race"      value={student.race} />
-                  <Field label="Ethnicity" value={student.ethnicity} />
-                  <div className="col-span-2">
-                    <Field label="Allergies" value={student.allergies} warn={!!(student.allergies && student.allergies !== "None")} />
+              {/* Personal information */}
+              <Section title="Personal information" canEdit={canEdit}
+                editing={editSection === "personal"} saving={saving}
+                onEdit={() => startEdit("personal")}
+                onSave={savePersonal} onCancel={() => setEditSection(null)}>
+                {editSection === "personal" ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input label="First name"  value={String(draftPersonal.first_name  ?? "")} onChange={v => setDraftPersonal(d => ({...d, first_name: v}))} />
+                    <Input label="Last name"   value={String(draftPersonal.last_name   ?? "")} onChange={v => setDraftPersonal(d => ({...d, last_name: v}))} />
+                    <Input label="Preferred name" value={String(draftPersonal.preferred_name ?? "")} onChange={v => setDraftPersonal(d => ({...d, preferred_name: v}))} />
+                    <Input label="Date of birth" type="date" value={String(draftPersonal.dob ?? "")} onChange={v => setDraftPersonal(d => ({...d, dob: v}))} />
+                    <div>
+                      <label className="text-xs text-gray-400 uppercase tracking-wide font-medium mb-0.5 block">Gender</label>
+                      <select className="input w-full text-sm" value={String(draftPersonal.gender ?? "")} onChange={e => setDraftPersonal(d => ({...d, gender: e.target.value}))}>
+                        <option value="">—</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Non-binary">Non-binary</option>
+                        <option value="Prefer not to say">Prefer not to say</option>
+                      </select>
+                    </div>
+                    <Input label="Race"        value={String(draftPersonal.race        ?? "")} onChange={v => setDraftPersonal(d => ({...d, race: v}))} />
+                    <Input label="Ethnicity"   value={String(draftPersonal.ethnicity   ?? "")} onChange={v => setDraftPersonal(d => ({...d, ethnicity: v}))} />
+                    <div className="col-span-2"><Input label="Allergies"  value={String(draftPersonal.allergies  ?? "")} onChange={v => setDraftPersonal(d => ({...d, allergies: v}))} /></div>
+                    <div className="col-span-2"><Input label="Notes"      value={String(draftPersonal.notes      ?? "")} onChange={v => setDraftPersonal(d => ({...d, notes: v}))} /></div>
+                    <div className="col-span-2"><Input label="Medications" value={String(draftPersonal.medications ?? "")} onChange={v => setDraftPersonal(d => ({...d, medications: v}))} /></div>
+                    <Input label="Doctor"       value={String(draftPersonal.doctor_name  ?? "")} onChange={v => setDraftPersonal(d => ({...d, doctor_name: v}))} />
+                    <Input label="Doctor phone" value={String(draftPersonal.doctor_phone ?? "")} onChange={v => setDraftPersonal(d => ({...d, doctor_phone: v}))} />
                   </div>
-                  <div className="col-span-2">
-                    <Field label="Notes" value={student.notes} />
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="Name"       value={`${student.first_name} ${student.last_name}`} />
+                    <Field label="Birthday"   value={fmt(student.dob)} />
+                    <Field label="Age"        value={age(student.dob)} />
+                    <Field label="Gender"     value={student.gender} />
+                    <Field label="Race"       value={student.race} />
+                    <Field label="Ethnicity"  value={student.ethnicity} />
+                    <div className="col-span-2">
+                      {student.allergies && student.allergies !== "None" ? (
+                        <div>
+                          <p className="text-xs text-gray-400 uppercase tracking-wide font-medium mb-0.5">Allergies</p>
+                          <p className="text-sm font-medium text-red-700 bg-red-50 rounded px-2 py-1 flex items-center gap-1.5">
+                            <AlertTriangle size={12} />{student.allergies}
+                          </p>
+                        </div>
+                      ) : <Field label="Allergies" value={student.allergies} />}
+                    </div>
+                    <div className="col-span-2"><Field label="Notes"      value={student.notes} /></div>
+                    <div className="col-span-2"><Field label="Medications" value={student.medications} /></div>
+                    <Field label="Doctor"       value={student.doctor_name} />
+                    <Field label="Doctor phone" value={student.doctor_phone} />
                   </div>
-                  <div className="col-span-2">
-                    <Field label="Medications" value={student.medications} />
-                  </div>
-                  <Field label="Doctor"       value={student.doctor_name} />
-                  <Field label="Doctor phone" value={student.doctor_phone} />
-                </div>
-              </div>
+                )}
+              </Section>
 
               {/* Address */}
-              <div className="card p-5">
-                <SectionHeader title="Address" />
-                {student.address ? (
-                  <div className="text-sm text-gray-900 space-y-0.5">
-                    <p>{(student.address as Record<string, string>).street}</p>
-                    <p>{(student.address as Record<string, string>).city}, {(student.address as Record<string, string>).state} {(student.address as Record<string, string>).zip}</p>
-                  </div>
-                ) : <p className="text-sm text-gray-400">—</p>}
-              </div>
-
-              {/* Financial details — admin only */}
-              {isAdmin && (
-                <div className="card p-5">
-                  <SectionHeader title="Financial details" badge="Not visible to parents" />
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="col-span-2">
-                      <Field label="Family income" value={enrollment?.family_income ? `$${enrollment.family_income.toLocaleString()}/yr` : null} />
+              <Section title="Address" canEdit={canEdit}
+                editing={editSection === "address"} saving={saving}
+                onEdit={() => startEdit("address")}
+                onSave={saveAddress} onCancel={() => setEditSection(null)}>
+                {editSection === "address" ? (
+                  <div className="space-y-3">
+                    <Input label="Street"  value={draftAddress.street  ?? ""} onChange={v => setDraftAddress(d => ({...d, street: v}))} />
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="col-span-1"><Input label="City"  value={draftAddress.city  ?? ""} onChange={v => setDraftAddress(d => ({...d, city: v}))} /></div>
+                      <Input label="State" value={draftAddress.state ?? ""} onChange={v => setDraftAddress(d => ({...d, state: v}))} />
+                      <Input label="ZIP"   value={draftAddress.zip   ?? ""} onChange={v => setDraftAddress(d => ({...d, zip: v}))} />
                     </div>
-                    <Field label="Subsidy" value={enrollment?.subsidy === true ? "Yes" : enrollment?.subsidy === false ? "No" : null} />
-                    <Field label="Subsidy details" value={enrollment?.subsidy_details} />
                   </div>
-                </div>
+                ) : (
+                  addr.street
+                    ? <div className="text-sm text-gray-900 space-y-0.5"><p>{addr.street}</p><p>{addr.city}, {addr.state} {addr.zip}</p></div>
+                    : <p className="text-sm text-gray-400">—</p>
+                )}
+              </Section>
+
+              {/* Financial — admin only */}
+              {isAdmin && (
+                <Section title="Financial details" badge="Not visible to parents" canEdit={isAdmin}
+                  editing={editSection === "financial"} saving={saving}
+                  onEdit={() => startEdit("financial")}
+                  onSave={saveFinancial} onCancel={() => setEditSection(null)}>
+                  {editSection === "financial" ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs text-gray-400 uppercase tracking-wide font-medium mb-0.5 block">Subsidy</label>
+                        <select className="input w-full text-sm" value={draftFinancial.subsidy ? "yes" : "no"} onChange={e => setDraftFinancial(d => ({...d, subsidy: e.target.value === "yes"}))}>
+                          <option value="no">No</option>
+                          <option value="yes">Yes</option>
+                        </select>
+                      </div>
+                      <Input label="Subsidy details" value={draftFinancial.subsidy_details ?? ""} onChange={v => setDraftFinancial(d => ({...d, subsidy_details: v}))} />
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field label="Family income"  value={enrollment?.family_income ? `$${enrollment.family_income.toLocaleString()}/yr` : null} />
+                      <Field label="Subsidy"        value={enrollment?.subsidy === true ? "Yes" : enrollment?.subsidy === false ? "No" : null} />
+                      <div className="col-span-2"><Field label="Subsidy details" value={enrollment?.subsidy_details} /></div>
+                    </div>
+                  )}
+                </Section>
               )}
             </div>
 
@@ -234,62 +548,100 @@ export default function StudentProfile() {
             <div className="space-y-5">
               {/* Rooms — admin only */}
               {isAdmin && (
-                <div className="card p-5">
-                  <SectionHeader title="Rooms" badge="Not visible to parents" />
+                <Section title="Rooms" badge="Not visible to parents" canEdit={false}
+                  editing={false} onEdit={() => {}} onSave={() => {}} onCancel={() => {}}>
                   <div className="grid grid-cols-2 gap-4">
                     <Field label="Homeroom" value={room?.name} />
                     <Field label="Others"   value="—" />
                   </div>
-                </div>
+                </Section>
               )}
 
               {/* School details — admin only */}
               {isAdmin && (
-                <div className="card p-5">
-                  <SectionHeader title="School details" badge="Not visible to parents" />
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field label="Status"     value={student.enrollment_status} />
-                    <Field label="Meal type"  value={student.meal_type?.replace(/_/g, " ")} />
-                    <Field label="Student ID" value={student.student_id_internal} />
-                    <Field label="Schedule"   value={student.schedule_days?.join(", ")} />
-                  </div>
-                </div>
+                <Section title="School details" badge="Not visible to parents" canEdit={isAdmin}
+                  editing={editSection === "school"} saving={saving}
+                  onEdit={() => startEdit("school")}
+                  onSave={saveSchool} onCancel={() => setEditSection(null)}>
+                  {editSection === "school" ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-gray-400 uppercase tracking-wide font-medium mb-0.5 block">Status</label>
+                        <select className="input w-full text-sm" value={String(draftSchool.enrollment_status ?? "")} onChange={e => setDraftSchool(d => ({...d, enrollment_status: e.target.value as Student["enrollment_status"]}))}>
+                          <option value="active">Active</option>
+                          <option value="waitlist">Waitlist</option>
+                          <option value="withdrawn">Withdrawn</option>
+                          <option value="graduated">Graduated</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400 uppercase tracking-wide font-medium mb-0.5 block">Meal type</label>
+                        <select className="input w-full text-sm" value={String(draftSchool.meal_type ?? "")} onChange={e => setDraftSchool(d => ({...d, meal_type: e.target.value}))}>
+                          <option value="">—</option>
+                          <option value="provided">Provided</option>
+                          <option value="brings_own">Brings own</option>
+                          <option value="formula">Formula</option>
+                          <option value="not_specified">Not specified</option>
+                        </select>
+                      </div>
+                      <Input label="Student ID" value={String(draftSchool.student_id_internal ?? "")} onChange={v => setDraftSchool(d => ({...d, student_id_internal: v}))} />
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field label="Status"     value={student.enrollment_status} />
+                      <Field label="Meal type"  value={student.meal_type?.replace(/_/g, " ")} />
+                      <Field label="Student ID" value={student.student_id_internal} />
+                      <Field label="Schedule"   value={student.schedule_days?.join(", ")} />
+                    </div>
+                  )}
+                </Section>
               )}
 
               {/* Enrollment details — admin only */}
               {isAdmin && (
-                <div className="card p-5">
-                  <SectionHeader title="Enrollment details" badge="Not visible to parents" />
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field label="First contact date"  value={fmt(enrollment?.first_contact_date ?? null)} />
-                    <Field label="Toured date"         value={fmt(enrollment?.toured_date ?? null)} />
-                    <Field label="Paperwork date"      value={fmt(enrollment?.paperwork_date ?? null)} />
-                    <Field label="Desired start date"  value={fmt(enrollment?.desired_start_date ?? null)} />
-                    <Field label="Start date"          value={fmt(student.start_date ?? null)} />
-                    <Field label="Graduation date"     value={fmt(enrollment?.graduation_date ?? null)} />
-                    <Field label="Expected birth date" value={fmt(enrollment?.expected_birth_date ?? null)} />
-                    <Field label="Sibling attending"   value={enrollment?.sibling_name} />
-                    <div className="col-span-2">
-                      <Field label="Programs"           value={enrollment?.programs} />
+                <Section title="Enrollment details" badge="Not visible to parents" canEdit={isAdmin}
+                  editing={editSection === "enrollment"} saving={saving}
+                  onEdit={() => startEdit("enrollment")}
+                  onSave={saveEnrollment} onCancel={() => setEditSection(null)}>
+                  {editSection === "enrollment" ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input label="First contact date"  type="date" value={draftEnrollment.first_contact_date  ?? ""} onChange={v => setDraftEnrollment(d => ({...d, first_contact_date: v}))} />
+                      <Input label="Toured date"         type="date" value={draftEnrollment.toured_date         ?? ""} onChange={v => setDraftEnrollment(d => ({...d, toured_date: v}))} />
+                      <Input label="Paperwork date"      type="date" value={draftEnrollment.paperwork_date      ?? ""} onChange={v => setDraftEnrollment(d => ({...d, paperwork_date: v}))} />
+                      <Input label="Desired start date"  type="date" value={draftEnrollment.desired_start_date  ?? ""} onChange={v => setDraftEnrollment(d => ({...d, desired_start_date: v}))} />
+                      <Input label="Graduation date"     type="date" value={draftEnrollment.graduation_date     ?? ""} onChange={v => setDraftEnrollment(d => ({...d, graduation_date: v}))} />
+                      <Input label="Sibling attending"   value={draftEnrollment.sibling_name    ?? ""} onChange={v => setDraftEnrollment(d => ({...d, sibling_name: v}))} />
+                      <div className="col-span-2"><Input label="Programs"         value={draftEnrollment.programs         ?? ""} onChange={v => setDraftEnrollment(d => ({...d, programs: v}))} /></div>
+                      <div className="col-span-2"><Input label="Additional details" value={draftEnrollment.additional_details ?? ""} onChange={v => setDraftEnrollment(d => ({...d, additional_details: v}))} /></div>
                     </div>
-                    <div className="col-span-2">
-                      <Field label="Additional details" value={enrollment?.additional_details} />
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field label="First contact"   value={fmt(enrollment?.first_contact_date  ?? null)} />
+                      <Field label="Toured"          value={fmt(enrollment?.toured_date         ?? null)} />
+                      <Field label="Paperwork"       value={fmt(enrollment?.paperwork_date      ?? null)} />
+                      <Field label="Desired start"   value={fmt(enrollment?.desired_start_date  ?? null)} />
+                      <Field label="Start date"      value={fmt(student.start_date              ?? null)} />
+                      <Field label="Graduation"      value={fmt(enrollment?.graduation_date     ?? null)} />
+                      <Field label="Sibling"         value={enrollment?.sibling_name} />
+                      <Field label="Programs"        value={enrollment?.programs} />
+                      <div className="col-span-2"><Field label="Additional details" value={enrollment?.additional_details} /></div>
                     </div>
-                  </div>
-                </div>
+                  )}
+                </Section>
               )}
             </div>
           </div>
         )}
 
-        {/* ── CONTACTS TAB ─────────────────────────────────────────────────────── */}
+        {/* ── CONTACTS TAB ───────────────────────────────────────────────────── */}
         {tab === "contacts" && (
           <div className="space-y-5">
             <div className="card overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h3 className="font-semibold text-gray-900 text-sm">Contacts</h3>
                 {isAdmin && (
-                  <button className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
+                  <button onClick={() => setShowAddContact(true)}
+                    className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
                     <Plus size={13} /> Add a contact
                   </button>
                 )}
@@ -307,7 +659,7 @@ export default function StudentProfile() {
                 </thead>
                 <tbody>
                   {contacts.length === 0 ? (
-                    <tr><td colSpan={6} className="px-5 py-8 text-center text-gray-400">No contacts added</td></tr>
+                    <tr><td colSpan={isAdmin ? 6 : 5} className="px-5 py-8 text-center text-gray-400">No contacts — add one above</td></tr>
                   ) : contacts.map(c => (
                     <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50">
                       <td className="px-5 py-3">
@@ -324,8 +676,8 @@ export default function StudentProfile() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-3 text-gray-600">{c.email || "—"}</td>
-                      <td className="px-5 py-3 text-gray-600">{c.phone || "—"}</td>
+                      <td className="px-5 py-3 text-gray-600 text-xs">{c.email || "—"}</td>
+                      <td className="px-5 py-3 text-gray-600 text-xs">{c.phone || "—"}</td>
                       <td className="px-5 py-3">
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${c.can_pickup ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
                           {c.can_pickup ? "Yes" : "No"}
@@ -333,21 +685,19 @@ export default function StudentProfile() {
                       </td>
                       {isAdmin && (
                         <td className="px-5 py-3">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-sm text-gray-900">
-                              {revealPin[c.id] ? c.pin_code ?? "—" : "••••"}
-                            </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-sm">{revealPin[c.id] ? (c.pin_code ?? "—") : "••••"}</span>
                             <button onClick={() => setRevealPin(p => ({...p, [c.id]: !p[c.id]}))}
-                              className="text-indigo-600 hover:text-indigo-800 text-xs flex items-center gap-1 border border-indigo-200 rounded px-1.5 py-0.5">
-                              {revealPin[c.id] ? <><EyeOff size={11} />Hide</> : <><Eye size={11} />Reveal</>}
+                              className="text-xs text-indigo-600 border border-indigo-200 rounded px-1.5 py-0.5 flex items-center gap-1 hover:bg-indigo-50">
+                              {revealPin[c.id] ? <><EyeOff size={10} />Hide</> : <><Eye size={10} />Reveal</>}
                             </button>
                           </div>
                         </td>
                       )}
                       <td className="px-5 py-3">
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize
-                          ${c.portal_status === "signed_up"    ? "bg-emerald-100 text-emerald-700" :
-                            c.portal_status === "invited"      ? "bg-amber-100 text-amber-700" :
+                          ${c.portal_status === "signed_up" ? "bg-emerald-100 text-emerald-700" :
+                            c.portal_status === "invited"   ? "bg-amber-100 text-amber-700" :
                             "bg-gray-100 text-gray-500"}`}>
                           {(c.portal_status ?? "not_signed_up").replace(/_/g, " ")}
                         </span>
@@ -358,7 +708,6 @@ export default function StudentProfile() {
               </table>
             </div>
 
-            {/* Emergency contacts */}
             {emergency.length > 0 && (
               <div className="card overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-100">
@@ -387,33 +736,33 @@ export default function StudentProfile() {
           </div>
         )}
 
-        {/* ── IMMUNIZATIONS TAB ────────────────────────────────────────────────── */}
+        {/* ── IMMUNIZATIONS TAB ──────────────────────────────────────────────── */}
         {tab === "immunizations" && (
           <div className="space-y-4">
             <div className="flex items-center gap-4 text-xs text-gray-500">
               <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-red-200 inline-block" />Overdue</span>
               <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-emerald-200 inline-block" />Completed</span>
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-gray-100 inline-block" />No record</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-gray-100 inline-block border" />No record</span>
             </div>
-
             {CDC_VACCINES.map(vaccine => {
-              const exempt = immunizations.find(i => i.vaccine_name.startsWith(vaccine.name.split(" ")[0]))?.exempt;
+              const exempt = immunizations.find(i => i.vaccine_name === vaccine.name)?.exempt;
               return (
                 <div key={vaccine.name} className="card overflow-hidden">
-                  <div className={`px-5 py-3 flex items-center justify-between ${exempt ? "bg-amber-50" : "bg-indigo-900"}`}>
+                  <div className={`px-5 py-2.5 flex items-center justify-between ${exempt ? "bg-amber-50" : "bg-indigo-900"}`}>
                     <span className={`text-sm font-semibold ${exempt ? "text-amber-800" : "text-white"}`}>{vaccine.name}</span>
                     {exempt && <span className="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full font-medium">Exempt</span>}
                   </div>
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-100">
-                        <td className="px-5 py-2 text-gray-400 font-medium w-40">Source</td>
+                        <td className="px-5 py-2 text-gray-400 font-medium w-36">Source</td>
                         {Array.from({ length: vaccine.doses }, (_, i) => (
                           <td key={i} className="px-4 py-2 text-gray-400 font-medium text-center">Dose {i + 1}</td>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
+                      {/* Read-only row */}
                       <tr className="border-b border-gray-50">
                         <td className="px-5 py-3 font-medium text-gray-700">Student record</td>
                         {Array.from({ length: vaccine.doses }, (_, i) => {
@@ -423,6 +772,33 @@ export default function StudentProfile() {
                           return <td key={i} className="px-4 py-3 text-center text-gray-300">—</td>;
                         })}
                       </tr>
+                      {/* Editable date inputs for admin/parent */}
+                      {canEdit && (
+                        <tr className="border-b border-gray-50 bg-gray-50/50">
+                          <td className="px-5 py-2 text-gray-400 text-xs">Edit dates</td>
+                          {Array.from({ length: vaccine.doses }, (_, i) => {
+                            const rec = immMap[`${vaccine.name}:${i + 1}`];
+                            return (
+                              <td key={i} className="px-3 py-2 text-center">
+                                <input
+                                  type="date"
+                                  className="border border-gray-200 rounded px-1.5 py-0.5 text-xs w-full max-w-[120px] focus:outline-none focus:border-indigo-400"
+                                  value={rec?.administered_date ?? ""}
+                                  onChange={async e => {
+                                    const date = e.target.value;
+                                    if (rec) {
+                                      await supabase.from("student_immunizations").update({ administered_date: date || null }).eq("id", rec.id);
+                                    } else {
+                                      await supabase.from("student_immunizations").insert({ student_id: id!, vaccine_name: vaccine.name, dose_number: i + 1, administered_date: date || null, exempt: false });
+                                    }
+                                    loadAll();
+                                  }}
+                                />
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      )}
                       <tr>
                         <td className="px-5 py-2 text-gray-400">CDC schedule</td>
                         {vaccine.schedule.map((s, i) => (
@@ -437,25 +813,61 @@ export default function StudentProfile() {
           </div>
         )}
 
-        {/* ── DAILY REPORT TAB ─────────────────────────────────────────────────── */}
+        {/* ── DAILY REPORT TAB — inline feed ─────────────────────────────────── */}
         {tab === "daily_report" && (
-          <div className="card p-6 text-center text-gray-400 space-y-2">
-            <p className="text-sm font-medium text-gray-600">Daily Report</p>
-            <p className="text-sm">View this child's activity feed from the room view.</p>
-            {student.homeroom_id && (
-              <Link to={`/rooms/${student.homeroom_id}`} className="text-indigo-600 text-sm hover:underline inline-block mt-2">
-                Go to {room?.name ?? "room"} feed →
-              </Link>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <input type="date" value={feedDate} onChange={e => setFeedDate(e.target.value)} className="input" />
+              <span className="text-sm text-gray-500">{activities.length} {activities.length === 1 ? "entry" : "entries"}</span>
+            </div>
+
+            {activities.length === 0 ? (
+              <div className="card p-10 text-center text-gray-400">
+                <p className="text-sm">No activities logged for {new Date(feedDate).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {activities.map(a => {
+                  const typeColor = ACTIVITY_COLORS[a.activity_type] ?? "bg-gray-100 text-gray-600";
+                  return (
+                    <div key={a.id} className="card p-4 flex items-start gap-4">
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${typeColor}`}>
+                        {ACTIVITY_ICONS[a.activity_type]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{activitySummary(a)}</p>
+                            {a.notes && a.activity_type !== "note" && (
+                              <p className="text-xs text-gray-500 mt-0.5">{a.notes}</p>
+                            )}
+                            {a.staff_only && (
+                              <span className="inline-flex items-center gap-1 text-xs text-gray-400 mt-1">
+                                <Shield size={10} /> Staff only
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-400 shrink-0">
+                            {a.activity_time ? a.activity_time.slice(0, 5) : ""}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}
 
-        {/* ── DOCUMENTS TAB ────────────────────────────────────────────────────── */}
+        {/* ── DOCUMENTS TAB ──────────────────────────────────────────────────── */}
         {tab === "documents" && (
-          <div className="card p-6 text-center text-gray-400 space-y-2">
+          <div className="card p-10 text-center text-gray-400 space-y-2">
             <p className="text-sm font-medium text-gray-600">Documents</p>
             <p className="text-sm">Immunization records, signed forms, and medical action plans.</p>
-            <p className="text-xs text-gray-300 mt-2">Document uploads coming soon.</p>
+            <Link to="/paperwork" className="text-sm text-indigo-600 hover:underline inline-block mt-2">
+              View all forms in Paperwork →
+            </Link>
           </div>
         )}
       </div>
