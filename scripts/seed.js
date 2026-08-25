@@ -236,53 +236,53 @@ async function seed() {
     {
       student_id: adrith.id, type: "parent", full_name: "Arudeepa Kumar",
       email: "parent@jsdaycare.com", phone: "+1 (332) 201-5176",
-      is_primary: true, can_pickup: true, pin_code: "1234",
+      is_primary: true, can_pickup: true, pin_code: "123401",
       portal_status: "signed_up",
     },
     {
       student_id: adrith.id, type: "parent", full_name: "Sai Satish Mukthineni",
       email: "sai.mukthineni@gmail.com", phone: "+1 (650) 314-1526",
-      is_primary: false, can_pickup: true, pin_code: "1234",
+      is_primary: false, can_pickup: true, pin_code: "123401",
       portal_status: "invited",
     },
     // Atif
     {
       student_id: atif.id, type: "parent", full_name: "Hifzur Rehman",
       email: "hifzur.rehman@gmail.com", phone: "+1 (408) 555-0210",
-      is_primary: true, can_pickup: true, pin_code: "5678",
+      is_primary: true, can_pickup: true, pin_code: "567802",
       portal_status: "signed_up",
     },
     {
       student_id: atif.id, type: "parent", full_name: "Sara Rehman",
       email: "sara.rehman@gmail.com", phone: "+1 (408) 555-0211",
-      is_primary: false, can_pickup: true, pin_code: "5678",
+      is_primary: false, can_pickup: true, pin_code: "567802",
       portal_status: "not_signed_up",
     },
     // Vihaan
     {
       student_id: vihaan.id, type: "parent", full_name: "Riya Bopardikar",
       email: "riya.bopardikar@gmail.com", phone: "+1 (408) 555-0220",
-      is_primary: true, can_pickup: true, pin_code: "9012",
+      is_primary: true, can_pickup: true, pin_code: "901203",
       portal_status: "invited",
     },
     // Aanya
     {
       student_id: aanya.id, type: "parent", full_name: "Priya Sharma",
       email: "priya.sharma@gmail.com", phone: "+1 (408) 555-0230",
-      is_primary: true, can_pickup: true, pin_code: "3456",
+      is_primary: true, can_pickup: true, pin_code: "345604",
       portal_status: "signed_up",
     },
     {
       student_id: aanya.id, type: "guardian", full_name: "Ramesh Sharma",
       email: null, phone: "+1 (408) 555-0231",
-      is_primary: false, can_pickup: true, pin_code: "3456",
+      is_primary: false, can_pickup: true, pin_code: "345604",
       portal_status: "not_signed_up",
     },
     // Leo
     {
       student_id: leo.id, type: "parent", full_name: "David Chen",
       email: "david.chen@gmail.com", phone: "+1 (408) 555-0240",
-      is_primary: true, can_pickup: true, pin_code: "7890",
+      is_primary: true, can_pickup: true, pin_code: "789005",
       portal_status: "not_signed_up",
     },
   ]);

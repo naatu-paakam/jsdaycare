@@ -442,7 +442,7 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
 
   async function save() {
     if (!form.full_name.trim()) { setError("Name is required."); return; }
-    if (form.pin_code && !/^\d{4}$/.test(form.pin_code)) { setError("PIN must be exactly 4 digits."); return; }
+    if (form.pin_code && !/^\d{6}$/.test(form.pin_code)) { setError("PIN must be exactly 6 digits."); return; }
     setSaving(true);
     setError("");
 
@@ -542,8 +542,8 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
             </div>
           </div>
           <div>
-            <label className="text-xs font-medium text-gray-600 mb-1 block">4-digit PIN (for check-in)</label>
-            <input className="input w-full font-mono" maxLength={4} placeholder="e.g. 1234" value={form.pin_code} onChange={e => setForm(f => ({...f, pin_code: e.target.value.replace(/\D/g,"")}))} />
+            <label className="text-xs font-medium text-gray-600 mb-1 block">6-digit PIN (for check-in)</label>
+            <input className="input w-full font-mono" maxLength={6} placeholder="e.g. 123456" value={form.pin_code} onChange={e => setForm(f => ({...f, pin_code: e.target.value.replace(/\D/g,"")}))} />
           </div>
 
           <hr className="border-gray-100" />

@@ -17,7 +17,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Home", to: "/home", icon: <Home size={18} /> },
   {
-    label: "My School",
+    label: "My School",  // dynamically replaced with school name in the component
     icon: <Building2 size={18} />,
     children: [
       { label: "Students", to: "/students", icon: <Baby size={18} /> },
@@ -92,7 +92,13 @@ function NavItemRow({ item, depth = 0 }: { item: NavItem; depth?: number }) {
 }
 
 export default function Sidebar() {
-  const { profile, signOut } = useAuth();
+  const { profile, school, signOut } = useAuth();
+  // Replace "My School" label with actual school name
+  const resolvedNav = navItems.map(item =>
+    item.label === "My School" && school?.name
+      ? { ...item, label: school.name }
+      : item
+  );
 
   return (
     <aside className="w-60 shrink-0 h-screen flex flex-col bg-white border-r border-gray-200">
@@ -108,7 +114,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-        {navItems.map(item => (
+        {resolvedNav.map(item => (
           <NavItemRow key={item.label} item={item} />
         ))}
       </nav>
