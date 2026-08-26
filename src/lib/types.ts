@@ -22,7 +22,7 @@ export type FoodCategory = "grain" | "protein" | "fruit" | "vegetable" | "dairy"
 export type FieldType = "text" | "long_text" | "date" | "number" | "checkbox" | "dropdown" | "file" | "signature";
 export type SharedWith = "all" | "room" | "student";
 export type SlotType = "item" | "time" | "recurring" | "time_series";
-export type ContactType = "parent" | "guardian";
+export type ContactType = "parent" | "guardian" | "grandparent" | "aunt_uncle" | "babysitter" | "nanny" | "family_friend" | "other";
 
 export interface School {
   id: string;

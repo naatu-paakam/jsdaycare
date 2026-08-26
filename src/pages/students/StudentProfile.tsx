@@ -474,7 +474,8 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
     phone:             initial?.phone             ?? "",
     is_primary:        initial?.is_primary        ?? false,
     can_pickup:        initial?.can_pickup        ?? true,
-    pin_code:          initial?.pin_code          ?? "",
+    // PIN is auto-generated on save — only pre-fill in edit mode
+    pin_code:          initial?.pin_code          ?? "",  // read-only display in edit, not shown in add
     portal_status:     initial?.portal_status     ?? "not_signed_up" as PortalStatus,
     pickup_valid_from: initial?.pickup_valid_from ?? "",
     pickup_valid_to:   initial?.pickup_valid_to   ?? "",
@@ -506,9 +507,15 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
 
   async function save() {
     if (!form.full_name.trim()) { setError("Name is required."); return; }
-    if (form.pin_code && !/^\d{6}$/.test(form.pin_code)) { setError("PIN must be exactly 6 digits."); return; }
     setSaving(true);
     setError("");
+
+    // Auto-generate a unique 6-digit PIN for new contacts
+    let pin = form.pin_code || null;
+    if (!isEdit && !pin) {
+      const { data: pinData } = await supabase.rpc("generate_unique_pin", { p_school_id: schoolId });
+      pin = pinData as string ?? null;
+    }
 
     const payload = {
       student_id: studentId, school_id: schoolId,
@@ -518,7 +525,7 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
       phone:             form.phone || null,
       is_primary:        form.is_primary,
       can_pickup:        form.can_pickup,
-      pin_code:          form.pin_code || null,
+      pin_code:          pin,
       portal_status:     form.portal_status,
       pickup_valid_from: form.can_pickup && form.pickup_valid_from ? form.pickup_valid_from : null,
       pickup_valid_to:   form.can_pickup && form.pickup_valid_to   ? form.pickup_valid_to   : null,
@@ -584,6 +591,12 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
               <select className="input w-full" value={form.type} onChange={e => setForm(f => ({...f, type: e.target.value as ContactType}))}>
                 <option value="parent">Parent</option>
                 <option value="guardian">Guardian</option>
+                <option value="grandparent">Grandparent</option>
+                <option value="aunt_uncle">Aunt / Uncle</option>
+                <option value="babysitter">Babysitter</option>
+                <option value="nanny">Nanny</option>
+                <option value="family_friend">Family Friend</option>
+                <option value="other">Other</option>
               </select>
             </div>
             <div>
@@ -605,10 +618,13 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
               <input className="input w-full" placeholder="+1 (555) 000-0000" value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))} />
             </div>
           </div>
-          <div>
-            <label className="text-xs font-medium text-gray-600 mb-1 block">6-digit PIN (for check-in)</label>
-            <input className="input w-full font-mono" maxLength={6} placeholder="e.g. 123456" value={form.pin_code} onChange={e => setForm(f => ({...f, pin_code: e.target.value.replace(/\D/g,"")}))} />
-          </div>
+          {/* PIN is auto-generated on save for new contacts. Show read-only in edit mode. */}
+          {isEdit && form.pin_code && (
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Check-in PIN</label>
+              <p className="text-sm font-mono bg-gray-50 border border-gray-200 rounded px-3 py-2 text-gray-600">{form.pin_code} <span className="text-xs text-gray-400 font-sans ml-2">(auto-generated)</span></p>
+            </div>
+          )}
 
           <hr className="border-gray-100" />
 
