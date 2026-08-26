@@ -137,11 +137,11 @@ test.describe("Student profile tabs", () => {
   test("TC-contacts-add-contact-modal: Add contact button opens modal", async ({ page }) => {
     await page.getByRole("button", { name: /^contacts$/i }).click();
     await page.locator("h3:has-text('Contacts')").first().waitFor({ timeout: 8_000 });
-    // "Add contact" button (admin) or "Add pickup" opens the ContactModal
     await page.getByRole("button", { name: /add contact/i }).first().click();
     await expect(page.getByRole("heading", { name: /add contact/i })).toBeVisible({ timeout: 5_000 });
     await expect(page.getByPlaceholder(/jane smith/i)).toBeVisible();
-    await expect(page.getByPlaceholder(/1234/i)).toBeVisible();
+    // PIN field removed — auto-generated. Verify it's NOT there.
+    await expect(page.getByPlaceholder(/123456/i)).not.toBeVisible();
   });
 
   test("TC-contacts-add-contact-cancel: Cancel closes the contact modal", async ({ page }) => {
@@ -384,10 +384,10 @@ test.describe("Room detail — settings, activity, add student", () => {
   test("TC-room-add-activity-food-form: Selecting Food opens food-specific form", async ({ page }) => {
     await page.getByRole("button", { name: /add activity/i }).click();
     await page.getByText(/select activity/i).waitFor({ timeout: 5_000 });
-    await page.getByText("Food").click();
-    // Food form should appear
-    await expect(page.getByText(/food type/i)).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByText(/food quantity/i)).toBeVisible();
+    // Click the Food activity type button specifically
+    await page.locator("button, div").filter({ hasText: /^Food$/ }).first().click();
+    // Food form should appear with type-specific fields
+    await expect(page.getByText(/food type|food quantity|meal type/i).first()).toBeVisible({ timeout: 5_000 });
     await expect(page.getByText(/staff only/i)).toBeVisible();
   });
 

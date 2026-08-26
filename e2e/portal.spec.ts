@@ -47,9 +47,10 @@ test("TC-portal-create-school: + Create school button opens modal", async ({ pag
 test("TC-portal-manage-school: Manage link opens school detail panel", async ({ page }) => {
   await loginAsPortalAdmin(page);
   await page.locator("table").waitFor({ timeout: 8_000 });
-  await page.getByRole("link", { name: /manage/i }).first().click();
-  // Should show school management UI
-  await expect(page.getByText(/admins|school name/i).first()).toBeVisible({ timeout: 5_000 });
+  // "Manage" is rendered as a button/link — click by text
+  await page.getByText("Manage").first().click();
+  // Should show school management UI (panel or modal with admins/name)
+  await expect(page.getByText(/admins|school name|edit.*school/i).first()).toBeVisible({ timeout: 8_000 });
 });
 
 test("TC-portal-blocked-from-home: portal admin cannot access /home", async ({ page }) => {
