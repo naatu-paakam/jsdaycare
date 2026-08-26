@@ -287,3 +287,116 @@ test.describe("Parent — student profile access", () => {
     await expect(page.locator('input[type="date"]').first()).toBeVisible();
   });
 });
+
+// ─── Immunization settings modal ──────────────────────────────────────────────
+
+test.describe("Immunization settings per student", () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto(`/students/${ADRITH_ID}`);
+    await page.waitForURL("**/students/**", { timeout: 10_000 });
+    await page.getByRole("button", { name: /^immunizations$/i }).click();
+    await page.getByText(/Hep B/i).first().waitFor({ timeout: 8_000 });
+  });
+
+  test("TC-imm-settings-button: Immunization settings gear button visible", async ({ page }) => {
+    await expect(page.getByRole("button", { name: /immunization settings/i })).toBeVisible();
+  });
+
+  test("TC-imm-settings-modal: Clicking opens modal with checkboxes", async ({ page }) => {
+    await page.getByRole("button", { name: /immunization settings/i }).click();
+    await expect(page.getByRole("heading", { name: /immunization settings/i })).toBeVisible({ timeout: 5_000 });
+    // All 11 CDC vaccines shown as checkboxes
+    await expect(page.getByText(/hep b/i).first()).toBeVisible();
+    await expect(page.getByText(/dtap/i).first()).toBeVisible();
+    await expect(page.getByText(/mmr/i).first()).toBeVisible();
+  });
+
+  test("TC-imm-settings-cancel: Cancel closes the settings modal", async ({ page }) => {
+    await page.getByRole("button", { name: /immunization settings/i }).click();
+    await page.getByRole("heading", { name: /immunization settings/i }).waitFor({ timeout: 5_000 });
+    await page.getByRole("button", { name: /cancel/i }).click();
+    await expect(page.getByRole("heading", { name: /immunization settings/i })).not.toBeVisible();
+  });
+});
+
+// ─── Contact modal — auto PIN and expanded types ──────────────────────────────
+
+test.describe("Contact modal enhancements", () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto(`/students/${ADRITH_ID}`);
+    await page.waitForURL("**/students/**", { timeout: 10_000 });
+    await page.getByRole("button", { name: /^contacts$/i }).click();
+    await page.locator("h3:has-text('Contacts')").first().waitFor({ timeout: 8_000 });
+    await page.locator("button:not(.btn-primary):has-text('Add contact')").click();
+    await page.getByRole("heading", { name: /add contact/i }).waitFor({ timeout: 5_000 });
+  });
+
+  test("TC-contact-no-pin-field: Add contact modal does NOT show a PIN input field", async ({ page }) => {
+    // PIN input should be gone — auto-generated on save
+    await expect(page.getByPlaceholder(/123456/i)).not.toBeVisible();
+    await expect(page.getByText(/6-digit pin/i)).not.toBeVisible();
+  });
+
+  test("TC-contact-expanded-types: Type dropdown has expanded options", async ({ page }) => {
+    const select = page.locator("select").filter({ has: page.locator("option[value=parent]") }).first();
+    const options = await select.locator("option").allTextContents();
+    expect(options).toContain("Grandparent");
+    expect(options).toContain("Babysitter");
+    expect(options).toContain("Nanny");
+    expect(options).toContain("Family Friend");
+    expect(options).toContain("Other");
+  });
+});
+
+// ─── Room settings and features ───────────────────────────────────────────────
+
+test.describe("Room detail — settings, activity, add student", () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto("/rooms");
+    const toddlerLink = page.locator('a[href^="/rooms/"]', { hasText: /toddler/i });
+    await toddlerLink.waitFor({ state: "visible", timeout: 10_000 });
+    await toddlerLink.click();
+    await page.waitForURL("**/rooms/**", { timeout: 10_000 });
+  });
+
+  test("TC-room-settings-modal: Room settings gear opens modal with fields", async ({ page }) => {
+    await page.getByRole("button", { name: /room settings/i }).click();
+    await expect(page.getByRole("heading", { name: /room settings/i })).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText(/max capacity/i)).toBeVisible();
+    await expect(page.getByText(/students per.*staff|ratio/i).first()).toBeVisible();
+    // Close
+    await page.getByRole("button", { name: /cancel/i }).click();
+  });
+
+  test("TC-room-add-activity-picker: Add Activity button opens 12-type selector", async ({ page }) => {
+    await page.getByRole("button", { name: /add activity/i }).click();
+    await expect(page.getByText(/select activity/i)).toBeVisible({ timeout: 5_000 });
+    // All activity types visible
+    await expect(page.getByText("Food")).toBeVisible();
+    await expect(page.getByText("Nap")).toBeVisible();
+    await expect(page.getByText("Potty")).toBeVisible();
+    await expect(page.getByText("Note")).toBeVisible();
+  });
+
+  test("TC-room-add-activity-food-form: Selecting Food opens food-specific form", async ({ page }) => {
+    await page.getByRole("button", { name: /add activity/i }).click();
+    await page.getByText(/select activity/i).waitFor({ timeout: 5_000 });
+    await page.getByText("Food").click();
+    // Food form should appear
+    await expect(page.getByText(/food type/i)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText(/food quantity/i)).toBeVisible();
+    await expect(page.getByText(/staff only/i)).toBeVisible();
+  });
+
+  test("TC-room-add-student-modal: Add Student button opens assignment modal", async ({ page }) => {
+    await page.getByRole("button", { name: /add student/i }).click();
+    await expect(page.getByText(/assign student|add student/i).first()).toBeVisible({ timeout: 5_000 });
+  });
+
+  test("TC-room-no-parents-tab: Parents tab is NOT present in room detail", async ({ page }) => {
+    await expect(page.getByRole("button", { name: /^parents$/i })).not.toBeVisible();
+  });
+});
