@@ -104,6 +104,14 @@ async function seed() {
   await upsertProfile(PARENT_ID, "parent", "Arudeepa Kumar", "+1 (332) 555-0200");
   log("Parent: Arudeepa Kumar (parent@jsdaycare.com)");
 
+  // Portal Admin — platform-level super-admin, no school_id
+  const PORTAL_ADMIN_ID = await upsertAuthUser("portal@daycareportal.com", "DayCarePortal@2026", "Portal Administrator");
+  await sb.from("profiles").upsert(
+    { id: PORTAL_ADMIN_ID, school_id: null, role: "portal_admin", full_name: "Portal Administrator", phone: null },
+    { onConflict: "id" }
+  );
+  log("Portal Admin: Portal Administrator (portal@daycareportal.com)");
+
   // ── Rooms ────────────────────────────────────────────────────────────────
 
   console.log("\n🏫 Creating rooms...");

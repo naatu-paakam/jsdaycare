@@ -21,8 +21,9 @@ export default function ProtectedRoute({ children, allowedRoles }: Props) {
   if (!user) return <Navigate to="/login" replace />;
 
   if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
-    // Redirect parents to their portal
+    // Redirect to role-specific home
     if (profile.role === "parent") return <Navigate to="/parent" replace />;
+    if (profile.role === "portal_admin") return <Navigate to="/portal" replace />;
     return <Navigate to="/home" replace />;
   }
 

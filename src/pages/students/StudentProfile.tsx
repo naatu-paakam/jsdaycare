@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import {
   ArrowLeft, Eye, EyeOff, Plus, Shield, AlertTriangle,
   Pencil, X, Check, Coffee, Moon, MessageSquare, Image,
-  Pill, Heart, Activity as ActivityIcon, Star, UserCheck, Trash2,
+  Pill, Heart, Activity as ActivityIcon, Star, UserCheck, Trash2, Settings2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
@@ -252,6 +252,70 @@ function EmergencyContactsSection({
           </tbody>
         </table>
       )}
+    </div>
+  );
+}
+
+// ─── Immunization settings modal ─────────────────────────────────────────────
+const VACCINE_NAMES = ["Hep B", "DTaP", "Hib", "PCV", "Polio", "Rotavirus", "Covid", "Flu", "MMR", "VAR", "Hep A"];
+
+function ImmunizationSettingsModal({
+  studentId, currentSettings, onApply, onClose,
+}: {
+  studentId: string;
+  currentSettings: string[];
+  onApply: (settings: string[]) => void;
+  onClose: () => void;
+}) {
+  const [selected, setSelected] = useState<string[]>(currentSettings);
+  const [saving, setSaving] = useState(false);
+
+  function toggle(name: string) {
+    setSelected(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]);
+  }
+
+  async function apply() {
+    setSaving(true);
+    await supabase.from("students").update({ immunization_settings: selected }).eq("id", studentId);
+    onApply(selected);
+    setSaving(false);
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div>
+            <h2 className="font-semibold text-gray-900">Immunization settings</h2>
+            <p className="text-xs text-gray-500 mt-0.5">Which immunizations should appear on reports and student records?</p>
+          </div>
+          <button onClick={onClose}><X size={18} className="text-gray-400" /></button>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-3 gap-3">
+            {VACCINE_NAMES.map(name => (
+              <label key={name} className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={selected.includes(name)}
+                  onChange={() => toggle(name)}
+                  className="accent-orange-500 w-4 h-4"
+                />
+                <span className="text-sm text-gray-700">{name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancel</button>
+          <button
+            onClick={apply} disabled={saving}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors disabled:opacity-50"
+          >
+            {saving ? "Saving…" : "Apply"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -622,6 +686,8 @@ export default function StudentProfile() {
   const [draftEnrollment, setDraftEnrollment] = useState<Partial<StudentEnrollmentDetails>>({});
   const [draftFinancial,  setDraftFinancial]  = useState<Partial<StudentEnrollmentDetails>>({});
   const [feedDate, setFeedDate] = useState(new Date().toISOString().split("T")[0]);
+  const [immunizationSettings, setImmunizationSettings] = useState<string[]>(VACCINE_NAMES);
+  const [showImmSettings, setShowImmSettings] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -638,6 +704,9 @@ export default function StudentProfile() {
     ]);
     setStudent(s); setContacts(c ?? []); setEmergency(e ?? []);
     setEnrollment(enr ?? null); setImmunizations(imm ?? []);
+    // Load immunization settings (fall back to all vaccines)
+    const settings = (s as (typeof s & { immunization_settings?: string[] }))?.immunization_settings;
+    setImmunizationSettings(Array.isArray(settings) && settings.length > 0 ? settings : VACCINE_NAMES);
     // Fetch current homeroom
     if (s?.homeroom_id) {
       const { data: r } = await supabase.from("rooms").select("*").eq("id", s.homeroom_id).single();
@@ -757,6 +826,15 @@ export default function StudentProfile() {
 
   return (
     <Layout>
+      {showImmSettings && (
+        <ImmunizationSettingsModal
+          studentId={student.id}
+          currentSettings={immunizationSettings}
+          onApply={(settings) => { setImmunizationSettings(settings); setShowImmSettings(false); }}
+          onClose={() => setShowImmSettings(false)}
+        />
+      )}
+
       {contactModal.open && student.school_id && (
         <ContactModal
           studentId={student.id} schoolId={student.school_id}
@@ -1202,12 +1280,23 @@ export default function StudentProfile() {
         {/* ── IMMUNIZATIONS TAB ──────────────────────────────────────────────── */}
         {tab === "immunizations" && (
           <div className="space-y-4">
-            {/* Legend */}
-            <div className="flex items-center gap-5 text-xs text-gray-500 flex-wrap">
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-red-200 inline-block" />Overdue</span>
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-emerald-200 inline-block" />Completed</span>
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-gray-200 inline-block" />Skipped</span>
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-200 inline-block" />Exempt</span>
+            {/* Legend + settings gear */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-5 text-xs text-gray-500 flex-wrap">
+                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-red-200 inline-block" />Overdue</span>
+                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-emerald-200 inline-block" />Completed</span>
+                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-gray-200 inline-block" />Skipped</span>
+                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-200 inline-block" />Exempt</span>
+              </div>
+              {canEdit && (
+                <button
+                  onClick={() => setShowImmSettings(true)}
+                  className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 transition-colors"
+                  title="Immunization settings"
+                >
+                  <Settings2 size={14} /> Immunization settings
+                </button>
+              )}
             </div>
 
             {/* Custom immunization add form */}
@@ -1224,7 +1313,7 @@ export default function StudentProfile() {
               );
             })()}
 
-            {CDC_VACCINES.map(vaccine => {
+            {CDC_VACCINES.filter(v => immunizationSettings.some(name => v.name.startsWith(name))).map(vaccine => {
               // Find any existing record to get vaccine-level exempt flag
               const anyRec = immunizations.find(i => i.vaccine_name === vaccine.name);
               const isExempt = anyRec?.exempt ?? false;

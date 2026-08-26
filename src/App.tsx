@@ -19,6 +19,7 @@ import CalendarPage from "@/pages/calendar/Calendar";
 import Menus from "@/pages/menus/Menus";
 import Settings from "@/pages/settings/Settings";
 import Admissions from "@/pages/admissions/Admissions";
+import PortalAdmin from "@/pages/portal/PortalAdmin";
 
 export default function App() {
   return (
@@ -47,6 +48,9 @@ export default function App() {
 
         {/* Parent route */}
         <Route path="/parent" element={<ProtectedRoute allowedRoles={["parent"]}><ParentPortal /></ProtectedRoute>} />
+
+        {/* Portal admin route */}
+        <Route path="/portal" element={<ProtectedRoute allowedRoles={["portal_admin"]}><PortalAdmin /></ProtectedRoute>} />
 
         {/* Catch-all */}
         <Route path="/" element={<Navigate to="/home" replace />} />

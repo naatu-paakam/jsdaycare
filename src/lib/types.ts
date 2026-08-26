@@ -2,7 +2,7 @@
 // Core Types for DayCarePortal
 // ============================================================
 
-export type Role = "admin" | "staff" | "parent";
+export type Role = "admin" | "staff" | "parent" | "portal_admin";
 export type EnrollmentStatus = "active" | "waitlist" | "withdrawn" | "graduated";
 export type AttendanceStatus = "checked_in" | "checked_out" | "absent" | "expected";
 export type ActivityType =
