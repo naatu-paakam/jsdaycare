@@ -262,7 +262,7 @@ test.describe("Student profile tabs", () => {
 
 // ─── Parent persona — profile access ─────────────────────────────────────────
 // Adrith Ram's student ID is known from seed data
-const ADRITH_ID = "ff1728f4-0c83-4634-9978-d2252c3215fd";
+const ADRITH_ID = "1cd2d725-70ce-429b-9070-7dbc59a157f2";
 
 test.describe("Parent — student profile access", () => {
   test("TC-parent-profile-edit: parent can see Edit on personal info", async ({ page }) => {

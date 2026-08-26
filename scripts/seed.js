@@ -21,7 +21,14 @@ const sb = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-const SCHOOL_ID = "08f7413b-1aa9-4679-b80b-d59ffc1fd749"; // JS Joy Family Daycare
+const SCHOOL_ID  = "08f7413b-1aa9-4679-b80b-d59ffc1fd749"; // JS Joy Family Daycare
+
+// Fixed UUIDs so IDs never change between resets — tests can hardcode these
+const ADRITH_ID  = "1cd2d725-70ce-429b-9070-7dbc59a157f2";
+const ATIF_ID    = "2201e840-e260-4abc-b68e-f0b45fa52486";
+const VIHAAN_ID  = "0008189e-2d99-4af6-8e93-fe864a6ad780";
+const AANYA_ID   = "6d628c58-06cc-4ce0-809a-fb2d29ef90d6";
+const LEO_ID     = "aa4f084a-a380-4c85-9b1f-41acfde27c64";
 const TODAY = new Date().toISOString().split("T")[0];
 const log = (msg) => console.log(`  ✓ ${msg}`);
 const err = (msg, e) => console.error(`  ✗ ${msg}:`, e?.message || e);
@@ -162,7 +169,7 @@ async function seed() {
   const { data: students, error: stuErr } = await sb.from("students").insert([
     // Toddlers room
     {
-      school_id: SCHOOL_ID, homeroom_id: toddlerRoom.id,
+      id: ADRITH_ID, school_id: SCHOOL_ID, homeroom_id: toddlerRoom.id,
       first_name: "Adrith Ram", last_name: "Mukthineni",
       dob: "2025-03-22", gender: "Male",
       allergies: "None", medications: "None",
@@ -173,7 +180,7 @@ async function seed() {
       schedule_days: ["monday","tuesday","wednesday","thursday","friday"],
     },
     {
-      school_id: SCHOOL_ID, homeroom_id: toddlerRoom.id,
+      id: ATIF_ID, school_id: SCHOOL_ID, homeroom_id: toddlerRoom.id,
       first_name: "Atif Hifzur", last_name: "Rehman",
       dob: "2024-11-05", gender: "Male",
       allergies: "Peanuts — carry EpiPen", medications: "EpiPen (in bag)",
@@ -185,7 +192,7 @@ async function seed() {
       schedule_days: ["monday","tuesday","wednesday","thursday","friday"],
     },
     {
-      school_id: SCHOOL_ID, homeroom_id: toddlerRoom.id,
+      id: VIHAAN_ID, school_id: SCHOOL_ID, homeroom_id: toddlerRoom.id,
       first_name: "Vihaan", last_name: "Bopardikar",
       dob: "2024-08-14", gender: "Male",
       allergies: "None",
@@ -197,7 +204,7 @@ async function seed() {
     },
     // Pre-K room
     {
-      school_id: SCHOOL_ID, homeroom_id: preKRoom.id,
+      id: AANYA_ID, school_id: SCHOOL_ID, homeroom_id: preKRoom.id,
       first_name: "Aanya", last_name: "Sharma",
       dob: "2022-05-18", gender: "Female",
       allergies: "Dairy — mild intolerance", medications: "None",
@@ -209,7 +216,7 @@ async function seed() {
     },
     // Waitlist — Infants
     {
-      school_id: SCHOOL_ID, homeroom_id: infantRoom.id,
+      id: LEO_ID, school_id: SCHOOL_ID, homeroom_id: infantRoom.id,
       first_name: "Leo", last_name: "Chen",
       dob: "2026-04-01", gender: "Male",
       allergies: "Unknown (infant)",
@@ -236,53 +243,53 @@ async function seed() {
     {
       student_id: adrith.id, school_id: SCHOOL_ID, type: "parent", full_name: "Arudeepa Kumar",
       email: "parent@jsdaycare.com", phone: "+1 (332) 201-5176",
-      is_primary: true, can_pickup: true, pin_code: "123401",
+      is_primary: true, can_pickup: true, pin_code: "100001",
       portal_status: "signed_up",
     },
     {
       student_id: adrith.id, school_id: SCHOOL_ID, type: "parent", full_name: "Sai Satish Mukthineni",
       email: "sai.mukthineni@gmail.com", phone: "+1 (650) 314-1526",
-      is_primary: false, can_pickup: true, pin_code: "123401",
+      is_primary: false, can_pickup: true, pin_code: "100002",
       portal_status: "invited",
     },
     // Atif
     {
       student_id: atif.id, school_id: SCHOOL_ID, type: "parent", full_name: "Hifzur Rehman",
       email: "hifzur.rehman@gmail.com", phone: "+1 (408) 555-0210",
-      is_primary: true, can_pickup: true, pin_code: "567802",
+      is_primary: true, can_pickup: true, pin_code: "200001",
       portal_status: "signed_up",
     },
     {
       student_id: atif.id, school_id: SCHOOL_ID, type: "parent", full_name: "Sara Rehman",
       email: "sara.rehman@gmail.com", phone: "+1 (408) 555-0211",
-      is_primary: false, can_pickup: true, pin_code: "567802",
+      is_primary: false, can_pickup: true, pin_code: "200002",
       portal_status: "not_signed_up",
     },
     // Vihaan
     {
       student_id: vihaan.id, school_id: SCHOOL_ID, type: "parent", full_name: "Riya Bopardikar",
       email: "riya.bopardikar@gmail.com", phone: "+1 (408) 555-0220",
-      is_primary: true, can_pickup: true, pin_code: "901203",
+      is_primary: true, can_pickup: true, pin_code: "300001",
       portal_status: "invited",
     },
     // Aanya
     {
       student_id: aanya.id, school_id: SCHOOL_ID, type: "parent", full_name: "Priya Sharma",
       email: "priya.sharma@gmail.com", phone: "+1 (408) 555-0230",
-      is_primary: true, can_pickup: true, pin_code: "345604",
+      is_primary: true, can_pickup: true, pin_code: "400001",
       portal_status: "signed_up",
     },
     {
       student_id: aanya.id, school_id: SCHOOL_ID, type: "guardian", full_name: "Ramesh Sharma",
       email: null, phone: "+1 (408) 555-0231",
-      is_primary: false, can_pickup: true, pin_code: "345604",
+      is_primary: false, can_pickup: true, pin_code: "400002",
       portal_status: "not_signed_up",
     },
     // Leo
     {
       student_id: leo.id, school_id: SCHOOL_ID, type: "parent", full_name: "David Chen",
       email: "david.chen@gmail.com", phone: "+1 (408) 555-0240",
-      is_primary: true, can_pickup: true, pin_code: "789005",
+      is_primary: true, can_pickup: true, pin_code: "500001",
       portal_status: "not_signed_up",
     },
   ]);
@@ -341,7 +348,7 @@ async function seed() {
     // DTaP dose 3 missing → overdue
     { student_id: adrith.id, vaccine_name: "Polio",  dose_number: 1, administered_date: "2025-05-22", exempt: false, skipped: false },
     { student_id: adrith.id, vaccine_name: "Polio",  dose_number: 2, administered_date: "2025-07-22", exempt: false, skipped: false },
-    { student_id: adrith.id, vaccine_name: "MMR",    dose_number: 1, administered_date: null, exempt: false },
+    { student_id: adrith.id, vaccine_name: "MMR",    dose_number: 1, administered_date: null, exempt: false, skipped: false },
   ]);
   log("Immunizations seeded (Adrith has overdue doses → triggers compliance alert)");
 
