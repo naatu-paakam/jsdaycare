@@ -7,11 +7,12 @@ Edit this file and ask Claude to roll out the changes.
 
 ## Personas
 
-| Persona | Login | Description |
-|---|---|---|
-| **Admin** | admin@jsdaycare.com | Owner/director — full access to all data and settings |
-| **Staff** | teacher@jsdaycare.com | Teacher/aide — operational access to their assigned rooms |
-| **Parent** | parent@jsdaycare.com | Parent/guardian — access to their own child's data only |
+| Persona | Login | Password | Description |
+|---|---|---|---|
+| **Portal Admin** | portal@daycareportal.com | DayCarePortal@2026 | Platform super-admin — creates schools, assigns admins; sees all schools |
+| **Admin** | admin@jsdaycare.com | JsDaycare@2026 | School owner/director — full access to their school's data |
+| **Staff** | teacher@jsdaycare.com | JsDaycare@2026 | Teacher/aide — operational access to assigned rooms |
+| **Parent** | parent@jsdaycare.com | JsDaycare@2026 | Parent/guardian — access to their own child's data only |
 
 ---
 
