@@ -191,9 +191,11 @@ test.describe("Student profile tabs", () => {
   });
 
   test("TC-immunizations-delete: admin sees delete button on existing dose records", async ({ page }) => {
+    // Navigate to Adrith who has seeded immunization records
+    await page.goto(`/students/${ADRITH_ID}`);
+    await page.waitForURL("**/students/**", { timeout: 10_000 });
     await page.getByRole("button", { name: /^immunizations$/i }).click();
     await page.getByText(/Hep B/i).first().waitFor({ timeout: 8_000 });
-    // Trash2 delete buttons exist for existing dose records
     const trashBtns = page.locator('button[title="Delete this dose record"]');
     const count = await trashBtns.count();
     expect(count).toBeGreaterThan(0);
@@ -260,7 +262,7 @@ test.describe("Student profile tabs", () => {
 
 // ─── Parent persona — profile access ─────────────────────────────────────────
 // Adrith Ram's student ID is known from seed data
-const ADRITH_ID = "0bdfed96-a0bf-42b4-8f0d-4134e9129f47";
+const ADRITH_ID = "ff1728f4-0c83-4634-9978-d2252c3215fd";
 
 test.describe("Parent — student profile access", () => {
   test("TC-parent-profile-edit: parent can see Edit on personal info", async ({ page }) => {

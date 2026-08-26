@@ -171,7 +171,7 @@ test("TC-settings-school-name-change: renaming school preserves students and roo
   // Wait for school name to load into input (non-empty)
   const nameInput = page.locator('input').first();
   await expect(nameInput).not.toHaveValue("", { timeout: 8_000 });
-  const originalName = await nameInput.inputValue();
+  const CANONICAL_NAME = "JS Joy Family Daycare"; // always restore to this
 
   // Change the name — school UUID stays the same, only name changes
   await nameInput.fill("JS Joy Family Daycare (Test Rename)");
@@ -187,9 +187,9 @@ test("TC-settings-school-name-change: renaming school preserves students and roo
   // Restore original name
   await page.goto("/settings");
   await expect(page.locator('input').first()).not.toHaveValue("", { timeout: 8_000 });
-  await page.locator('input').first().fill(originalName);
+  await page.locator('input').first().fill(CANONICAL_NAME);
   await page.getByRole("button", { name: /save changes/i }).click();
-  await expect(page.locator('input').first()).toHaveValue(originalName, { timeout: 5_000 });
+  await expect(page.locator('input').first()).toHaveValue(CANONICAL_NAME, { timeout: 5_000 });
 });
 
 test("TC-sidebar-school-name: sidebar shows actual school name (not generic 'My School')", async ({ page }) => {
