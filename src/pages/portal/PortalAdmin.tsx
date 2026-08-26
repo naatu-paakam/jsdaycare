@@ -40,6 +40,7 @@ export default function PortalAdmin() {
   const [managedSchool, setManagedSchool] = useState<SchoolWithAdmins | null>(null);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
+  const [inviteError, setInviteError] = useState("");
   const [editName, setEditName] = useState("");
   const [editingName, setEditingName] = useState(false);
   const [savingName, setSavingName] = useState(false);
@@ -83,35 +84,48 @@ export default function PortalAdmin() {
   async function inviteAdmin() {
     if (!inviteEmail.trim() || !managedSchool) return;
     setInviting(true);
-    // Create auth user + profile with admin role for this school
-    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/admin/users`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify({
-        email: inviteEmail.trim(),
-        email_confirm: false,
-        role: "authenticated",
-      }),
-    });
-    if (!res.ok) {
-      // Fallback: just show error
-      alert("Could not create user. Please use Supabase dashboard to invite this admin.");
-    } else {
-      const { user } = await res.json();
-      if (user?.id) {
-        await supabase.from("profiles").upsert(
-          { id: user.id, school_id: managedSchool.id, role: "admin", full_name: inviteEmail.trim(), phone: null },
-          { onConflict: "id" }
-        );
-      }
+    setInviteError("");
+
+    // Step 1: Look up user by email using a security-definer DB function
+    const { data: userId, error: lookupErr } = await supabase
+      .rpc("find_user_id_by_email", { p_email: inviteEmail.trim() });
+
+    if (lookupErr || !userId) {
+      setInviteError(
+        `No account found for "${inviteEmail.trim()}". ` +
+        `Ask them to register at the login page first, then come back to assign them here.`
+      );
+      setInviting(false);
+      return;
     }
+
+    // Step 2: Check if already admin of another school
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("role, school_id")
+      .eq("id", userId)
+      .single();
+
+    if (existingProfile?.role === "portal_admin") {
+      setInviteError("This user is a Portal Admin and cannot be assigned as a school admin.");
+      setInviting(false);
+      return;
+    }
+
+    // Step 3: Assign as admin of this school
+    await supabase.from("profiles").upsert(
+      { id: userId, school_id: managedSchool.id, role: "admin" },
+      { onConflict: "id" }
+    );
+
+    // Step 4: Add to school_memberships
+    await supabase.from("school_memberships").upsert(
+      { profile_id: userId, school_id: managedSchool.id, role: "admin" },
+      { onConflict: "profile_id, school_id" }
+    );
+
     setInviteEmail(""); setInviting(false);
     await loadAll();
-    // Refresh managed school
     const updated = schools.find(s => s.id === managedSchool.id);
     if (updated) setManagedSchool(updated);
   }
@@ -318,24 +332,31 @@ export default function PortalAdmin() {
                 )}
               </div>
 
-              {/* Invite admin */}
+              {/* Assign existing user as admin */}
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Invite admin</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Assign admin</p>
                 <div className="flex gap-2">
                   <input
                     type="email"
                     className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
-                    placeholder="admin@school.com"
-                    value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
+                    placeholder="existing-user@email.com"
+                    value={inviteEmail}
+                    onChange={e => { setInviteEmail(e.target.value); setInviteError(""); }}
                   />
                   <button
                     onClick={inviteAdmin} disabled={inviting || !inviteEmail.trim()}
                     className="px-3 py-1.5 bg-orange-500 text-white rounded-lg text-xs font-medium hover:bg-orange-600 disabled:opacity-50"
                   >
-                    {inviting ? "…" : "Invite"}
+                    {inviting ? "…" : "Assign"}
                   </button>
                 </div>
-                <p className="text-xs text-gray-400 mt-1">An account will be created and assigned as admin for this school.</p>
+                {inviteError ? (
+                  <p className="text-xs text-red-600 mt-1.5 bg-red-50 rounded px-2 py-1">{inviteError}</p>
+                ) : (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Enter the email of an existing DayCarePortal user. They must register first if they don't have an account.
+                  </p>
+                )}
               </div>
             </div>
           </div>
