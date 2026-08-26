@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Mail, Phone, ExternalLink } from "lucide-react";
+import { Mail, Phone, ExternalLink, Plus } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import Layout from "@/components/Layout";
 import { StudentContact, Student } from "@/lib/types";
+import InviteDialog from "@/components/InviteDialog";
 
 interface ContactRow extends StudentContact {
   student?: Pick<Student, "id" | "first_name" | "last_name" | "homeroom_id">;
@@ -21,6 +22,7 @@ export default function Parents() {
   const [contacts, setContacts] = useState<ContactRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [showInvite, setShowInvite] = useState(false);
 
   useEffect(() => {
     if (!profile?.school_id) return;
@@ -49,7 +51,25 @@ export default function Parents() {
             <h1 className="text-2xl font-bold text-gray-900">Parents</h1>
             <p className="text-sm text-gray-500 mt-0.5">{contacts.length} contacts across all students</p>
           </div>
+          {profile?.role === "admin" && (
+            <button
+              onClick={() => setShowInvite(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors"
+            >
+              <Plus size={14} /> Invite Parent
+            </button>
+          )}
         </div>
+
+        {showInvite && profile?.school_id && (
+          <InviteDialog
+            schoolId={profile.school_id}
+            schoolName="this school"
+            defaultRole="parent"
+            allowedRoles={["parent"]}
+            onClose={() => setShowInvite(false)}
+          />
+        )}
 
         <input
           value={search}

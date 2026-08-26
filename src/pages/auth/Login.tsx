@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Baby } from "lucide-react";
 
@@ -97,6 +97,12 @@ export default function Login() {
               {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
+
+          <div className="mt-5 text-center">
+            <Link to="/register" className="text-sm text-orange-500 hover:text-orange-600 hover:underline">
+              Have an invitation? Register here →
+            </Link>
+          </div>
         </div>
       </div>
     </div>

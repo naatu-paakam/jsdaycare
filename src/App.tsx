@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Login from "@/pages/auth/Login";
+import Register from "@/pages/auth/Register";
 import Home from "@/pages/home/Home";
 import StudentList from "@/pages/students/StudentList";
 import StudentProfile from "@/pages/students/StudentProfile";
@@ -26,6 +27,7 @@ export default function App() {
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         {/* Admin / Staff routes */}
         <Route path="/home" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><Home /></ProtectedRoute>} />

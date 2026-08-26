@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { UserCheck, Mail, Phone } from "lucide-react";
+import { UserCheck, Mail, Phone, Plus } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import Layout from "@/components/Layout";
 import { Profile } from "@/lib/types";
+import InviteDialog from "@/components/InviteDialog";
 
 export default function StaffList() {
   const { profile } = useAuth();
   const [staff, setStaff] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showInvite, setShowInvite] = useState(false);
 
   useEffect(() => {
     if (!profile?.school_id) return;
@@ -33,7 +35,25 @@ export default function StaffList() {
             <h1 className="text-2xl font-bold text-gray-900">Staff & Payroll</h1>
             <p className="text-sm text-gray-500 mt-0.5">{staff.length} team members</p>
           </div>
+          {profile?.role === "admin" && (
+            <button
+              onClick={() => setShowInvite(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors"
+            >
+              <Plus size={14} /> Invite Staff
+            </button>
+          )}
         </div>
+
+        {showInvite && profile?.school_id && (
+          <InviteDialog
+            schoolId={profile.school_id}
+            schoolName="this school"
+            defaultRole="staff"
+            allowedRoles={["staff"]}
+            onClose={() => setShowInvite(false)}
+          />
+        )}
 
         <div className="card overflow-hidden">
           <table className="w-full text-sm">
