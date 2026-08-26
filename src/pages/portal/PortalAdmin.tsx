@@ -112,17 +112,24 @@ export default function PortalAdmin() {
       return;
     }
 
-    // Step 3: Assign as admin of this school
-    await supabase.from("profiles").upsert(
-      { id: userId, school_id: managedSchool.id, role: "admin" },
-      { onConflict: "id" }
-    );
-
-    // Step 4: Add to school_memberships
+    // Step 3: Add to school_memberships (supports multi-school admins)
     await supabase.from("school_memberships").upsert(
       { profile_id: userId, school_id: managedSchool.id, role: "admin" },
-      { onConflict: "profile_id, school_id" }
+      { onConflict: "profile_id,school_id" }
     );
+
+    // Step 4: Update profiles.role to admin if needed.
+    // IMPORTANT: Do NOT overwrite school_id — that would remove them from their current school.
+    // profiles.school_id = active school (the one they last switched to).
+    // If they have no school yet (new user), set it to this school.
+    if (!existingProfile?.school_id) {
+      await supabase.from("profiles").update(
+        { school_id: managedSchool.id, role: "admin" }
+      ).eq("id", userId);
+    } else if (existingProfile.role !== "admin") {
+      // Already has a school — just upgrade role
+      await supabase.from("profiles").update({ role: "admin" }).eq("id", userId);
+    }
 
     setInviteEmail(""); setInviting(false);
     await loadAll();
