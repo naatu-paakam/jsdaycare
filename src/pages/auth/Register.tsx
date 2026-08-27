@@ -6,11 +6,12 @@ import { Baby } from "lucide-react";
 interface Invitation {
   id: string;
   school_id: string;
-  email: string;
+  email: string | null;
   role: string;
-  expires_at: string;
+  expires_at: string | null;
   used_at: string | null;
   school_name: string;
+  permanent: boolean;
 }
 
 export default function Register() {
@@ -22,7 +23,10 @@ export default function Register() {
   const [loadError, setLoadError] = useState("");
   const [loadingInvite, setLoadingInvite] = useState(true);
 
-  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -47,6 +51,8 @@ export default function Register() {
     }
     const inv: Invitation = Array.isArray(data) ? data[0] : data;
     setInvitation(inv);
+    // Pre-fill email if it's set on the invitation
+    if (inv.email) setEmail(inv.email);
     setLoadingInvite(false);
   }
 
@@ -54,6 +60,14 @@ export default function Register() {
     e.preventDefault();
     setFormError("");
 
+    if (!email.trim()) {
+      setFormError("Email is required.");
+      return;
+    }
+    if (!firstName.trim() || !lastName.trim()) {
+      setFormError("First and last name are required.");
+      return;
+    }
     if (password.length < 8) {
       setFormError("Password must be at least 8 characters.");
       return;
@@ -64,11 +78,12 @@ export default function Register() {
     }
 
     setSubmitting(true);
+    const fullName = `${firstName.trim()} ${lastName.trim()}`;
 
     const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-      email: invitation!.email,
+      email: email.trim(),
       password,
-      options: { data: { full_name: fullName.trim() } },
+      options: { data: { full_name: fullName, phone: phone.trim() || null } },
     });
 
     if (signUpErr || !signUpData.user) {
@@ -81,7 +96,13 @@ export default function Register() {
 
     // Upsert profile
     await supabase.from("profiles").upsert(
-      { id: userId, school_id: invitation!.school_id, role: invitation!.role, full_name: fullName.trim() },
+      {
+        id: userId,
+        school_id: invitation!.school_id,
+        role: invitation!.role,
+        full_name: fullName,
+        phone: phone.trim() || null,
+      },
       { onConflict: "id" }
     );
 
@@ -91,8 +112,10 @@ export default function Register() {
       { onConflict: "profile_id,school_id" }
     );
 
-    // Mark invitation used
-    await supabase.rpc("use_invitation", { p_token: token });
+    // Only mark used if NOT a permanent invite
+    if (!invitation!.permanent) {
+      await supabase.rpc("use_invitation", { p_token: token });
+    }
 
     setSuccess(true);
     setTimeout(() => {
@@ -104,9 +127,18 @@ export default function Register() {
     }, 1500);
   }
 
-  const roleLabel = invitation?.role
-    ? invitation.role.charAt(0).toUpperCase() + invitation.role.slice(1)
-    : "";
+  const roleLabel = invitation?.role === "admin"
+    ? "School Admin"
+    : invitation?.role
+      ? invitation.role.charAt(0).toUpperCase() + invitation.role.slice(1)
+      : "";
+
+  // Determine if invitation is valid/usable
+  const isExpired = invitation && !invitation.permanent && invitation.expires_at
+    ? new Date(invitation.expires_at) < new Date()
+    : false;
+  const isUsed = invitation?.used_at && !invitation.permanent;
+  const isUsable = invitation && !isExpired && !isUsed;
 
   if (loadingInvite) {
     return (
@@ -149,7 +181,7 @@ export default function Register() {
 
         {!loadError && invitation && (
           <>
-            {invitation.used_at && (
+            {isUsed && (
               <div className="card p-8 text-center space-y-3">
                 <p className="text-amber-600 font-medium">This invitation has already been used</p>
                 <p className="text-sm text-gray-500">If you already registered, sign in below.</p>
@@ -157,7 +189,7 @@ export default function Register() {
               </div>
             )}
 
-            {!invitation.used_at && new Date(invitation.expires_at) < new Date() && (
+            {isExpired && !isUsed && (
               <div className="card p-8 text-center space-y-3">
                 <p className="text-red-600 font-medium">This invitation has expired</p>
                 <p className="text-sm text-gray-500">Contact your admin to send a new invitation.</p>
@@ -165,7 +197,7 @@ export default function Register() {
               </div>
             )}
 
-            {!invitation.used_at && new Date(invitation.expires_at) >= new Date() && (
+            {isUsable && (
               <div className="card p-8">
                 {success ? (
                   <div className="text-center py-6 space-y-2">
@@ -186,30 +218,56 @@ export default function Register() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Email <span className="text-red-500">*</span></label>
                       <input
                         type="email"
-                        value={invitation.email}
-                        readOnly
-                        className="input bg-gray-50 text-gray-500 cursor-not-allowed"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Full name</label>
-                      <input
-                        type="text"
-                        value={fullName}
-                        onChange={e => setFullName(e.target.value)}
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
                         className="input"
-                        placeholder="Jane Smith"
+                        placeholder="you@example.com"
                         required
-                        autoFocus
+                        autoFocus={!invitation.email}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">First name <span className="text-red-500">*</span></label>
+                        <input
+                          type="text"
+                          value={firstName}
+                          onChange={e => setFirstName(e.target.value)}
+                          className="input"
+                          placeholder="Jane"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Last name <span className="text-red-500">*</span></label>
+                        <input
+                          type="text"
+                          value={lastName}
+                          onChange={e => setLastName(e.target.value)}
+                          className="input"
+                          placeholder="Smith"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone number <span className="text-gray-400 font-normal">(optional)</span></label>
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={e => setPhone(e.target.value)}
+                        className="input"
+                        placeholder="+1 555 123 4567"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Password <span className="text-red-500">*</span></label>
                       <input
                         type="password"
                         value={password}
@@ -222,7 +280,7 @@ export default function Register() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm password</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm password <span className="text-red-500">*</span></label>
                       <input
                         type="password"
                         value={confirmPassword}
