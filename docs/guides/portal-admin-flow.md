@@ -20,10 +20,15 @@ The fastest way to onboard a new school admin who doesn't have a DayCarePortal a
 
 ## What the invited admin sees
 1. Opens the link → /register?token=xxx
-2. Sees: school name + "School Admin" role pre-filled (cannot be changed)
-3. Fills in: Email, First name, Last name, Phone (optional), Password
-4. Clicks "Create Account" → account is created and active immediately
-5. Redirected to /home → their school appears in the sidebar
+2. Sees: school name badge + "School Admin" role badge (pre-filled, cannot be changed)
+3. Fills in:
+   - **User ID** (required) — their login username, e.g. `jaya.bijjala`
+   - **First name** + **Last name** (required)
+   - **Email** (optional) — if not provided, they log in with User ID only
+   - **Phone** (optional)
+   - **Password** + **Confirm password** (min 8 chars)
+4. Clicks **Create Account** → account is created and active immediately (no email verification needed)
+5. Redirected to /home → their school appears in the sidebar under the school switcher
 
 ## Assigning an existing user as school admin
 For users who already have a DayCarePortal account (e.g. an admin of another school):

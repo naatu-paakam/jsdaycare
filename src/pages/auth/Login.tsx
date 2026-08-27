@@ -5,7 +5,7 @@ import { Baby } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [loginInput, setLoginInput] = useState(""); // email or user ID
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -15,7 +15,19 @@ export default function Login() {
     setError("");
     setLoading(true);
 
-    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    // Resolve login input: if no @ assume it's a User ID, look up the internal email
+    let authEmail = loginInput.trim();
+    if (!authEmail.includes("@")) {
+      const { data: emailData } = await supabase.rpc("get_email_by_login_id", { p_login_id: authEmail.toLowerCase() });
+      if (!emailData) {
+        setError("User ID not found. Please check your User ID or use your email address.");
+        setLoading(false);
+        return;
+      }
+      authEmail = emailData as string;
+    }
+
+    const { data, error: authError } = await supabase.auth.signInWithPassword({ email: authEmail, password });
 
     if (authError) {
       setError(authError.message);
@@ -56,15 +68,15 @@ export default function Login() {
         <div className="card p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">User ID or Email</label>
               <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
+                type="text"
+                value={loginInput}
+                onChange={e => setLoginInput(e.target.value)}
                 className="input"
-                placeholder="you@example.com"
+                placeholder="User ID or email"
                 required
-                autoComplete="email"
+                autoComplete="username"
               />
             </div>
             <div>
