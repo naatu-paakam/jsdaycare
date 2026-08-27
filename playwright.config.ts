@@ -5,7 +5,7 @@ export default defineConfig({
   timeout: 30_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
-  workers: 3,
+  workers: 2,  // Keep low to avoid concurrent Supabase auth conflicts
   retries: 2,
   use: {
     baseURL: "http://localhost:5174",

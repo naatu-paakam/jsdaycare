@@ -51,30 +51,23 @@ test("TC-portal-manage-school: Manage link opens school detail panel", async ({ 
   await expect(page.getByText(/admins|school name|manage school/i).first()).toBeVisible({ timeout: 8_000 });
 });
 
-test("TC-portal-assign-panel: Manage panel opens and has assign input", async ({ page }) => {
+test("TC-portal-manage-invite: Manage panel has Invite School Admin button (opens InviteDialog)", async ({ page }) => {
   await loginAsPortalAdmin(page);
-  // Navigate directly to portal and open manage for JS Joy (first row)
   await page.locator("table tbody tr").first().waitFor({ timeout: 10_000 });
   await page.locator("table tbody tr").first().getByText("Manage").click();
-  // Confirm the manage panel opened
-  await expect(page.getByText(/school name|assign admin/i).first()).toBeVisible({ timeout: 10_000 });
-  // Assign input present
-  await expect(page.getByPlaceholder("existing-user@email.com")).toBeVisible({ timeout: 5_000 });
+  // Panel opens — look for Invite School Admin button
+  await expect(page.getByRole("button", { name: /invite school admin/i })).toBeVisible({ timeout: 10_000 });
 });
 
-test("TC-portal-assign-known-email: assigning known email succeeds", async ({ page }) => {
+test("TC-portal-invite-dialog-opens: Invite School Admin button opens InviteDialog", async ({ page }) => {
   await loginAsPortalAdmin(page);
-  await page.locator("table").waitFor({ timeout: 8_000 });
-  // Use JS Joy Family Daycare's manage panel
-  const jsjoyRow = page.locator("tr").filter({ hasText: /JS Joy Family/i });
-  await jsjoyRow.getByText("Manage").click();
-  await page.getByPlaceholder("existing-user@email.com").waitFor({ timeout: 8_000 });
-  // Assign existing admin (Jaya Bijjala) — should succeed silently
-  await page.getByPlaceholder("existing-user@email.com").fill("admin@jsdaycare.com");
-  await page.getByRole("button", { name: /^assign$/i }).click();
-  // Error should NOT appear (user exists)
-  await page.waitForTimeout(2000);
-  await expect(page.getByText(/no account found/i)).not.toBeVisible();
+  await page.locator("table tbody tr").first().waitFor({ timeout: 10_000 });
+  await page.locator("table tbody tr").first().getByText("Manage").click();
+  await page.getByRole("button", { name: /invite school admin/i }).waitFor({ timeout: 10_000 });
+  await page.getByRole("button", { name: /invite school admin/i }).click();
+  // InviteDialog should open with email input + generate link button
+  await expect(page.locator('input[type="email"]').first()).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByRole("button", { name: /generate invite link/i })).toBeVisible();
 });
 
 test("TC-portal-blocked-from-home: portal admin cannot access /home", async ({ page }) => {

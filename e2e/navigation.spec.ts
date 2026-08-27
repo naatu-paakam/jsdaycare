@@ -55,7 +55,7 @@ test.describe("Admin — left nav links", () => {
     await page.locator("nav button").filter({ hasText: /js joy|my school/i }).first().click();
     await page.getByRole("link", { name: /^calendar$/i }).click();
     await expect(page).toHaveURL(/\/calendar/);
-    await expect(page.getByRole("heading", { name: /calendar/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /calendar/i }).first()).toBeVisible();
   });
 
   test("TC-nav-schedules: navigates to /schedule", async ({ page }) => {

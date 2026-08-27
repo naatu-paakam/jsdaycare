@@ -35,7 +35,7 @@ test.describe("Calendar page", () => {
   });
 
   test("TC-calendar-special-events: Special Events section and + Add Special Event button visible", async ({ page }) => {
-    await expect(page.getByText("Special Events")).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByText("Special Events").first()).toBeVisible({ timeout: 8_000 });
     await expect(page.getByRole("button", { name: /add special event/i })).toBeVisible({ timeout: 5_000 });
   });
 

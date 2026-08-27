@@ -352,11 +352,11 @@ test.describe("Contact modal enhancements", () => {
 
 // ─── Room settings and features ───────────────────────────────────────────────
 
-test.describe("Room detail — settings, activity, add student", () => {
+test.describe.serial("Room detail — settings, activity, add student", () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
     await page.goto("/rooms");
-    const toddlerLink = page.locator('a[href^="/rooms/"]', { hasText: /toddler/i });
+    const toddlerLink = page.locator('a[href^="/rooms/"]', { hasText: /toddler/i }).first();
     await toddlerLink.waitFor({ state: "visible", timeout: 10_000 });
     await toddlerLink.click();
     await page.waitForURL("**/rooms/**", { timeout: 10_000 });

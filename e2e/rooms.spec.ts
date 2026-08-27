@@ -30,7 +30,7 @@ test("TC-checkin-buttons: room Students tab has Check in and Mark absent buttons
   // Wait for all room links, then pick "Toddlers" which has active students
   await page.locator('a[href^="/rooms/"]').first().waitFor({ state: "visible", timeout: 10_000 });
 
-  const toddlerLink = page.locator('a[href^="/rooms/"]', { hasText: /toddler/i });
+  const toddlerLink = page.locator('a[href^="/rooms/"]', { hasText: /toddler/i }).first();
   const count = await toddlerLink.count();
   if (count === 0) { test.skip(); return; }
 
