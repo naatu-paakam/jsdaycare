@@ -289,17 +289,6 @@ export default function PortalAdmin() {
         </div>
       )}
 
-      {/* Invite dialog */}
-      {showInviteDialog && managedSchool && (
-        <InviteDialog
-          schoolId={managedSchool.id}
-          schoolName={managedSchool.name}
-          defaultRole="admin"
-          allowedRoles={["admin"]}
-          onClose={() => setShowInviteDialog(false)}
-        />
-      )}
-
       {/* Manage school panel */}
       {managedSchool && (
         <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-4">
@@ -354,7 +343,7 @@ export default function PortalAdmin() {
 
               {/* Invite new admin */}
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Invite admin</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Invite new admin</p>
                 <button
                   onClick={() => setShowInviteDialog(true)}
                   className="flex items-center gap-2 px-3 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors"
@@ -365,9 +354,49 @@ export default function PortalAdmin() {
                   Generates a registration link you can send to the new admin.
                 </p>
               </div>
+
+              {/* Assign existing user */}
+              <div className="border-t border-gray-100 pt-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Assign existing user</p>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    placeholder="existing-user@email.com"
+                    value={inviteEmail}
+                    onChange={e => { setInviteEmail(e.target.value); setInviteError(""); }}
+                  />
+                  <button
+                    onClick={inviteAdmin}
+                    disabled={inviting || !inviteEmail.trim()}
+                    className="px-3 py-1.5 bg-gray-700 text-white rounded-lg text-xs font-medium hover:bg-gray-800 disabled:opacity-50"
+                  >
+                    {inviting ? "…" : "Assign"}
+                  </button>
+                </div>
+                {inviteError ? (
+                  <p className="text-xs text-red-600 mt-1.5 bg-red-50 rounded px-2 py-1">{inviteError}</p>
+                ) : (
+                  <p className="text-xs text-gray-400 mt-1">
+                    For existing DayCarePortal users. They keep access to their other schools.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* InviteDialog — rendered AFTER manage panel with higher z-index so it appears on top */}
+      {showInviteDialog && managedSchool && (
+        <InviteDialog
+          schoolId={managedSchool.id}
+          schoolName={managedSchool.name}
+          defaultRole="admin"
+          allowedRoles={["admin"]}
+          onClose={() => setShowInviteDialog(false)}
+          zIndex="z-[60]"
+        />
       )}
     </div>
   );

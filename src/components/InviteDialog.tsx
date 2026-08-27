@@ -9,6 +9,7 @@ interface InviteDialogProps {
   defaultRole?: "admin" | "staff" | "parent";
   allowedRoles: ("admin" | "staff" | "parent")[];
   onClose: () => void;
+  zIndex?: string;  // override z-index when opened above another modal
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -17,7 +18,7 @@ const ROLE_LABELS: Record<string, string> = {
   parent: "Parent",
 };
 
-export default function InviteDialog({ schoolId, schoolName, defaultRole, allowedRoles, onClose }: InviteDialogProps) {
+export default function InviteDialog({ schoolId, schoolName, defaultRole, allowedRoles, onClose, zIndex = "z-50" }: InviteDialogProps) {
   const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"admin" | "staff" | "parent">(defaultRole ?? allowedRoles[0]);
@@ -54,7 +55,7 @@ export default function InviteDialog({ schoolId, schoolName, defaultRole, allowe
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div className={`fixed inset-0 bg-black/40 flex items-center justify-center ${zIndex} p-4`}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div>
