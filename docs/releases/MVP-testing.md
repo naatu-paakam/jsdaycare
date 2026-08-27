@@ -1,8 +1,21 @@
 # MVP Testing — DayCarePortal
 
-**Total: 114 Playwright tests (92 unique TC IDs)**
+**Total: 147 Playwright tests across 10 spec files**
 Run: `npm run test:e2e`
 Personas: portal admin / admin / teacher / parent — credentials in `.notes`
+
+| File | Tests | Area |
+|---|---|---|
+| auth.spec.ts | 2 | Login + wrong password |
+| dashboard.spec.ts | 4 | Home page stats/ratios/alerts |
+| navigation.spec.ts | 28 | All nav links, 3 personas, school name, settings |
+| rooms.spec.ts | 4 | Room list, detail, check-in |
+| students.spec.ts | 51 | Full student profile — all tabs, contacts, immunizations, rooms |
+| schedules.spec.ts | 14 | Grid, dialogs, week nav |
+| calendar.spec.ts | 10 | Holiday calendar, operating hours, policies |
+| menus.spec.ts | 11 | Weekly menu, food library, role-based tabs |
+| portal.spec.ts | 11 | Portal admin dashboard, schools, invite |
+| registration.spec.ts | 12 | Register page, invite link, multi-school admin |
 
 ---
 
