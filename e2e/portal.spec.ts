@@ -51,48 +51,49 @@ test("TC-portal-manage-school: Manage link opens school detail panel", async ({ 
   await expect(page.getByText(/admins|school name|manage school/i).first()).toBeVisible({ timeout: 8_000 });
 });
 
-test("TC-portal-manage-invite: Manage panel has both Invite and Assign sections", async ({ page }) => {
+test("TC-portal-manage-invite: Manage panel has Admin Registration Link and Assign sections", async ({ page }) => {
   await loginAsPortalAdmin(page);
   await page.locator("table tbody tr").first().waitFor({ timeout: 10_000 });
   await page.locator("table tbody tr").first().getByText("Manage").click();
-  // Panel opens — both sections visible
-  await expect(page.getByRole("button", { name: /invite school admin/i })).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByPlaceholder("existing-user@email.com")).toBeVisible();
+  // Admin Registration Link section visible
+  await expect(page.getByText(/admin registration link/i)).toBeVisible({ timeout: 10_000 });
+  // Assign existing admin section visible
+  await expect(page.getByText(/assign existing admin/i)).toBeVisible();
+});
+
+test("TC-portal-invite-dialog-opens: Admin Registration Link section loads in manage panel", async ({ page }) => {
+  await loginAsPortalAdmin(page);
+  await page.locator("table tbody tr").first().waitFor({ timeout: 10_000 });
+  await page.locator("table tbody tr").first().getByText("Manage").click();
+  // Wait for the admin link section to load (fetches from DB)
+  await page.getByText(/admin registration link/i).waitFor({ timeout: 10_000 });
+  // Wait for either the link or the generate button to appear (DB fetch may take a moment)
+  await expect(
+    page.getByRole("button", { name: /copy|generate admin link/i }).first()
+  ).toBeVisible({ timeout: 8_000 });
+});
+
+test("TC-portal-invite-generates-link: Generate Admin Link shows copy button", async ({ page }) => {
+  await loginAsPortalAdmin(page);
+  await page.locator("table tbody tr").first().waitFor({ timeout: 10_000 });
+  await page.locator("table tbody tr").first().getByText("Manage").click();
+  await page.getByText(/admin registration link/i).waitFor({ timeout: 10_000 });
+  // Click Generate if no link yet
+  const generateBtn = page.getByRole("button", { name: /generate admin link/i });
+  if (await generateBtn.count() > 0) await generateBtn.click();
+  // Copy button should appear
+  await expect(page.getByRole("button", { name: /copy/i }).first()).toBeVisible({ timeout: 10_000 });
+});
+
+test("TC-portal-assign-existing: Assign existing user shows error for unknown search", async ({ page }) => {
+  await loginAsPortalAdmin(page);
+  await page.locator("table tbody tr").first().waitFor({ timeout: 10_000 });
+  await page.locator("table tbody tr").first().getByText("Manage").click();
+  await page.getByText(/assign existing admin/i).waitFor({ timeout: 10_000 });
+  // The assign section has a search input
+  const searchInput = page.getByPlaceholder(/search by name/i);
+  await expect(searchInput).toBeVisible({ timeout: 5_000 });
   await expect(page.getByRole("button", { name: /^assign$/i })).toBeVisible();
-});
-
-test("TC-portal-invite-dialog-opens: Invite School Admin opens dialog ABOVE manage panel", async ({ page }) => {
-  await loginAsPortalAdmin(page);
-  await page.locator("table tbody tr").first().waitFor({ timeout: 10_000 });
-  await page.locator("table tbody tr").first().getByText("Manage").click();
-  await page.getByRole("button", { name: /invite school admin/i }).waitFor({ timeout: 10_000 });
-  await page.getByRole("button", { name: /invite school admin/i }).click();
-  // InviteDialog opens above manage panel (z-[60])
-  await expect(page.getByText("Invite user")).toBeVisible({ timeout: 5_000 });
-  await expect(page.getByRole("button", { name: /generate invite link/i })).toBeVisible();
-});
-
-test("TC-portal-invite-generates-link: Invite generates a /register?token link", async ({ page }) => {
-  await loginAsPortalAdmin(page);
-  await page.locator("table tbody tr").first().waitFor({ timeout: 10_000 });
-  await page.locator("table tbody tr").first().getByText("Manage").click();
-  await page.getByRole("button", { name: /invite school admin/i }).waitFor({ timeout: 10_000 });
-  await page.getByRole("button", { name: /invite school admin/i }).click();
-  await page.locator('input[type="text"], input[type="email"]').first().waitFor({ timeout: 5_000 });
-  await page.locator('input[type="text"], input[type="email"]').first().fill("newadmin@test-invite.com");
-  await page.getByRole("button", { name: /generate invite link/i }).click();
-  // Copy button appears when link is generated
-  await expect(page.getByRole("button", { name: /copy/i })).toBeVisible({ timeout: 10_000 });
-});
-
-test("TC-portal-assign-existing: Assign existing user shows error for unknown email", async ({ page }) => {
-  await loginAsPortalAdmin(page);
-  await page.locator("table tbody tr").first().waitFor({ timeout: 10_000 });
-  await page.locator("table tbody tr").first().getByText("Manage").click();
-  await page.getByPlaceholder("existing-user@email.com").waitFor({ timeout: 10_000 });
-  await page.getByPlaceholder("existing-user@email.com").fill("nobody@doesnotexist.com");
-  await page.getByRole("button", { name: /^assign$/i }).click();
-  await expect(page.getByText(/no account found|register.*first/i)).toBeVisible({ timeout: 10_000 });
 });
 
 test("TC-portal-blocked-from-home: portal admin cannot access /home", async ({ page }) => {

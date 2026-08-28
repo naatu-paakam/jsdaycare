@@ -118,8 +118,8 @@ test.describe("Student profile tabs", () => {
     await page.locator("h3:has-text('Contacts')").first().waitFor({ timeout: 8_000 });
     await page.locator("button:not(.btn-primary):has-text('Add contact')").click();
     await page.getByRole("heading", { name: /add contact/i }).waitFor({ timeout: 5_000 });
-    // Generate Invite URL button should be in the modal
-    await expect(page.getByText(/generate invite url|portal invite link/i)).toBeVisible({ timeout: 5_000 });
+    // Generate Invite URL button or section should be in the modal
+    await expect(page.getByText(/generate invite url|portal invite link/i).first()).toBeVisible({ timeout: 5_000 });
   });
 
   test("TC-contacts-photo-upload: Add contact modal has photo upload section", async ({ page }) => {
