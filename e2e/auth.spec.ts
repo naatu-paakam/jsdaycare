@@ -8,7 +8,7 @@ test("TC-admin-login: navigates to /login and logs in successfully", async ({ pa
   await page.goto("/");
   await page.waitForURL("**/login", { timeout: 10_000 });
 
-  await page.fill('input[type="email"]', ADMIN_EMAIL);
+  await page.fill('input[type="text"], input[type="email"]', ADMIN_EMAIL);
   await page.fill('input[type="password"]', ADMIN_PASSWORD);
   await page.click('button[type="submit"]');
 
@@ -18,7 +18,7 @@ test("TC-admin-login: navigates to /login and logs in successfully", async ({ pa
 
 test("TC-wrong-password: shows error for bad credentials", async ({ page }) => {
   await page.goto("/login");
-  await page.fill('input[type="email"]', ADMIN_EMAIL);
+  await page.fill('input[type="text"], input[type="email"]', ADMIN_EMAIL);
   await page.fill('input[type="password"]', "wrongpassword123");
   await page.click('button[type="submit"]');
 

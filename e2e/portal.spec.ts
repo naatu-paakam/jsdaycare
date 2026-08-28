@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 async function loginAsPortalAdmin(page: import("@playwright/test").Page) {
   await page.goto("/login");
-  await page.fill('input[type="email"]', "portal@daycareportal.com");
+  await page.fill('input[type="text"], input[type="email"]', "portal@daycareportal.com");
   await page.fill('input[type="password"]', "DayCarePortal@2026");
   await page.click('button[type="submit"]');
   await page.waitForURL("**/portal", { timeout: 15_000 });
@@ -78,8 +78,8 @@ test("TC-portal-invite-generates-link: Invite generates a /register?token link",
   await page.locator("table tbody tr").first().getByText("Manage").click();
   await page.getByRole("button", { name: /invite school admin/i }).waitFor({ timeout: 10_000 });
   await page.getByRole("button", { name: /invite school admin/i }).click();
-  await page.locator('input[type="email"]').first().waitFor({ timeout: 5_000 });
-  await page.locator('input[type="email"]').first().fill("newadmin@test-invite.com");
+  await page.locator('input[type="text"], input[type="email"]').first().waitFor({ timeout: 5_000 });
+  await page.locator('input[type="text"], input[type="email"]').first().fill("newadmin@test-invite.com");
   await page.getByRole("button", { name: /generate invite link/i }).click();
   // Copy button appears when link is generated
   await expect(page.getByRole("button", { name: /copy/i })).toBeVisible({ timeout: 10_000 });
