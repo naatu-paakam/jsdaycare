@@ -8,7 +8,6 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import Layout from "@/components/Layout";
-import InviteDialog from "@/components/InviteDialog";
 import {
   Student, StudentContact, StudentEmergencyContact,
   StudentImmunization, StudentEnrollmentDetails, Room,
@@ -468,6 +467,29 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
   onClose: () => void; onSaved: () => void;
 }) {
   const isEdit = !!initial?.id;  // true only when editing an existing contact (has a real id)
+
+  // Invite URL state — generate a /register?token link for this contact
+  const [inviteLink, setInviteLink]   = useState("");
+  const [generatingLink, setGeneratingLink] = useState(false);
+  const [linkCopied, setLinkCopied]   = useState(false);
+
+  async function generateInviteLink() {
+    setGeneratingLink(true);
+    const { data } = await supabase
+      .from("invitations")
+      .insert({ school_id: schoolId, role: "parent", permanent: false,
+        email: form.email || null, expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() })
+      .select("token").single();
+    if (data?.token) setInviteLink(`${window.location.origin}/register?token=${data.token}`);
+    setGeneratingLink(false);
+  }
+
+  async function copyLink() {
+    await navigator.clipboard.writeText(inviteLink);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  }
+
   const [form, setForm] = useState({
     full_name:         initial?.full_name         ?? "",
     type:              initial?.type              ?? "parent" as ContactType,
@@ -659,6 +681,40 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
           )}
         </div>
 
+        {/* ── Invite URL ── */}
+        <div className="border-t border-gray-100 pt-4 space-y-2">
+          <p className="text-xs font-medium text-gray-600">Portal Invite Link</p>
+          {!inviteLink ? (
+            <div>
+              <button
+                type="button"
+                onClick={generateInviteLink}
+                disabled={generatingLink}
+                className="flex items-center gap-2 text-xs text-orange-600 border border-orange-200 rounded-lg px-3 py-1.5 hover:bg-orange-50 disabled:opacity-50"
+              >
+                {generatingLink ? "Generating…" : "🔗 Generate Invite URL"}
+              </button>
+              <p className="text-xs text-gray-400 mt-1">
+                Creates a registration link for this contact. They use it to create their login.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 bg-orange-50 border border-orange-100 rounded-lg px-3 py-2">
+                <span className="text-xs text-gray-600 truncate flex-1 font-mono">{inviteLink}</span>
+                <button
+                  type="button"
+                  onClick={copyLink}
+                  className="text-xs text-orange-600 font-medium shrink-0 flex items-center gap-1 hover:text-orange-700"
+                >
+                  {linkCopied ? "✓ Copied!" : "Copy"}
+                </button>
+              </div>
+              <p className="text-xs text-gray-400">Link expires in 7 days. Send it directly to the contact.</p>
+            </div>
+          )}
+        </div>
+
         <div className="flex justify-end gap-3 pt-2">
           <button onClick={onClose} className="btn-secondary">Cancel</button>
           <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Saving…" : isEdit ? "Save Changes" : "Add Contact"}</button>
@@ -691,7 +747,6 @@ export default function StudentProfile() {
   const [loading,      setLoading]      = useState(true);
   const [revealPin,    setRevealPin]    = useState<Record<string, boolean>>({});
   const [contactModal, setContactModal] = useState<{ open: boolean; contact?: StudentContact }>({ open: false });
-  const [inviteContactModal, setInviteContactModal] = useState(false);
 
   // Edit states — which section is being edited
   const [editSection, setEditSection] = useState<string | null>(null);
@@ -859,18 +914,6 @@ export default function StudentProfile() {
           initial={contactModal.contact}
           onClose={() => setContactModal({ open: false })}
           onSaved={() => { setContactModal({ open: false }); loadAll(); }}
-        />
-      )}
-
-      {/* Invite dialog — generates a /register?token link for the contact to sign up */}
-      {inviteContactModal && student.school_id && (
-        <InviteDialog
-          schoolId={student.school_id}
-          schoolName={school?.name ?? "this school"}
-          defaultRole="parent"
-          allowedRoles={["parent"]}
-          onClose={() => setInviteContactModal(false)}
-          zIndex="z-[60]"
         />
       )}
 
@@ -1163,8 +1206,6 @@ export default function StudentProfile() {
             return { label: "Active", color: "bg-emerald-100 text-emerald-700" };
           }
 
-          // sendInvite: opens InviteDialog to generate a registration link for the contact
-          // The link is role-based (parent/guardian) and school-scoped
 
           return (
             <div className="space-y-6">
@@ -1269,14 +1310,7 @@ export default function StudentProfile() {
                                     "bg-gray-100 text-gray-500"}`}>
                                   {(c.portal_status ?? "not_signed_up").replace(/_/g, " ")}
                                 </span>
-                                {isAdmin && c.portal_status !== "signed_up" && (
-                                  <button
-                                    onClick={() => setInviteContactModal(true)}
-                                    className="text-xs text-orange-500 border border-orange-200 rounded px-2 py-0.5 hover:bg-orange-50 flex items-center gap-1 w-fit"
-                                  >
-                                    📨 Invite
-                                  </button>
-                                )}
+                                {/* Invite link available via Edit contact modal */}
                               </div>
                             </td>
                             {/* Edit */}

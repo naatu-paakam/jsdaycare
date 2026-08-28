@@ -47,6 +47,17 @@ When an admin is assigned to multiple schools:
 
 ## School admin responsibilities (after onboarding)
 - Add students, rooms, staff
-- Invite parents (Parents page → + Invite Parent)
+- Invite parents/guardians (from student profile → Contacts tab → Add Contact or Edit Contact → Generate Invite URL)
 - Invite staff (Staff & Payroll → + Invite Staff)
 - Manage schedules, menus, calendar
+
+## Inviting a parent/guardian to the portal (school admin)
+1. Go to a student's profile → Contacts tab
+2. Click **+ Add contact** or the **✏ Edit** button on an existing contact
+3. Fill in the contact details (name, type, phone, etc.)
+4. Scroll to **Portal Invite Link** section → click **🔗 Generate Invite URL**
+5. A `/register?token=xxx` link appears — click **Copy** to copy it
+6. Send the link directly to the parent/guardian (SMS, WhatsApp, email, etc.)
+7. The link expires in 7 days
+8. The parent visits the link → fills in User ID, name, password → instantly accesses their child's portal
+9. The Contacts table shows their portal status: **Not signed up → Invited → Signed Up**

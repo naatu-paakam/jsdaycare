@@ -106,12 +106,20 @@ test.describe("Student profile tabs", () => {
     await expect(page.getByText("Valid To")).toBeVisible();
   });
 
-  test("TC-contacts-send-invite: Send invite shown for contacts without portal access", async ({ page }) => {
+  test("TC-contacts-portal-status: Contacts table shows portal status badge (Signed Up / Not Signed Up)", async ({ page }) => {
     await page.getByRole("button", { name: /^contacts$/i }).click();
     await page.locator("h3:has-text('Contacts')").first().waitFor({ timeout: 8_000 });
-    const inviteLinks = page.getByText("Send invite →");
-    const count = await inviteLinks.count();
-    expect(count).toBeGreaterThan(0);
+    // At least one portal status badge visible (Signed Up, Not signed up, or Invited)
+    await expect(page.getByText(/signed up|not signed up|invited/i).first()).toBeVisible({ timeout: 5_000 });
+  });
+
+  test("TC-contacts-invite-url-in-modal: Add contact modal has Generate Invite URL button", async ({ page }) => {
+    await page.getByRole("button", { name: /^contacts$/i }).click();
+    await page.locator("h3:has-text('Contacts')").first().waitFor({ timeout: 8_000 });
+    await page.locator("button:not(.btn-primary):has-text('Add contact')").click();
+    await page.getByRole("heading", { name: /add contact/i }).waitFor({ timeout: 5_000 });
+    // Generate Invite URL button should be in the modal
+    await expect(page.getByText(/generate invite url|portal invite link/i)).toBeVisible({ timeout: 5_000 });
   });
 
   test("TC-contacts-photo-upload: Add contact modal has photo upload section", async ({ page }) => {
