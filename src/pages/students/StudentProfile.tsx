@@ -8,6 +8,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import Layout from "@/components/Layout";
+import InviteDialog from "@/components/InviteDialog";
 import {
   Student, StudentContact, StudentEmergencyContact,
   StudentImmunization, StudentEnrollmentDetails, Room,
@@ -672,7 +673,7 @@ type Tab = "profile" | "contacts" | "immunizations" | "daily_report" | "document
 
 export default function StudentProfile() {
   const { id } = useParams<{ id: string }>();
-  const { profile: authProfile } = useAuth();
+  const { profile: authProfile, school } = useAuth();
   const isAdmin   = authProfile?.role === "admin";
   const isParent  = authProfile?.role === "parent";
   const canEdit   = isAdmin || isParent;
@@ -690,6 +691,7 @@ export default function StudentProfile() {
   const [loading,      setLoading]      = useState(true);
   const [revealPin,    setRevealPin]    = useState<Record<string, boolean>>({});
   const [contactModal, setContactModal] = useState<{ open: boolean; contact?: StudentContact }>({ open: false });
+  const [inviteContactModal, setInviteContactModal] = useState(false);
 
   // Edit states — which section is being edited
   const [editSection, setEditSection] = useState<string | null>(null);
@@ -857,6 +859,18 @@ export default function StudentProfile() {
           initial={contactModal.contact}
           onClose={() => setContactModal({ open: false })}
           onSaved={() => { setContactModal({ open: false }); loadAll(); }}
+        />
+      )}
+
+      {/* Invite dialog — generates a /register?token link for the contact to sign up */}
+      {inviteContactModal && student.school_id && (
+        <InviteDialog
+          schoolId={student.school_id}
+          schoolName={school?.name ?? "this school"}
+          defaultRole="parent"
+          allowedRoles={["parent"]}
+          onClose={() => setInviteContactModal(false)}
+          zIndex="z-[60]"
         />
       )}
 
@@ -1149,11 +1163,8 @@ export default function StudentProfile() {
             return { label: "Active", color: "bg-emerald-100 text-emerald-700" };
           }
 
-          async function sendInvite(c: StudentContact) {
-            // Mark as invited — in production this would trigger an email
-            await supabase.from("student_contacts").update({ portal_status: "invited" }).eq("id", c.id);
-            loadAll();
-          }
+          // sendInvite: opens InviteDialog to generate a registration link for the contact
+          // The link is role-based (parent/guardian) and school-scoped
 
           return (
             <div className="space-y-6">
@@ -1258,9 +1269,12 @@ export default function StudentProfile() {
                                     "bg-gray-100 text-gray-500"}`}>
                                   {(c.portal_status ?? "not_signed_up").replace(/_/g, " ")}
                                 </span>
-                                {isAdmin && c.portal_status !== "signed_up" && c.email && (
-                                  <button onClick={() => sendInvite(c)} className="text-xs text-orange-500 hover:underline w-fit">
-                                    Send invite →
+                                {isAdmin && c.portal_status !== "signed_up" && (
+                                  <button
+                                    onClick={() => setInviteContactModal(true)}
+                                    className="text-xs text-orange-500 border border-orange-200 rounded px-2 py-0.5 hover:bg-orange-50 flex items-center gap-1 w-fit"
+                                  >
+                                    📨 Invite
                                   </button>
                                 )}
                               </div>
