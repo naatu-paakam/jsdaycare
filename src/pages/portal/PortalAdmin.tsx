@@ -54,6 +54,16 @@ interface RemoveConfirm {
   schoolName: string;
 }
 
+interface PendingInvite {
+  id: string;
+  email: string | null;
+  role: string;
+  school_id: string;
+  created_at: string;
+  expires_at: string | null;
+  schools: { name: string } | null;
+}
+
 interface InviteTarget {
   schoolId: string;
   schoolName: string;
@@ -75,6 +85,7 @@ export default function PortalAdmin() {
   // Users tab state
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
   const [memberships, setMemberships] = useState<Membership[]>([]);
+  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [userSearch, setUserSearch] = useState("");
   const [userSchoolFilter, setUserSchoolFilter] = useState("");
@@ -82,6 +93,9 @@ export default function PortalAdmin() {
   const [removeConfirm, setRemoveConfirm] = useState<RemoveConfirm | null>(null);
   const [removing, setRemoving] = useState(false);
   const [inviteTarget, setInviteTarget] = useState<InviteTarget | null>(null);
+  const [showInviteUserDialog, setShowInviteUserDialog] = useState(false);
+  const [inviteUserSchool, setInviteUserSchool] = useState("");
+  const [inviteUserRole, setInviteUserRole] = useState<"admin"|"staff"|"parent">("admin");
 
   // Create school modal
   const [showCreate, setShowCreate] = useState(false);
@@ -148,7 +162,7 @@ export default function PortalAdmin() {
 
   async function loadUsers() {
     setUsersLoading(true);
-    const [{ data: profiles }, { data: mships }] = await Promise.all([
+    const [{ data: profiles }, { data: mships }, { data: pendingInvites }] = await Promise.all([
       supabase
         .from("profiles")
         .select("id, full_name, login_id, role, school_id, phone")
@@ -157,9 +171,18 @@ export default function PortalAdmin() {
       supabase
         .from("school_memberships")
         .select("profile_id, school_id, role, schools(id, name)"),
+      // Pending invitations — sent but not yet registered (used_at is null, non-permanent)
+      supabase
+        .from("invitations")
+        .select("id, email, role, school_id, created_at, expires_at, schools(name)")
+        .is("used_at", null)
+        .eq("permanent", false)
+        .order("created_at", { ascending: false }),
     ]);
     if (profiles) setUserProfiles(profiles);
     if (mships) setMemberships(mships as unknown as Membership[]);
+    // Store pending invites so the table can show "Invited" rows
+    if (pendingInvites) setPendingInvites(pendingInvites as unknown as PendingInvite[]);
     setUsersLoading(false);
   }
 
@@ -523,7 +546,15 @@ export default function PortalAdmin() {
         {activeTab === "users" && (
           <div className="bg-white rounded-xl border border-gray-200">
             <div className="px-5 py-4 border-b border-gray-100">
-              <h2 className="font-semibold text-gray-900 mb-3">Users</h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-semibold text-gray-900">Users</h2>
+                <button
+                  onClick={() => setShowInviteUserDialog(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 text-white text-xs font-medium rounded-lg hover:bg-orange-600 transition-colors"
+                >
+                  <Plus size={13} /> Invite User
+                </button>
+              </div>
               {/* Filters row */}
               <div className="flex gap-3 flex-wrap">
                 <input
@@ -603,21 +634,6 @@ export default function PortalAdmin() {
                         </td>
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-2 justify-end">
-                            <button
-                              title="Invite"
-                              onClick={() => {
-                                if (!primarySchoolForInvite) return;
-                                const role = (u.role === "admin" || u.role === "staff" || u.role === "parent") ? u.role : "staff";
-                                setInviteTarget({
-                                  schoolId: primarySchoolForInvite.id,
-                                  schoolName: primarySchoolForInvite.name,
-                                  role,
-                                });
-                              }}
-                              className="p-1.5 text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
-                            >
-                              <LinkIcon size={14} />
-                            </button>
                             {userMemberships.length > 1 ? (
                               <select
                                 className="text-xs border border-gray-200 rounded px-1.5 py-1 text-red-500 focus:outline-none"
@@ -663,6 +679,45 @@ export default function PortalAdmin() {
                       </tr>
                     );
                   })}
+
+                  {/* Pending invites — sent but not yet registered */}
+                  {pendingInvites
+                    .filter(inv => {
+                      if (userRoleFilter && userRoleFilter !== inv.role) return false;
+                      if (userSchoolFilter && inv.school_id !== userSchoolFilter) return false;
+                      if (userSearch && !inv.email?.toLowerCase().includes(userSearch.toLowerCase())) return false;
+                      return true;
+                    })
+                    .map(inv => (
+                      <tr key={inv.id} className="border-b border-gray-50 hover:bg-gray-50">
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 font-semibold text-xs shrink-0">
+                              ?
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-700">{inv.email ?? "—"}</p>
+                              <p className="text-xs text-gray-400">Invite pending</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3">
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium capitalize
+                            ${inv.role === "admin" ? "bg-orange-100 text-orange-700" :
+                              inv.role === "staff" ? "bg-blue-100 text-blue-700" :
+                              "bg-green-100 text-green-700"}`}>
+                            {inv.role}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3 text-xs text-gray-500">{(inv.schools as {name:string}|null)?.name ?? "—"}</td>
+                        <td className="px-5 py-3">
+                          <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">Invited</span>
+                        </td>
+                        <td className="px-5 py-3 text-xs text-gray-400">
+                          {inv.expires_at ? `Expires ${new Date(inv.expires_at).toLocaleDateString()}` : "—"}
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             )}
@@ -995,7 +1050,7 @@ export default function PortalAdmin() {
         </div>
       )}
 
-      {/* InviteDialog for Users tab */}
+      {/* InviteDialog for Users tab — per-row invite (kept for manage school) */}
       {inviteTarget && (
         <InviteDialog
           schoolId={inviteTarget.schoolId}
@@ -1005,6 +1060,60 @@ export default function PortalAdmin() {
           onClose={() => setInviteTarget(null)}
           zIndex="z-[60]"
         />
+      )}
+
+      {/* Invite User dialog — top-right button, school + role dropdowns */}
+      {showInviteUserDialog && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-gray-900">Invite User</h2>
+              <button onClick={() => { setShowInviteUserDialog(false); setInviteUserSchool(""); setInviteUserRole("admin"); }}>
+                <X size={18} className="text-gray-400" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">School</label>
+                <select
+                  className="input w-full"
+                  value={inviteUserSchool}
+                  onChange={e => setInviteUserSchool(e.target.value)}
+                >
+                  <option value="">Select a school…</option>
+                  {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Role</label>
+                <select
+                  className="input w-full"
+                  value={inviteUserRole}
+                  onChange={e => setInviteUserRole(e.target.value as "admin"|"staff"|"parent")}
+                >
+                  <option value="admin">Admin</option>
+                  <option value="staff">Staff</option>
+                  <option value="parent">Parent</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => { setShowInviteUserDialog(false); setInviteUserSchool(""); }} className="btn-secondary text-sm">Cancel</button>
+              <button
+                disabled={!inviteUserSchool}
+                onClick={() => {
+                  const school = schools.find(s => s.id === inviteUserSchool);
+                  if (!school) return;
+                  setShowInviteUserDialog(false);
+                  setInviteTarget({ schoolId: school.id, schoolName: school.name, role: inviteUserRole });
+                }}
+                className="btn-primary text-sm disabled:opacity-50"
+              >
+                Next: Generate Link
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

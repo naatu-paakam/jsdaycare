@@ -158,3 +158,15 @@ test("TC-portal-users-role-filter: Role filter narrows to matching users", async
   await expect(page.getByText(/Arudeepa Kumar/i)).toBeVisible({ timeout: 5_000 });
   await expect(page.getByText(/Jaya Bijjala/i)).not.toBeVisible();
 });
+
+test("TC-portal-users-invite-button: + Invite User button in top right opens school+role dialog", async ({ page }) => {
+  await loginAsPortalAdmin(page);
+  await page.getByText(/👥.*Users|Users/i).first().click();
+  await page.getByRole("heading", { name: /^users$/i }).waitFor({ timeout: 8_000 });
+  // + Invite User button in top right (no per-row link icons)
+  await page.getByRole("button", { name: /invite user/i }).click();
+  // Dialog appears with school dropdown + role dropdown
+  await expect(page.getByRole("heading", { name: "Invite User" })).toBeVisible({ timeout: 5_000 });
+  await expect(page.locator("select").first()).toBeVisible(); // school dropdown
+  await expect(page.getByRole("button", { name: /next.*generate link/i })).toBeVisible();
+});
