@@ -122,10 +122,10 @@ export default function Sidebar() {
           <button
             onClick={() => multiSchool && setSchoolOpen(o => !o)}
             className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors
-              ${multiSchool ? "hover:bg-orange-50 cursor-pointer text-orange-700 bg-orange-50/60" : "cursor-default text-gray-600"}`}
+              ${multiSchool ? "hover:bg-gray-100 cursor-pointer text-gray-700 bg-gray-100 border border-gray-200" : "cursor-default text-gray-600 bg-gray-50"}`}
           >
             <span className="flex items-center gap-1.5 truncate">
-              <Building2 size={13} className="shrink-0 text-orange-400" />
+              <Building2 size={13} className="shrink-0 text-gray-500" />
               <span className="truncate">{school?.name ?? "My School"}</span>
             </span>
             {multiSchool && (
@@ -141,7 +141,7 @@ export default function Sidebar() {
                   key={s.id}
                   onClick={async () => { await switchSchool(s.id); setSchoolOpen(false); }}
                   className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center gap-2
-                    ${s.id === school?.id ? "bg-orange-50 text-orange-700 font-semibold" : "text-gray-700 hover:bg-gray-50"}`}
+                    ${s.id === school?.id ? "bg-orange-50 text-orange-700 font-semibold border-l-2 border-orange-400" : "text-gray-700 hover:bg-gray-50"}`}
                 >
                   <Building2 size={11} className="shrink-0" />
                   <span className="truncate">{s.name}</span>
