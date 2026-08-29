@@ -681,37 +681,46 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
           )}
         </div>
 
-        {/* ── Invite URL ── */}
+        {/* ── Invite URL — only for Parent / Guardian contacts ── */}
         <div className="border-t border-gray-100 pt-4 space-y-2">
-          <p className="text-xs font-medium text-gray-600">Portal Invite Link</p>
-          {!inviteLink ? (
-            <div>
-              <button
-                type="button"
-                onClick={generateInviteLink}
-                disabled={generatingLink}
-                className="flex items-center gap-2 text-xs text-orange-600 border border-orange-200 rounded-lg px-3 py-1.5 hover:bg-orange-50 disabled:opacity-50"
-              >
-                {generatingLink ? "Generating…" : "🔗 Generate Invite URL"}
-              </button>
-              <p className="text-xs text-gray-400 mt-1">
-                Creates a registration link for this contact. They use it to create their login.
-              </p>
-            </div>
+          <p className="text-xs font-medium text-gray-600">Portal Access</p>
+          {(form.type === "parent" || form.type === "guardian") ? (
+            <>
+              {!inviteLink ? (
+                <div>
+                  <button
+                    type="button"
+                    onClick={generateInviteLink}
+                    disabled={generatingLink}
+                    className="flex items-center gap-2 text-xs text-orange-600 border border-orange-200 rounded-lg px-3 py-1.5 hover:bg-orange-50 disabled:opacity-50"
+                  >
+                    {generatingLink ? "Generating…" : "🔗 Generate Invite URL"}
+                  </button>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Creates a 7-day registration link. Parent/guardian uses it to set up their portal login.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 bg-orange-50 border border-orange-100 rounded-lg px-3 py-2">
+                    <span className="text-xs text-gray-600 truncate flex-1 font-mono">{inviteLink}</span>
+                    <button
+                      type="button"
+                      onClick={copyLink}
+                      className="text-xs text-orange-600 font-medium shrink-0 flex items-center gap-1 hover:text-orange-700"
+                    >
+                      {linkCopied ? "✓ Copied!" : "Copy"}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-400">Link expires in 7 days. Send it directly to the contact.</p>
+                </div>
+              )}
+            </>
           ) : (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 bg-orange-50 border border-orange-100 rounded-lg px-3 py-2">
-                <span className="text-xs text-gray-600 truncate flex-1 font-mono">{inviteLink}</span>
-                <button
-                  type="button"
-                  onClick={copyLink}
-                  className="text-xs text-orange-600 font-medium shrink-0 flex items-center gap-1 hover:text-orange-700"
-                >
-                  {linkCopied ? "✓ Copied!" : "Copy"}
-                </button>
-              </div>
-              <p className="text-xs text-gray-400">Link expires in 7 days. Send it directly to the contact.</p>
-            </div>
+            <p className="text-xs text-gray-400 italic">
+              Portal access is only available for Parent and Guardian contacts.
+              {form.type ? ` "${form.type.replace(/_/g, " ")}" contacts cannot log in to the portal.` : ""}
+            </p>
           )}
         </div>
 
