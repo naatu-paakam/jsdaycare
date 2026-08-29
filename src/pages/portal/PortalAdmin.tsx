@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import { School } from "@/lib/types";
 import { Building2, Users, UserCheck, Plus, X, ChevronRight, Pencil, Trash2, Copy, Check, Link as LinkIcon } from "lucide-react";
+import InviteDialog from "@/components/InviteDialog";
 
 const TIMEZONES = [
   "America/New_York",
@@ -30,12 +31,57 @@ interface Profile {
   role: string;
 }
 
+interface UserProfile {
+  id: string;
+  full_name: string | null;
+  login_id: string | null;
+  role: string;
+  school_id: string | null;
+  phone: string | null;
+}
+
+interface Membership {
+  profile_id: string;
+  school_id: string;
+  role: string;
+  schools: { id: string; name: string } | null;
+}
+
+interface RemoveConfirm {
+  profileId: string;
+  profileName: string;
+  schoolId: string;
+  schoolName: string;
+}
+
+interface InviteTarget {
+  schoolId: string;
+  schoolName: string;
+  role: "admin" | "staff" | "parent";
+}
+
+type TabKey = "schools" | "users";
+
 export default function PortalAdmin() {
   const { signOut } = useAuth();
   const [schools, setSchools] = useState<SchoolWithAdmins[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ totalStudents: 0, totalStaff: 0 });
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
+
+  // Tab
+  const [activeTab, setActiveTab] = useState<TabKey>("schools");
+
+  // Users tab state
+  const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
+  const [memberships, setMemberships] = useState<Membership[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [userSearch, setUserSearch] = useState("");
+  const [userSchoolFilter, setUserSchoolFilter] = useState("");
+  const [userRoleFilter, setUserRoleFilter] = useState("");
+  const [removeConfirm, setRemoveConfirm] = useState<RemoveConfirm | null>(null);
+  const [removing, setRemoving] = useState(false);
+  const [inviteTarget, setInviteTarget] = useState<InviteTarget | null>(null);
 
   // Create school modal
   const [showCreate, setShowCreate] = useState(false);
@@ -73,6 +119,12 @@ export default function PortalAdmin() {
   useEffect(() => { loadAll(); loadProfiles(); }, []);
 
   useEffect(() => {
+    if (activeTab === "users" && userProfiles.length === 0 && !usersLoading) {
+      loadUsers();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (assignRef.current && !assignRef.current.contains(e.target as Node)) {
         setAssignProfileOpen(false);
@@ -92,6 +144,23 @@ export default function PortalAdmin() {
       .not("role", "eq", "portal_admin")
       .order("full_name");
     if (data) setAllProfiles(data);
+  }
+
+  async function loadUsers() {
+    setUsersLoading(true);
+    const [{ data: profiles }, { data: mships }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, full_name, login_id, role, school_id, phone")
+        .not("role", "eq", "portal_admin")
+        .order("full_name"),
+      supabase
+        .from("school_memberships")
+        .select("profile_id, school_id, role, schools(id, name)"),
+    ]);
+    if (profiles) setUserProfiles(profiles);
+    if (mships) setMemberships(mships as unknown as Membership[]);
+    setUsersLoading(false);
   }
 
   async function loadAll() {
@@ -254,6 +323,32 @@ export default function PortalAdmin() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  async function removeUserFromSchool(profileId: string, schoolId: string) {
+    setRemoving(true);
+    await supabase.from("school_memberships")
+      .delete()
+      .eq("profile_id", profileId)
+      .eq("school_id", schoolId);
+
+    const { data: profile } = await supabase.from("profiles")
+      .select("school_id").eq("id", profileId).single();
+    if (profile?.school_id === schoolId) {
+      const { data: otherMemberships } = await supabase
+        .from("school_memberships")
+        .select("school_id")
+        .eq("profile_id", profileId)
+        .neq("school_id", schoolId)
+        .limit(1);
+      await supabase.from("profiles")
+        .update({ school_id: otherMemberships?.[0]?.school_id ?? null })
+        .eq("id", profileId);
+    }
+
+    setRemoveConfirm(null);
+    setRemoving(false);
+    await loadUsers();
+  }
+
   // Filter profiles for dropdowns
   const createFilteredProfiles = allProfiles.filter(p =>
     (p.full_name ?? "").toLowerCase().includes(createProfileSearch.toLowerCase())
@@ -264,6 +359,40 @@ export default function PortalAdmin() {
     !managedAdminIds.has(p.id) &&
     (p.full_name ?? "").toLowerCase().includes(assignProfileSearch.toLowerCase())
   );
+
+  // Build membership map: profile_id -> Membership[]
+  const membershipMap = memberships.reduce<Record<string, Membership[]>>((acc, m) => {
+    if (!acc[m.profile_id]) acc[m.profile_id] = [];
+    acc[m.profile_id].push(m);
+    return acc;
+  }, {});
+
+  // Filter users
+  const filteredUsers = userProfiles.filter(u => {
+    const nameMatch = !userSearch ||
+      (u.full_name ?? "").toLowerCase().includes(userSearch.toLowerCase()) ||
+      (u.login_id ?? "").toLowerCase().includes(userSearch.toLowerCase());
+    const roleMatch = !userRoleFilter || u.role === userRoleFilter;
+    const schoolMatch = !userSchoolFilter ||
+      (membershipMap[u.id] ?? []).some(m => m.school_id === userSchoolFilter);
+    return nameMatch && roleMatch && schoolMatch;
+  });
+
+  function getInitials(name: string | null) {
+    if (!name) return "?";
+    return name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  }
+
+  function roleBadge(role: string) {
+    const map: Record<string, string> = {
+      admin: "bg-orange-100 text-orange-700",
+      staff: "bg-blue-100 text-blue-700",
+      parent: "bg-green-100 text-green-700",
+    };
+    const cls = map[role] ?? "bg-gray-100 text-gray-700";
+    const label = role.charAt(0).toUpperCase() + role.slice(1);
+    return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${cls}`}>{label}</span>;
+  }
 
   if (loading) {
     return (
@@ -309,60 +438,236 @@ export default function PortalAdmin() {
           ))}
         </div>
 
-        {/* Schools table */}
-        <div className="bg-white rounded-xl border border-gray-200">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-900">Schools</h2>
-            <button
-              onClick={() => setShowCreate(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors"
-            >
-              <Plus size={14} /> Create school
-            </button>
-          </div>
-
-          {schools.length === 0 ? (
-            <p className="text-center text-gray-400 py-12">No schools yet</p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Name</th>
-                  <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Timezone</th>
-                  <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Admins</th>
-                  <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Created</th>
-                  <th className="px-5 py-2.5" />
-                </tr>
-              </thead>
-              <tbody>
-                {schools.map(s => (
-                  <tr key={s.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                    <td className="px-5 py-3 font-medium text-gray-900">{s.name}</td>
-                    <td className="px-5 py-3 text-gray-500">{s.timezone}</td>
-                    <td className="px-5 py-3 text-gray-500">{s.admins.length}</td>
-                    <td className="px-5 py-3 text-gray-500">{new Date(s.created_at).toLocaleDateString()}</td>
-                    <td className="px-5 py-3">
-                      <button
-                        onClick={() => {
-                          setManagedSchool(s);
-                          setEditName(s.name);
-                          setEditingName(false);
-                          setAssignProfileId("");
-                          setAssignProfileSearch("");
-                          setInviteError("");
-                          loadAdminInvite(s.id);
-                        }}
-                        className="flex items-center gap-1 text-orange-500 hover:text-orange-700 text-xs font-medium"
-                      >
-                        Manage <ChevronRight size={12} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+        {/* Tab bar */}
+        <div className="flex gap-1 border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab("schools")}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "schools"
+                ? "border-orange-500 text-orange-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            🏫 Schools
+          </button>
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "users"
+                ? "border-orange-500 text-orange-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            👥 Users
+          </button>
         </div>
+
+        {/* Schools tab */}
+        {activeTab === "schools" && (
+          <div className="bg-white rounded-xl border border-gray-200">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h2 className="font-semibold text-gray-900">Schools</h2>
+              <button
+                onClick={() => setShowCreate(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors"
+              >
+                <Plus size={14} /> Create school
+              </button>
+            </div>
+
+            {schools.length === 0 ? (
+              <p className="text-center text-gray-400 py-12">No schools yet</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Name</th>
+                    <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Timezone</th>
+                    <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Admins</th>
+                    <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Created</th>
+                    <th className="px-5 py-2.5" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {schools.map(s => (
+                    <tr key={s.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                      <td className="px-5 py-3 font-medium text-gray-900">{s.name}</td>
+                      <td className="px-5 py-3 text-gray-500">{s.timezone}</td>
+                      <td className="px-5 py-3 text-gray-500">{s.admins.length}</td>
+                      <td className="px-5 py-3 text-gray-500">{new Date(s.created_at).toLocaleDateString()}</td>
+                      <td className="px-5 py-3">
+                        <button
+                          onClick={() => {
+                            setManagedSchool(s);
+                            setEditName(s.name);
+                            setEditingName(false);
+                            setAssignProfileId("");
+                            setAssignProfileSearch("");
+                            setInviteError("");
+                            loadAdminInvite(s.id);
+                          }}
+                          className="flex items-center gap-1 text-orange-500 hover:text-orange-700 text-xs font-medium"
+                        >
+                          Manage <ChevronRight size={12} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+
+        {/* Users tab */}
+        {activeTab === "users" && (
+          <div className="bg-white rounded-xl border border-gray-200">
+            <div className="px-5 py-4 border-b border-gray-100">
+              <h2 className="font-semibold text-gray-900 mb-3">Users</h2>
+              {/* Filters row */}
+              <div className="flex gap-3 flex-wrap">
+                <input
+                  className="flex-1 min-w-48 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  placeholder="Search by name or login ID..."
+                  value={userSearch}
+                  onChange={e => setUserSearch(e.target.value)}
+                />
+                <select
+                  className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  value={userSchoolFilter}
+                  onChange={e => setUserSchoolFilter(e.target.value)}
+                >
+                  <option value="">All schools</option>
+                  {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+                <select
+                  className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  value={userRoleFilter}
+                  onChange={e => setUserRoleFilter(e.target.value)}
+                >
+                  <option value="">All roles</option>
+                  <option value="admin">Admin</option>
+                  <option value="staff">Staff</option>
+                  <option value="parent">Parent</option>
+                </select>
+              </div>
+            </div>
+
+            {usersLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="w-7 h-7 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <p className="text-center text-gray-400 py-12 text-sm px-6">
+                {userProfiles.length === 0
+                  ? "No users found. Use the Invite School Admin button in the Manage School panel to add users."
+                  : "No users match your filters."}
+              </p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">User</th>
+                    <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Role</th>
+                    <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Schools</th>
+                    <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+                    <th className="px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map(u => {
+                    const userMemberships = membershipMap[u.id] ?? [];
+                    const schoolNames = userMemberships.map(m => m.schools?.name).filter(Boolean).join(", ") || "—";
+                    const primarySchool = userMemberships[0];
+                    const primarySchoolForInvite = schools.find(s => s.id === (u.school_id ?? primarySchool?.school_id));
+
+                    return (
+                      <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                              {getInitials(u.full_name)}
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{u.full_name || "—"}</p>
+                              {u.login_id && <p className="text-xs text-gray-400">{u.login_id}</p>}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3">{roleBadge(u.role)}</td>
+                        <td className="px-5 py-3 text-gray-500 text-xs">{schoolNames}</td>
+                        <td className="px-5 py-3">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                            Active
+                          </span>
+                        </td>
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-2 justify-end">
+                            <button
+                              title="Invite"
+                              onClick={() => {
+                                if (!primarySchoolForInvite) return;
+                                const role = (u.role === "admin" || u.role === "staff" || u.role === "parent") ? u.role : "staff";
+                                setInviteTarget({
+                                  schoolId: primarySchoolForInvite.id,
+                                  schoolName: primarySchoolForInvite.name,
+                                  role,
+                                });
+                              }}
+                              className="p-1.5 text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
+                            >
+                              <LinkIcon size={14} />
+                            </button>
+                            {userMemberships.length > 1 ? (
+                              <select
+                                className="text-xs border border-gray-200 rounded px-1.5 py-1 text-red-500 focus:outline-none"
+                                defaultValue=""
+                                onChange={e => {
+                                  const schoolId = e.target.value;
+                                  if (!schoolId) return;
+                                  const school = schools.find(s => s.id === schoolId);
+                                  setRemoveConfirm({
+                                    profileId: u.id,
+                                    profileName: u.full_name ?? "User",
+                                    schoolId,
+                                    schoolName: school?.name ?? schoolId,
+                                  });
+                                  e.target.value = "";
+                                }}
+                              >
+                                <option value="">🗑 Remove from…</option>
+                                {userMemberships.map(m => (
+                                  <option key={m.school_id} value={m.school_id}>{m.schools?.name ?? m.school_id}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              <button
+                                title="Remove from school"
+                                onClick={() => {
+                                  const m = userMemberships[0];
+                                  if (!m) return;
+                                  setRemoveConfirm({
+                                    profileId: u.id,
+                                    profileName: u.full_name ?? "User",
+                                    schoolId: m.school_id,
+                                    schoolName: m.schools?.name ?? m.school_id,
+                                  });
+                                }}
+                                className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Create school modal */}
@@ -657,6 +962,49 @@ export default function PortalAdmin() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Remove confirmation modal */}
+      {removeConfirm && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
+            <div className="p-6 space-y-4">
+              <h3 className="font-semibold text-gray-900">Remove user from school?</h3>
+              <p className="text-sm text-gray-600">
+                Remove <span className="font-medium">{removeConfirm.profileName}</span> from{" "}
+                <span className="font-medium">{removeConfirm.schoolName}</span>? This will revoke their access.
+              </p>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  onClick={() => setRemoveConfirm(null)}
+                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
+                  disabled={removing}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => removeUserFromSchool(removeConfirm.profileId, removeConfirm.schoolId)}
+                  disabled={removing}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50"
+                >
+                  {removing ? "Removing…" : "Remove"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* InviteDialog for Users tab */}
+      {inviteTarget && (
+        <InviteDialog
+          schoolId={inviteTarget.schoolId}
+          schoolName={inviteTarget.schoolName}
+          defaultRole={inviteTarget.role}
+          allowedRoles={["admin", "staff", "parent"]}
+          onClose={() => setInviteTarget(null)}
+          zIndex="z-[60]"
+        />
       )}
     </div>
   );

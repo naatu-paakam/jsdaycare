@@ -109,3 +109,52 @@ test("TC-portal-blocked-from-students: portal admin cannot access /students", as
 });
 
 }); // end test.describe.serial
+
+// ─── Users tab ────────────────────────────────────────────────────────────────
+
+test("TC-portal-users-tab: Users tab visible and shows user table", async ({ page }) => {
+  await loginAsPortalAdmin(page);
+  await page.getByText(/👥.*Users|Users/i).first().click();
+  await expect(page.getByRole("heading", { name: /^users$/i })).toBeVisible({ timeout: 8_000 });
+  await expect(page.locator("table")).toBeVisible({ timeout: 8_000 });
+});
+
+test("TC-portal-users-shows-all-users: Users table shows multiple users with roles", async ({ page }) => {
+  await loginAsPortalAdmin(page);
+  await page.getByText(/👥.*Users|Users/i).first().click();
+  await page.getByRole("heading", { name: /^users$/i }).waitFor({ timeout: 8_000 });
+  // At least one user visible (Jaya Bijjala)
+  await expect(page.getByText(/Jaya Bijjala/i)).toBeVisible({ timeout: 8_000 });
+  // Role badges visible
+  await expect(page.getByText("Admin").first()).toBeVisible();
+});
+
+test("TC-portal-users-multischool-shown: Multi-school user shows both school names", async ({ page }) => {
+  await loginAsPortalAdmin(page);
+  await page.getByText(/👥.*Users|Users/i).first().click();
+  await page.getByRole("heading", { name: /^users$/i }).waitFor({ timeout: 8_000 });
+  // Jaya Bijjala should show 2 schools (multi-school admin)
+  const jayaRow = page.locator("tr").filter({ hasText: /Jaya Bijjala/i });
+  await jayaRow.waitFor({ timeout: 8_000 });
+  await expect(jayaRow.getByText(/Sunshine|JS Joy/i).first()).toBeVisible();
+});
+
+test("TC-portal-users-search: Search filter narrows user list", async ({ page }) => {
+  await loginAsPortalAdmin(page);
+  await page.getByText(/👥.*Users|Users/i).first().click();
+  await page.getByRole("heading", { name: /^users$/i }).waitFor({ timeout: 8_000 });
+  await page.getByPlaceholder(/search by name/i).fill("Jaya");
+  await expect(page.getByText(/Jaya Bijjala/i)).toBeVisible({ timeout: 5_000 });
+  // Other users should not be visible after filtering
+  await expect(page.getByText(/Nidhi Patel/i)).not.toBeVisible();
+});
+
+test("TC-portal-users-role-filter: Role filter narrows to matching users", async ({ page }) => {
+  await loginAsPortalAdmin(page);
+  await page.getByText(/👥.*Users|Users/i).first().click();
+  await page.getByRole("heading", { name: /^users$/i }).waitFor({ timeout: 8_000 });
+  await page.getByRole("combobox").last().selectOption("parent");
+  // Only parents should show
+  await expect(page.getByText(/Arudeepa Kumar/i)).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByText(/Jaya Bijjala/i)).not.toBeVisible();
+});
