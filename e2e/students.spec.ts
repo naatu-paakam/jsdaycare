@@ -113,13 +113,28 @@ test.describe("Student profile tabs", () => {
     await expect(page.getByText(/signed up|not signed up|invited/i).first()).toBeVisible({ timeout: 5_000 });
   });
 
-  test("TC-contacts-invite-url-in-modal: Add contact modal has Generate Invite URL button", async ({ page }) => {
+  test("TC-contacts-invite-url-in-modal: Parent contact shows Generate Invite URL option", async ({ page }) => {
     await page.getByRole("button", { name: /^contacts$/i }).click();
     await page.locator("h3:has-text('Contacts')").first().waitFor({ timeout: 8_000 });
     await page.locator("button:not(.btn-primary):has-text('Add contact')").click();
     await page.getByRole("heading", { name: /add contact/i }).waitFor({ timeout: 5_000 });
-    // Generate Invite URL button or section should be in the modal
-    await expect(page.getByText(/generate invite url|portal invite link/i).first()).toBeVisible({ timeout: 5_000 });
+    // Default type is "parent" — invite URL section should be visible
+    await expect(page.getByText(/portal invite link|generate invite url/i).first()).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByRole("button", { name: /generate invite url/i })).toBeVisible();
+  });
+
+  test("TC-contacts-nonparent-no-invite: Non-parent contact type hides invite URL section", async ({ page }) => {
+    await page.getByRole("button", { name: /^contacts$/i }).click();
+    await page.locator("h3:has-text('Contacts')").first().waitFor({ timeout: 8_000 });
+    await page.locator("button:not(.btn-primary):has-text('Add contact')").click();
+    await page.getByRole("heading", { name: /add contact/i }).waitFor({ timeout: 5_000 });
+    // Change contact type to Grandparent
+    const typeSelect = page.locator("select").filter({ has: page.locator("option[value=parent]") }).first();
+    await typeSelect.selectOption("grandparent");
+    // Invite URL button should NOT be visible
+    await expect(page.getByRole("button", { name: /generate invite url/i })).not.toBeVisible();
+    // Instead shows "portal access not available" message
+    await expect(page.getByText(/portal access is only available/i)).toBeVisible({ timeout: 3_000 });
   });
 
   test("TC-contacts-photo-upload: Add contact modal has photo upload section", async ({ page }) => {

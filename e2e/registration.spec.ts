@@ -72,21 +72,23 @@ test.describe("Invite dialog", () => {
 
 // ─── Multi-school admin ───────────────────────────────────────────────────────
 
-test("TC-multischool-switcher: Multi-school admin sees school switcher in sidebar", async ({ page }) => {
+test("TC-multischool-switcher: Multi-school admin sees school switcher button in sidebar", async ({ page }) => {
   await loginAsAdmin(page);
-  // admin@jsdaycare.com has 2 schools (JS Joy + Sunshine)
-  // The sidebar school section should be a clickable dropdown
-  const schoolSection = page.locator("nav").getByText(/JS Joy|Sunshine/i).first();
-  await expect(schoolSection).toBeVisible({ timeout: 10_000 });
-});
-
-test("TC-multischool-dropdown: Multi-school admin sidebar has clickable school switcher", async ({ page }) => {
-  await loginAsAdmin(page);
-  // admin@jsdaycare.com has JS Joy + Sunshine memberships
-  // The school section in sidebar is a button (clickable switcher)
+  // admin@jsdaycare.com is member of JS Joy Family Daycare + Sunshine
+  // Sidebar shows school name as a clickable button (with dropdown chevron)
   const schoolBtn = page.locator("nav button").filter({ hasText: /JS Joy|Sunshine/i }).first();
   await schoolBtn.waitFor({ timeout: 10_000 });
-  // It should be a button (not plain text) — indicates multi-school mode
   await expect(schoolBtn).toBeVisible();
   await expect(schoolBtn).toBeEnabled();
+});
+
+test("TC-multischool-dropdown: Clicking school switcher reveals all schools for the admin", async ({ page }) => {
+  await loginAsAdmin(page);
+  // admin@jsdaycare.com should see BOTH schools in dropdown
+  const schoolBtn = page.locator("nav button").filter({ hasText: /JS Joy|Sunshine/i }).first();
+  await schoolBtn.waitFor({ timeout: 10_000 });
+  await schoolBtn.click();
+  // Both schools should be listed
+  await expect(page.getByText("JS Joy Family Daycare")).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByText("Sunshine")).toBeVisible({ timeout: 5_000 });
 });

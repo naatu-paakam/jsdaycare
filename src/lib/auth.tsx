@@ -54,16 +54,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from("schools").select("*").eq("id", p.school_id).single();
       setSchool(s ?? null);
 
-      // All schools this user is a member of (for the school switcher)
-      const { data: memberships } = await supabase
-        .from("school_memberships")
-        .select("school_id, schools(*)")
-        .eq("profile_id", userId);
-      const schools = (memberships ?? [])
-        .map(m => m.schools as unknown as School)
-        .filter(Boolean)
-        .sort((a, b) => a.name.localeCompare(b.name));
-      setAllSchools(schools);
+      // All schools this user is a member of — use RPC to bypass RLS scoping
+      const { data: schoolsData } = await supabase.rpc("get_my_schools");
+      setAllSchools((schoolsData as School[]) ?? []);
     }
 
     setLoading(false);
