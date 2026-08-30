@@ -733,6 +733,196 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
   );
 }
 
+// ─── Edit Activity Modal ──────────────────────────────────────────────────────
+function EditActivityModal({ activity, onClose, onSaved }: {
+  activity: Activity;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [notes, setNotes]       = useState(activity.notes ?? "");
+  const [staffOnly, setStaffOnly] = useState(activity.staff_only ?? false);
+  const [data, setData]         = useState<Record<string, unknown>>(
+    (activity.data as Record<string, unknown>) ?? {}
+  );
+  const [saving, setSaving]     = useState(false);
+
+  function setD(key: string, value: unknown) {
+    setData(d => ({ ...d, [key]: value }));
+  }
+
+  async function save() {
+    setSaving(true);
+    await supabase
+      .from("activities")
+      .update({ notes: notes || null, staff_only: staffOnly, data })
+      .eq("id", activity.id);
+    setSaving(false);
+    onSaved();
+  }
+
+  const t = activity.activity_type;
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto space-y-4 p-6">
+        <div className="flex items-center justify-between">
+          <h2 className="font-bold text-gray-900 capitalize">
+            Edit {t.replace(/_/g, " ")} entry
+          </h2>
+          <button onClick={onClose}><X size={18} className="text-gray-400" /></button>
+        </div>
+
+        <div className="space-y-3">
+          {/* food fields */}
+          {t === "food" && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Food type</label>
+                  <select className="input w-full text-sm" value={String(data.food_type ?? "food")} onChange={e => setD("food_type", e.target.value)}>
+                    <option value="food">Food</option>
+                    <option value="bottle">Bottle</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Quantity</label>
+                  <select className="input w-full text-sm" value={String(data.food_quantity ?? "")} onChange={e => setD("food_quantity", e.target.value)}>
+                    <option value="">—</option>
+                    <option value="All">All</option>
+                    <option value="Most">Most</option>
+                    <option value="Some">Some</option>
+                    <option value="None">None</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Meal type</label>
+                  <select className="input w-full text-sm" value={String(data.meal_type ?? "")} onChange={e => setD("meal_type", e.target.value)}>
+                    <option value="">—</option>
+                    <option value="breakfast">Breakfast</option>
+                    <option value="am_snack">AM Snack</option>
+                    <option value="lunch">Lunch</option>
+                    <option value="pm_snack">PM Snack</option>
+                    <option value="dinner">Dinner</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Items</label>
+                  <input className="input w-full text-sm" value={String(data.meal_items ?? "")} onChange={e => setD("meal_items", e.target.value)} placeholder="e.g. banana, crackers" />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* nap fields */}
+          {t === "nap" && (
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Status</label>
+              <select className="input w-full text-sm" value={String(data.nap_status ?? "started")} onChange={e => setD("nap_status", e.target.value)}>
+                <option value="started">Started</option>
+                <option value="ended">Ended</option>
+              </select>
+            </div>
+          )}
+
+          {/* potty fields */}
+          {t === "potty" && (
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Type</label>
+              <select className="input w-full text-sm" value={String(data.potty_type ?? "")} onChange={e => setD("potty_type", e.target.value)}>
+                <option value="">—</option>
+                <option value="wet">Wet</option>
+                <option value="bm">BM</option>
+                <option value="dry">Dry</option>
+                <option value="used potty">Used potty</option>
+              </select>
+            </div>
+          )}
+
+          {/* meds fields */}
+          {t === "meds" && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Medication name</label>
+                <input className="input w-full text-sm" value={String(data.med_name ?? "")} onChange={e => setD("med_name", e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Dose</label>
+                <input className="input w-full text-sm" value={String(data.med_dose ?? "")} onChange={e => setD("med_dose", e.target.value)} />
+              </div>
+            </div>
+          )}
+
+          {/* health_check fields */}
+          {t === "health_check" && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Temperature (°F)</label>
+                <input className="input w-full text-sm" type="number" step="0.1" value={String(data.health_temp ?? "")} onChange={e => setD("health_temp", e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Symptoms</label>
+                <input className="input w-full text-sm" value={String(data.symptoms ?? "")} onChange={e => setD("symptoms", e.target.value)} />
+              </div>
+            </div>
+          )}
+
+          {/* observation fields */}
+          {t === "observation" && (
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Area</label>
+              <input className="input w-full text-sm" value={String(data.observation_area ?? "")} onChange={e => setD("observation_area", e.target.value)} />
+            </div>
+          )}
+
+          {/* incident fields */}
+          {t === "incident" && (
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Incident type</label>
+                <input className="input w-full text-sm" value={String(data.incident_type ?? "")} onChange={e => setD("incident_type", e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Action taken</label>
+                <input className="input w-full text-sm" value={String(data.action_taken ?? "")} onChange={e => setD("action_taken", e.target.value)} />
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                  <input type="checkbox" checked={Boolean(data.parent_notified)} onChange={e => setD("parent_notified", e.target.checked)} className="rounded" />
+                  Parent notified
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* notes textarea — shown for all types */}
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-1 block">Notes</label>
+            <textarea
+              className="input w-full text-sm min-h-[80px] resize-y"
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Add notes…"
+            />
+          </div>
+
+          {/* staff only checkbox */}
+          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input type="checkbox" checked={staffOnly} onChange={e => setStaffOnly(e.target.checked)} className="rounded" />
+            Staff only (hidden from parents)
+          </label>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+          <button onClick={onClose} className="btn-secondary">Cancel</button>
+          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Saving…" : "Save changes"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 type Tab = "profile" | "contacts" | "immunizations" | "daily_report" | "documents";
 
@@ -770,6 +960,8 @@ export default function StudentProfile() {
   const [feedDate, setFeedDate] = useState(new Date().toISOString().split("T")[0]);
   const [immunizationSettings, setImmunizationSettings] = useState<string[]>(VACCINE_NAMES);
   const [showImmSettings, setShowImmSettings] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
+  const [confirmDelete, setConfirmDelete]     = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -810,6 +1002,12 @@ export default function StudentProfile() {
     await loadAll();
     setEditSection(null);
     setSaving(false);
+  }
+
+  async function doDeleteActivity(actId: string) {
+    await supabase.from("activities").delete().eq("id", actId);
+    setConfirmDelete(null);
+    loadActivities(feedDate);
   }
 
   async function loadActivities(date: string) {
@@ -914,6 +1112,14 @@ export default function StudentProfile() {
           currentSettings={immunizationSettings}
           onApply={(settings) => { setImmunizationSettings(settings); setShowImmSettings(false); }}
           onClose={() => setShowImmSettings(false)}
+        />
+      )}
+
+      {editingActivity && (
+        <EditActivityModal
+          activity={editingActivity}
+          onClose={() => setEditingActivity(null)}
+          onSaved={() => { setEditingActivity(null); loadActivities(feedDate); }}
         />
       )}
 
@@ -1539,6 +1745,7 @@ export default function StudentProfile() {
               <div className="space-y-3">
                 {activities.map(a => {
                   const typeColor = ACTIVITY_COLORS[a.activity_type] ?? "bg-gray-100 text-gray-600";
+                  const canManage = isAdmin || authProfile?.role === "staff";
                   return (
                     <div key={a.id} className="card p-4 flex items-start gap-4">
                       <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${typeColor}`}>
@@ -1557,9 +1764,29 @@ export default function StudentProfile() {
                               </span>
                             )}
                           </div>
-                          <span className="text-xs text-gray-400 shrink-0">
-                            {a.activity_time ? a.activity_time.slice(0, 5) : ""}
-                          </span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-xs text-gray-400">
+                              {a.activity_time ? a.activity_time.slice(0, 5) : ""}
+                            </span>
+                            {canManage && (
+                              confirmDelete === a.id ? (
+                                <div className="flex items-center gap-1 text-xs">
+                                  <span className="text-red-600">Delete?</span>
+                                  <button onClick={() => doDeleteActivity(a.id)} className="text-red-600 font-medium hover:underline">Yes</button>
+                                  <button onClick={() => setConfirmDelete(null)} className="text-gray-400 hover:underline">No</button>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1">
+                                  <button onClick={() => setEditingActivity(a)} className="p-1 text-gray-400 hover:text-orange-500 rounded" title="Edit">
+                                    <Pencil size={13} />
+                                  </button>
+                                  <button onClick={() => setConfirmDelete(a.id)} className="p-1 text-gray-400 hover:text-red-500 rounded" title="Delete">
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              )
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>

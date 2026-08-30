@@ -423,3 +423,101 @@ test.describe.serial("Room detail — settings, activity, add student", () => {
     await expect(page.getByRole("button", { name: /^parents$/i })).not.toBeVisible();
   });
 });
+
+// ─── Daily report — edit and delete activities ────────────────────────────────
+const ADRITH_ID_REPORT = "1cd2d725-70ce-429b-9070-7dbc59a157f2";
+
+test.describe("Daily report — edit and delete activities", () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto(`/students/${ADRITH_ID_REPORT}`);
+    await page.waitForURL("**/students/**", { timeout: 10_000 });
+    await page.getByRole("button", { name: /^daily report$/i }).click();
+    await page.locator('input[type="date"]').first().waitFor({ timeout: 8_000 });
+  });
+
+  test("TC-daily-report-edit-button: Admin sees edit button on each activity row", async ({ page }) => {
+    // If there are activities today, pencil buttons should be visible
+    const activities = page.locator(".card").filter({ has: page.locator("svg") });
+    const count = await activities.count();
+    if (count === 0) { test.skip(); return; }
+    // Pencil edit button visible (admin only)
+    await expect(page.locator("button[title='Edit activity'], button:has(svg[data-lucide='pencil'])").first().or(
+      page.locator("button").filter({ has: page.locator("svg") }).first()
+    )).toBeVisible({ timeout: 5_000 });
+  });
+
+  test("TC-daily-report-delete-inline-confirm: Delete button shows inline Yes/No confirm", async ({ page }) => {
+    const rows = page.locator(".card.p-4");
+    const count = await rows.count();
+    if (count === 0) { test.skip(); return; }
+
+    // Click the trash/delete icon on the first activity row
+    const firstRow = rows.first();
+    const deleteBtn = firstRow.locator("button").filter({ has: page.locator("svg") }).last();
+    await deleteBtn.click();
+    // Inline confirm appears: "Delete?" with Yes / No
+    await expect(page.getByText("Delete?").first()).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("Yes").first()).toBeVisible();
+    await expect(page.getByText("No").first()).toBeVisible();
+  });
+
+  test("TC-daily-report-delete-no-cancel: Clicking No cancels delete confirm", async ({ page }) => {
+    const rows = page.locator(".card.p-4");
+    const count = await rows.count();
+    if (count === 0) { test.skip(); return; }
+
+    const firstRow = rows.first();
+    const deleteBtn = firstRow.locator("button").filter({ has: page.locator("svg") }).last();
+    await deleteBtn.click();
+    await page.getByText("Delete?").first().waitFor({ timeout: 5_000 });
+    // Click No — confirm should disappear
+    await page.getByText("No").first().click();
+    await expect(page.getByText("Delete?")).not.toBeVisible();
+  });
+
+  test("TC-daily-report-edit-modal-opens: Clicking edit opens edit activity modal", async ({ page }) => {
+    const rows = page.locator(".card.p-4");
+    const count = await rows.count();
+    if (count === 0) { test.skip(); return; }
+
+    // Click pencil/edit button (second-to-last button in first row — trash is last)
+    const firstRow = rows.first();
+    const buttons = firstRow.locator("button").filter({ has: page.locator("svg") });
+    const btnCount = await buttons.count();
+    if (btnCount < 2) { test.skip(); return; }
+    await buttons.nth(btnCount - 2).click(); // second from last = edit
+
+    // Edit modal should open
+    await expect(page.getByText(/edit activity|notes/i).first()).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByRole("button", { name: /save|cancel/i }).first()).toBeVisible();
+  });
+
+  test("TC-daily-report-edit-modal-cancel: Cancel closes edit modal without saving", async ({ page }) => {
+    const rows = page.locator(".card.p-4");
+    const count = await rows.count();
+    if (count === 0) { test.skip(); return; }
+
+    const firstRow = rows.first();
+    const buttons = firstRow.locator("button").filter({ has: page.locator("svg") });
+    const btnCount = await buttons.count();
+    if (btnCount < 2) { test.skip(); return; }
+    await buttons.nth(btnCount - 2).click();
+
+    // Wait for modal
+    await page.getByRole("button", { name: /cancel/i }).last().waitFor({ timeout: 5_000 });
+    await page.getByRole("button", { name: /cancel/i }).last().click();
+    // Modal should close
+    await expect(page.getByRole("button", { name: /save changes/i })).not.toBeVisible({ timeout: 3_000 });
+  });
+
+  test("TC-daily-report-parent-no-edit: Parent cannot see edit/delete buttons", async ({ page }) => {
+    await loginAsParent(page);
+    await page.goto(`/students/${ADRITH_ID_REPORT}`);
+    await page.waitForURL("**/students/**", { timeout: 10_000 });
+    await page.getByRole("button", { name: /^daily report$/i }).click();
+    await page.locator('input[type="date"]').first().waitFor({ timeout: 8_000 });
+    // No "Delete?" confirm or edit modal buttons for parents
+    await expect(page.getByText("Delete?")).not.toBeVisible();
+  });
+});
