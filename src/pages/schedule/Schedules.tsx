@@ -37,6 +37,7 @@ interface StaffDialogState {
   open: boolean;
   staffId: string | null;
   dayOfWeek: number | null;
+  existingIds?: string[];  // IDs of existing schedules for this cell (for delete/upsert)
 }
 
 interface StudentDialogState {
@@ -54,9 +55,10 @@ interface StaffDialogProps {
   weekStart: Date;
   onClose: () => void;
   onSaved: () => void;
+  onDeleted?: () => void;
 }
 
-function StaffScheduleDialog({ state, staff, rooms, weekStart, onClose, onSaved }: StaffDialogProps) {
+function StaffScheduleDialog({ state, staff, rooms, weekStart, onClose, onSaved, onDeleted }: StaffDialogProps) {
   const defaultDay = state.dayOfWeek ?? 1; // default Mon
   const defaultDate = fmtDate(addDays(weekStart, defaultDay));
 
@@ -103,6 +105,14 @@ function StaffScheduleDialog({ state, staff, rooms, weekStart, onClose, onSaved 
     if (!selectedStaffIds.includes(id)) setSelectedStaffIds(prev => [...prev, id]);
   }
 
+  async function handleDelete() {
+    if (!state.existingIds?.length) return;
+    setSaving(true);
+    await supabase.from("staff_schedules").delete().in("id", state.existingIds);
+    setSaving(false);
+    onDeleted?.();
+  }
+
   async function handleSave() {
     if (!selectedStaffIds.length) { setError("Select at least one staff member."); return; }
     if (!roomId) { setError("Select a room."); return; }
@@ -112,6 +122,16 @@ function StaffScheduleDialog({ state, staff, rooms, weekStart, onClose, onSaved 
 
     setSaving(true);
     setError("");
+
+    // Upsert: delete existing schedules for same staff+day combos to prevent overlap
+    for (const sid of selectedStaffIds) {
+      for (const dow of days) {
+        await supabase.from("staff_schedules")
+          .delete()
+          .eq("staff_id", sid)
+          .eq("day_of_week", dow);
+      }
+    }
 
     const rows: Omit<StaffSchedule, "id">[] = [];
     for (const sid of selectedStaffIds) {
@@ -256,11 +276,23 @@ function StaffScheduleDialog({ state, staff, rooms, weekStart, onClose, onSaved 
           {error && <p className="text-xs text-red-500">{error}</p>}
 
           {/* footer */}
-          <div className="flex justify-end gap-2 pt-2">
-            <button onClick={onClose} className="btn btn-ghost text-sm">Cancel</button>
-            <button onClick={handleSave} disabled={saving} className="btn btn-primary text-sm">
-              {saving ? "Saving…" : "Save"}
-            </button>
+          <div className="flex items-center justify-between pt-2">
+            {/* Delete button — shown when editing existing schedule */}
+            {state.existingIds?.length ? (
+              <button
+                onClick={handleDelete}
+                disabled={saving}
+                className="text-xs text-red-600 border border-red-200 rounded-lg px-3 py-1.5 hover:bg-red-50 disabled:opacity-50 flex items-center gap-1"
+              >
+                🗑 Delete Schedule
+              </button>
+            ) : <div />}
+            <div className="flex gap-2">
+              <button onClick={onClose} className="btn btn-ghost text-sm">Cancel</button>
+              <button onClick={handleSave} disabled={saving} className="btn btn-primary text-sm">
+                {saving ? "Saving…" : "Save"}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -487,7 +519,11 @@ export default function Schedules() {
   const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   function openStaffDialog(staffId: string | null, dayOfWeek: number | null) {
-    setStaffDialog({ open: true, staffId, dayOfWeek });
+    // Pass existing schedule IDs so dialog can show Delete button and do upsert
+    const existingIds = staffId && dayOfWeek !== null
+      ? staffSchedules.filter(s => s.staff_id === staffId && s.day_of_week === dayOfWeek).map(s => s.id)
+      : [];
+    setStaffDialog({ open: true, staffId, dayOfWeek, existingIds });
   }
 
   function openStudentDialog(studentId: string | null, dayOfWeek: number | null) {
@@ -713,6 +749,7 @@ export default function Schedules() {
         weekStart={weekStart}
         onClose={() => setStaffDialog(s => ({ ...s, open: false }))}
         onSaved={() => { setStaffDialog(s => ({ ...s, open: false })); loadSchedules(); }}
+        onDeleted={() => { setStaffDialog(s => ({ ...s, open: false })); loadSchedules(); }}
       />
       <StudentScheduleDialog
         state={studentDialog}
