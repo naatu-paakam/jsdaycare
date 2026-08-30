@@ -12,9 +12,24 @@ type StudentRow = {
   room_name: string | null;
 };
 
-type StudentWithStatus = StudentRow & { status: string | null };
+type StudentWithStatus = StudentRow & {
+  status: string | null;
+  checkin_time?: string | null;
+};
 
 type Step = "pin" | "students" | "done";
+
+function statusLabel(s: StudentWithStatus): { text: string; color: string } {
+  if (s.status === "checked_in") {
+    const time = s.checkin_time
+      ? new Date(s.checkin_time).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+      : "";
+    return { text: `✓ Present${time ? " since " + time : ""}`, color: "text-green-700 bg-green-50" };
+  }
+  if (s.status === "checked_out") return { text: "Checked out", color: "text-gray-500 bg-gray-100" };
+  if (s.status === "absent") return { text: "Absent", color: "text-red-600 bg-red-50" };
+  return { text: "Not recorded", color: "text-gray-400 bg-gray-50" };
+}
 
 export default function CheckIn() {
   const [params] = useSearchParams();
@@ -28,6 +43,7 @@ export default function CheckIn() {
   const [students, setStudents] = useState<StudentWithStatus[]>([]);
   const [contactName, setContactName] = useState("");
   const [doneMsg, setDoneMsg] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!schoolId) return;
@@ -59,11 +75,80 @@ export default function CheckIn() {
           p_student_id: r.student_id,
           p_date: today,
         });
-        return { ...r, status: (st as string | null) ?? null };
+        // Try to get checkin_time from attendance table
+        const { data: att } = await supabase
+          .from("attendance")
+          .select("checkin_time")
+          .eq("student_id", r.student_id)
+          .eq("date", today)
+          .maybeSingle();
+        return { ...r, status: (st as string | null) ?? null, checkin_time: att?.checkin_time ?? null };
       })
     );
     setStudents(withStatus);
+    setSelected(new Set(withStatus.map(s => s.student_id)));
     setStep("students");
+  }
+
+  const allSelected = students.length > 0 && selected.size === students.length;
+
+  function toggleSelectAll() {
+    if (allSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(students.map(s => s.student_id)));
+    }
+  }
+
+  function toggleStudent(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  const selectedStudents = students.filter(s => selected.has(s.student_id));
+  const allSelectedCheckedIn = selectedStudents.length > 0 && selectedStudents.every(s => s.status === "checked_in");
+  const bulkLabel = allSelectedCheckedIn ? "Check Out All Selected" : "Check In All Selected";
+
+  async function handleBulkAction() {
+    if (selectedStudents.length === 0) return;
+    const today = new Date().toISOString().slice(0, 10);
+    setLoading(true);
+    let checkedInCount = 0;
+    let checkedOutCount = 0;
+    for (const student of selectedStudents) {
+      const { data, error: rpcErr } = await supabase.rpc("checkin_student", {
+        p_student_id: student.student_id,
+        p_room_id: student.homeroom_id,
+        p_contact_id: student.contact_id,
+        p_date: today,
+      });
+      if (!rpcErr) {
+        if (data === "checked_in") checkedInCount++;
+        else checkedOutCount++;
+      }
+    }
+    setLoading(false);
+    if (checkedInCount > 0 && checkedOutCount === 0) {
+      setDoneMsg(`Checked In (${checkedInCount} student${checkedInCount > 1 ? "s" : ""})`);
+    } else if (checkedOutCount > 0 && checkedInCount === 0) {
+      setDoneMsg(`Checked Out (${checkedOutCount} student${checkedOutCount > 1 ? "s" : ""})`);
+    } else {
+      setDoneMsg(`Done! (${checkedInCount} in, ${checkedOutCount} out)`);
+    }
+    setStep("done");
+    setTimeout(() => {
+      setPin("");
+      setStudents([]);
+      setContactName("");
+      setError("");
+      setDoneMsg("");
+      setSelected(new Set());
+      setStep("pin");
+    }, 2500);
   }
 
   async function handleAction(student: StudentWithStatus) {
@@ -86,6 +171,7 @@ export default function CheckIn() {
       setContactName("");
       setError("");
       setDoneMsg("");
+      setSelected(new Set());
       setStep("pin");
     }, 2500);
   }
@@ -94,6 +180,8 @@ export default function CheckIn() {
     if (key === "back") { setPin(p => p.slice(0, -1)); return; }
     if (pin.length < 6) setPin(p => p + key);
   }
+
+  const isMulti = students.length > 1;
 
   return (
     <div className="min-h-screen bg-orange-50 flex flex-col items-center justify-start pt-8 px-4">
@@ -161,45 +249,100 @@ export default function CheckIn() {
           <div className="space-y-4">
             <div className="text-center pb-2 border-b border-gray-100">
               <p className="text-lg font-bold text-gray-900">Welcome, {contactName}!</p>
-              <p className="text-sm text-gray-500">Select a student to check in or out</p>
+              <p className="text-sm text-gray-500">
+                {isMulti ? "Select students to check in or out" : "Tap to check in or out"}
+              </p>
             </div>
+
+            {/* Select all toggle for multi-kid */}
+            {isMulti && (
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs text-gray-500 font-medium">
+                  {selected.size} of {students.length} selected
+                </span>
+                <button
+                  onClick={toggleSelectAll}
+                  className="text-xs text-orange-600 font-semibold hover:underline"
+                >
+                  {allSelected ? "Deselect All" : "Select All"}
+                </button>
+              </div>
+            )}
 
             {students.map((s) => {
               const isCheckedIn = s.status === "checked_in";
               const isAbsent = s.status === "absent";
+              const badge = statusLabel(s);
+              const isSelected = selected.has(s.student_id);
+
               return (
-                <div key={s.student_id} className="border border-gray-200 rounded-xl p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
+                <div
+                  key={s.student_id}
+                  className={`border rounded-xl p-4 space-y-3 transition-colors ${
+                    isSelected && isMulti ? "border-orange-300 bg-orange-50/40" : "border-gray-200"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    {/* Checkbox for multi-kid */}
+                    {isMulti && (
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleStudent(s.student_id)}
+                        disabled={isAbsent}
+                        className="mt-1 w-4 h-4 accent-orange-500 cursor-pointer"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
                       <p className="font-semibold text-gray-900">{s.first_name} {s.last_name}</p>
                       {s.room_name && <p className="text-xs text-gray-500">{s.room_name}</p>}
+                      {/* Status badge */}
+                      <span className={`inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full font-medium ${badge.color}`}>
+                        {badge.text}
+                      </span>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                      isCheckedIn ? "bg-green-100 text-green-700"
-                      : isAbsent ? "bg-red-100 text-red-600"
-                      : s.status === "checked_out" ? "bg-gray-100 text-gray-600"
-                      : "bg-gray-100 text-gray-400"
-                    }`}>
-                      {isCheckedIn ? "Checked In" : isAbsent ? "Absent" : s.status === "checked_out" ? "Checked Out" : "Not Here"}
-                    </span>
                   </div>
 
-                  <button
-                    onClick={() => handleAction(s)}
-                    disabled={isAbsent || loading}
-                    className={`w-full py-3 rounded-lg font-semibold text-sm transition-all active:scale-95 ${
-                      isAbsent
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : isCheckedIn
-                        ? "bg-orange-100 text-orange-700 hover:bg-orange-200"
-                        : "bg-green-100 text-green-700 hover:bg-green-200"
-                    }`}
-                  >
-                    {isAbsent ? "Already marked absent" : isCheckedIn ? "→ Check Out" : "✓ Check In"}
-                  </button>
+                  {/* Per-student action button (single-kid flow or individual toggle) */}
+                  {!isMulti && (
+                    isAbsent ? (
+                      <span className="block w-full py-2 text-center rounded-lg text-sm font-medium bg-red-50 text-red-400">
+                        Marked absent
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleAction(s)}
+                        disabled={loading}
+                        className={`w-full py-3 rounded-lg font-semibold text-sm transition-all active:scale-95 ${
+                          isCheckedIn
+                            ? "bg-orange-100 text-orange-700 hover:bg-orange-200"
+                            : "bg-green-100 text-green-700 hover:bg-green-200"
+                        }`}
+                      >
+                        {isCheckedIn ? "→ Check Out" : "✓ Check In"}
+                      </button>
+                    )
+                  )}
                 </div>
               );
             })}
+
+            {/* Bulk action button for multi-kid */}
+            {isMulti && (
+              <button
+                onClick={handleBulkAction}
+                disabled={loading || selected.size === 0}
+                className={`w-full py-3 rounded-xl font-semibold text-sm transition-all active:scale-95 ${
+                  selected.size === 0
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : allSelectedCheckedIn
+                    ? "bg-orange-500 text-white hover:bg-orange-600"
+                    : "bg-green-500 text-white hover:bg-green-600"
+                }`}
+              >
+                {loading ? "Processing…" : bulkLabel}
+              </button>
+            )}
 
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
@@ -215,7 +358,7 @@ export default function CheckIn() {
         {/* Step: Done */}
         {step === "done" && (
           <div className="text-center py-8 space-y-3">
-            <div className="text-6xl">{doneMsg === "Checked In!" ? "✅" : "👋"}</div>
+            <div className="text-6xl">{doneMsg.startsWith("Checked In") ? "✅" : doneMsg.startsWith("Checked Out") ? "👋" : "✅"}</div>
             <p className="text-2xl font-bold text-gray-900">{doneMsg}</p>
             <p className="text-sm text-gray-500">Returning to PIN entry…</p>
           </div>

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Users, DoorOpen, AlertTriangle, Cake } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { Users, DoorOpen, AlertTriangle, Cake, RefreshCw } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import Layout from "@/components/Layout";
@@ -40,15 +40,9 @@ export default function Home() {
   const [roomRatios, setRoomRatios] = useState<RoomRatio[]>([]);
   const [birthdays, setBirthdays] = useState<UpcomingBirthday[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    if (!profile?.school_id) return;
-    Promise.all([fetchStats(), fetchRoomRatios(), fetchBirthdays()]).finally(() =>
-      setLoading(false)
-    );
-  }, [profile?.school_id]);
-
-  async function fetchStats() {
+  const fetchStats = useCallback(async () => {
     const { data: attendance } = await supabase
       .from("attendance")
       .select("status")
@@ -67,9 +61,9 @@ export default function Home() {
         totalRooms: rooms?.length ?? 0,
       });
     }
-  }
+  }, [profile?.school_id, today]);
 
-  async function fetchRoomRatios() {
+  const fetchRoomRatios = useCallback(async () => {
     const { data: rooms } = await supabase
       .from("rooms")
       .select("id, name, capacity, ratio_staff, ratio_children")
@@ -105,6 +99,29 @@ export default function Home() {
     );
 
     setRoomRatios(ratios);
+  }, [profile?.school_id, today]);
+
+  useEffect(() => {
+    if (!profile?.school_id) return;
+    Promise.all([fetchStats(), fetchRoomRatios(), fetchBirthdays()]).finally(() =>
+      setLoading(false)
+    );
+  }, [profile?.school_id]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (!profile?.school_id) return;
+    const interval = setInterval(() => {
+      fetchStats();
+      fetchRoomRatios();
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [fetchStats, fetchRoomRatios]);
+
+  async function handleManualRefresh() {
+    setRefreshing(true);
+    await Promise.all([fetchStats(), fetchRoomRatios()]);
+    setRefreshing(false);
   }
 
   async function fetchBirthdays() {
@@ -150,14 +167,27 @@ export default function Home() {
     <Layout>
       <div className="p-6 max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Good {new Date().getHours() < 12 ? "morning" : "afternoon"},{" "}
-            {profile?.full_name?.split(" ")[0] ?? "Admin"} 👋
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Good {new Date().getHours() < 12 ? "morning" : "afternoon"},{" "}
+              {profile?.full_name?.split(" ")[0] ?? "Admin"} 👋
+            </h1>
+            <div className="flex items-center gap-3 mt-1">
+              <p className="text-gray-500 text-sm">
+                {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+              </p>
+              <button
+                onClick={handleManualRefresh}
+                disabled={refreshing}
+                className="inline-flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700 font-medium"
+                title="Refresh stats"
+              >
+                <RefreshCw size={12} className={refreshing ? "animate-spin" : ""} />
+                Refresh
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Stat cards */}
