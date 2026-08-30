@@ -21,6 +21,7 @@ import Menus from "@/pages/menus/Menus";
 import Settings from "@/pages/settings/Settings";
 import Admissions from "@/pages/admissions/Admissions";
 import PortalAdmin from "@/pages/portal/PortalAdmin";
+import CheckIn from "@/pages/checkin/CheckIn";
 
 export default function App() {
   return (
@@ -47,6 +48,9 @@ export default function App() {
         <Route path="/menus" element={<ProtectedRoute allowedRoles={["admin","staff","parent"]}><Menus /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute allowedRoles={["admin"]}><Settings /></ProtectedRoute>} />
         <Route path="/admissions" element={<ProtectedRoute allowedRoles={["admin"]}><Admissions /></ProtectedRoute>} />
+
+        {/* Public check-in route */}
+        <Route path="/checkin" element={<CheckIn />} />
 
         {/* Parent route */}
         <Route path="/parent" element={<ProtectedRoute allowedRoles={["parent"]}><ParentPortal /></ProtectedRoute>} />
