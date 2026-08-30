@@ -39,6 +39,7 @@ export default function Home() {
   });
   const [roomRatios, setRoomRatios] = useState<RoomRatio[]>([]);
   const [birthdays, setBirthdays] = useState<UpcomingBirthday[]>([]);
+  const [notCheckedOut, setNotCheckedOut] = useState<string[]>([]); // student names still checked in past closing
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -103,7 +104,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!profile?.school_id) return;
-    Promise.all([fetchStats(), fetchRoomRatios(), fetchBirthdays()]).finally(() =>
+    Promise.all([fetchStats(), fetchRoomRatios(), fetchBirthdays(), fetchNotCheckedOut()]).finally(() =>
       setLoading(false)
     );
   }, [profile?.school_id]);
@@ -120,7 +121,7 @@ export default function Home() {
 
   async function handleManualRefresh() {
     setRefreshing(true);
-    await Promise.all([fetchStats(), fetchRoomRatios()]);
+    await Promise.all([fetchStats(), fetchRoomRatios(), fetchNotCheckedOut()]);
     setRefreshing(false);
   }
 
@@ -148,6 +149,59 @@ export default function Home() {
       .slice(0, 5);
 
     setBirthdays(upcoming);
+  }
+
+  async function fetchNotCheckedOut() {
+    if (!profile?.school_id) return;
+    // Get today's closing time from school operating_hours
+    const { data: school } = await supabase
+      .from("schools")
+      .select("operating_hours")
+      .eq("id", profile.school_id)
+      .single();
+
+    if (!school?.operating_hours) return;
+
+    const dayNames = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+    const todayName = dayNames[new Date().getDay()];
+    const hoursStr: string = (school.operating_hours as Record<string, string>)[todayName] ?? "";
+
+    // Parse closing time — format: "8:30 AM - 5:30 PM" or "Closed"
+    if (!hoursStr || hoursStr.toLowerCase() === "closed") return;
+    const parts = hoursStr.split("-").map(s => s.trim());
+    if (parts.length < 2) return;
+    const closingStr = parts[1]; // e.g. "5:30 PM"
+
+    // Parse closing time into today's Date
+    const [timePart, meridiem] = closingStr.split(" ");
+    const [hrs, mins] = timePart.split(":").map(Number);
+    const closing = new Date();
+    closing.setHours(
+      meridiem === "PM" && hrs !== 12 ? hrs + 12 : meridiem === "AM" && hrs === 12 ? 0 : hrs,
+      mins, 0, 0
+    );
+
+    // Only check if we're past closing time
+    if (new Date() < closing) { setNotCheckedOut([]); return; }
+
+    // Fetch students still checked_in (not checked_out) today
+    const { data: attendance } = await supabase
+      .from("attendance")
+      .select("student_id, students(first_name, last_name)")
+      .eq("date", today)
+      .eq("status", "checked_in");
+
+    if (!attendance?.length) { setNotCheckedOut([]); return; }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const names = (attendance as any[])
+      .map((a: any) => {
+        const s = Array.isArray(a.students) ? a.students[0] : a.students;
+        return s ? `${s.first_name} ${s.last_name}` : null;
+      })
+      .filter(Boolean) as string[];
+
+    setNotCheckedOut(names);
   }
 
   function ratioOk(room: RoomRatio) {
@@ -290,20 +344,31 @@ export default function Home() {
             <AlertTriangle size={16} className="text-amber-500" />
             <h2 className="font-semibold text-gray-900 text-sm">Compliance Alerts</h2>
           </div>
-          <div className="px-5 py-4">
-            {roomRatios.filter(r => !ratioOk(r)).length === 0 ? (
+          <div className="px-5 py-4 space-y-2">
+            {roomRatios.filter(r => !ratioOk(r)).length === 0 && notCheckedOut.length === 0 ? (
               <p className="text-sm text-emerald-600 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
                 All ratios are compliant
               </p>
             ) : (
               <ul className="space-y-2">
+                {/* Ratio violations */}
                 {roomRatios.filter(r => !ratioOk(r)).map(r => (
                   <li key={r.room_id} className="text-sm text-red-600 flex items-center gap-2">
-                    <AlertTriangle size={14} />
-                    <strong>{r.room_name}</strong> is under ratio ({r.checked_in_students} students, {r.checked_in_staff} staff)
+                    <AlertTriangle size={14} className="shrink-0" />
+                    <span><strong>{r.room_name}</strong> is under ratio ({r.checked_in_students} students, {r.checked_in_staff} staff)</span>
                   </li>
                 ))}
+                {/* Students not checked out after school closing */}
+                {notCheckedOut.length > 0 && (
+                  <li className="text-sm text-amber-700 flex items-start gap-2 bg-amber-50 rounded-lg px-3 py-2">
+                    <AlertTriangle size={14} className="shrink-0 mt-0.5 text-amber-500" />
+                    <span>
+                      <strong>Past closing time — not checked out:</strong>{" "}
+                      {notCheckedOut.join(", ")}
+                    </span>
+                  </li>
+                )}
               </ul>
             )}
           </div>
