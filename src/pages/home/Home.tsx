@@ -231,7 +231,7 @@ export default function Home() {
                       <td colSpan={5} className="px-5 py-8 text-center text-gray-400">No rooms found</td>
                     </tr>
                   ) : (
-                    roomRatios.map(room => (
+                    [...roomRatios].sort((a, b) => a.room_name.localeCompare(b.room_name)).map(room => (
                       <tr key={room.room_id} className="border-b border-gray-50 hover:bg-gray-50">
                         <td className="px-5 py-3 font-medium text-gray-900">{room.room_name}</td>
                         <td className="px-5 py-3 text-gray-600">{room.checked_in_students}</td>
