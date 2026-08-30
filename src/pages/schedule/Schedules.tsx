@@ -69,9 +69,9 @@ function StaffScheduleDialog({ state, staff, rooms, weekStart, onClose, onSaved,
   const [repeats, setRepeats] = useState(true);
   const [startDate, setStartDate] = useState(defaultDate);
   const [endDate, setEndDate] = useState("");
-  const [startTime, setStartTime] = useState("07:30");
-  const [endTime, setEndTime] = useState("16:30");
-  const [days, setDays] = useState<number[]>([defaultDay]);
+  const [startTime, setStartTime] = useState("08:30");
+  const [endTime, setEndTime] = useState("18:00");
+  const [days, setDays] = useState<number[]>([1,2,3,4,5]);
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -81,13 +81,13 @@ function StaffScheduleDialog({ state, staff, rooms, weekStart, onClose, onSaved,
     if (state.open) {
       const d = state.dayOfWeek ?? 1;
       setSelectedStaffIds(state.staffId ? [state.staffId] : []);
-      setDays([d]);
+      setDays([1,2,3,4,5]);
       setStartDate(fmtDate(addDays(weekStart, d)));
       setEndDate("");
       setRoomId("");
       setRepeats(true);
-      setStartTime("07:30");
-      setEndTime("16:30");
+      setStartTime("08:30");
+      setEndTime("18:00");
       setDescription("");
       setError("");
     }
@@ -322,7 +322,7 @@ function StudentScheduleDialog({ state, students, weekStart, onClose, onSaved }:
   const defaultDate = fmtDate(addDays(weekStart, defaultDay));
 
   const [scheduleType, setScheduleType] = useState<"full"|"am"|"pm"|"half">("full");
-  const [days, setDays] = useState<number[]>([defaultDay]);
+  const [days, setDays] = useState<number[]>([1,2,3,4,5]);
   const [startDate, setStartDate] = useState(defaultDate);
   const [endDate, setEndDate] = useState("");
   const [saving, setSaving] = useState(false);
@@ -331,7 +331,7 @@ function StudentScheduleDialog({ state, students, weekStart, onClose, onSaved }:
   useEffect(() => {
     if (state.open) {
       const d = state.dayOfWeek ?? 1;
-      setDays([d]);
+      setDays([1,2,3,4,5]);
       setStartDate(fmtDate(addDays(weekStart, d)));
       setEndDate("");
       setScheduleType("full");
