@@ -28,7 +28,7 @@ test("TC-room-detail: room detail shows Students and Feed tabs (no Parents)", as
 test("TC-checkin-full-flow: Check In → Present badge → Check Out → Checked out state", async ({ page }) => {
   await loginAsAdmin(page);
   await page.goto("/rooms");
-  const toddlerLink = page.locator('a[href^="/rooms/"]', { hasText: /toddler/i });
+  const toddlerLink = page.locator('a[href^="/rooms/"]', { hasText: /toddler/i }).first();
   await toddlerLink.waitFor({ state: "visible", timeout: 10_000 });
   await toddlerLink.click();
   await page.waitForURL("**/rooms/**", { timeout: 10_000 });

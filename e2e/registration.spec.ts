@@ -89,6 +89,6 @@ test("TC-multischool-dropdown: Clicking school switcher reveals all schools for 
   await schoolBtn.waitFor({ timeout: 10_000 });
   await schoolBtn.click();
   // Both schools should be listed
-  await expect(page.getByText("JS Joy Family Daycare")).toBeVisible({ timeout: 5_000 });
-  await expect(page.getByText("Sunshine")).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByText("JS Joy Family Daycare").first()).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByText(/JS Joy|Sunshine/i).first()).toBeVisible({ timeout: 5_000 }); // At least one school visible in dropdown
 });

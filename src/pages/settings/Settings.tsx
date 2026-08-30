@@ -43,12 +43,87 @@ export default function Settings() {
   }
 
   function downloadQR() {
-    const canvas = qrCanvasRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
-    if (!canvas) return;
-    const url = canvas.toDataURL("image/png");
+    const qrCanvas = qrCanvasRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
+    if (!qrCanvas) return;
+
+    // Build a beautiful printable card canvas
+    const card = document.createElement("canvas");
+    card.width  = 800;
+    card.height = 1050;
+    const ctx = card.getContext("2d")!;
+
+    // Background — warm cream
+    ctx.fillStyle = "#FFF8F3";
+    ctx.fillRect(0, 0, card.width, card.height);
+
+    // Top orange banner
+    ctx.fillStyle = "#F97316";
+    ctx.fillRect(0, 0, card.width, 200);
+
+    // School logo/emoji
+    ctx.font = "72px serif";
+    ctx.textAlign = "center";
+    ctx.fillText("🏫", 400, 100);
+
+    // School name
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 38px system-ui, sans-serif";
+    ctx.fillText(school?.name ?? "JsDayCare", 400, 160);
+
+    // Date line
+    const today = new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    ctx.font = "22px system-ui, sans-serif";
+    ctx.fillStyle = "#FED7AA";
+    ctx.fillText(today, 400, 195);
+
+    // Welcome headline
+    ctx.fillStyle = "#9A3412";
+    ctx.font = "bold 34px system-ui, sans-serif";
+    ctx.fillText("Welcome, Family! 👋", 400, 270);
+
+    // Subtext
+    ctx.fillStyle = "#78350F";
+    ctx.font = "22px system-ui, sans-serif";
+    ctx.fillText("Start your day right — scan to check in.", 400, 315);
+    ctx.fillText("Close the day — scan again to check out.", 400, 348);
+
+    // Divider
+    ctx.strokeStyle = "#FED7AA";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(80, 378); ctx.lineTo(720, 378); ctx.stroke();
+
+    // Draw the QR code (scaled to fit nicely)
+    const qrSize = 420;
+    const qrX = (card.width - qrSize) / 2;
+    const qrY = 400;
+
+    // White rounded QR background
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.roundRect(qrX - 20, qrY - 20, qrSize + 40, qrSize + 40, 20);
+    ctx.fill();
+
+    ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+
+    // Instruction below QR
+    ctx.fillStyle = "#374151";
+    ctx.font = "bold 24px system-ui, sans-serif";
+    ctx.fillText("Scan with your phone camera", 400, qrY + qrSize + 60);
+    ctx.font = "18px system-ui, sans-serif";
+    ctx.fillStyle = "#6B7280";
+    ctx.fillText("Enter your 6-digit PIN to check in or out", 400, qrY + qrSize + 90);
+
+    // Bottom orange footer
+    ctx.fillStyle = "#F97316";
+    ctx.fillRect(0, 990, card.width, 60);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "16px system-ui, sans-serif";
+    ctx.fillText("Powered by JsDayCare · daycareportal.com", 400, 1027);
+
+    // Download
     const a = document.createElement("a");
-    a.href = url;
-    a.download = "checkin-qr.png";
+    a.href = card.toDataURL("image/png");
+    a.download = `${(school?.name ?? "daycare").replace(/\s+/g, "-")}-checkin-card.png`;
     a.click();
   }
 
