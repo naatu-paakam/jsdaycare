@@ -25,6 +25,30 @@ test("TC-room-detail: room detail shows Students and Feed tabs (no Parents)", as
   await expect(page.getByRole("button", { name: /^parents$/i })).not.toBeVisible();
 });
 
+test("TC-checkin-full-flow: Check In → Present badge → Check Out → Checked out state", async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto("/rooms");
+  const toddlerLink = page.locator('a[href^="/rooms/"]', { hasText: /toddler/i });
+  await toddlerLink.waitFor({ state: "visible", timeout: 10_000 });
+  await toddlerLink.click();
+  await page.waitForURL("**/rooms/**", { timeout: 10_000 });
+  // Wait for student rows
+  const firstRow = page.locator("table tbody tr").filter({ hasNot: page.locator("td[colspan]") }).first();
+  await firstRow.waitFor({ state: "visible", timeout: 8_000 });
+  // Check In
+  const checkInBtn = firstRow.getByRole("button", { name: /check in/i });
+  if (await checkInBtn.count() > 0) {
+    await checkInBtn.click();
+    // Status should show "Present" badge
+    await expect(firstRow.getByText(/present/i)).toBeVisible({ timeout: 5_000 });
+    // Check Out button now visible
+    await expect(firstRow.getByRole("button", { name: /check out/i })).toBeVisible();
+    // Click Check Out
+    await firstRow.getByRole("button", { name: /check out/i }).click();
+    await expect(firstRow.getByText(/checked out/i)).toBeVisible({ timeout: 5_000 });
+  }
+});
+
 test("TC-checkin-buttons: room Students tab has Check in and Mark absent buttons", async ({ page }) => {
   await page.goto("/rooms");
   // Wait for all room links, then pick "Toddlers" which has active students

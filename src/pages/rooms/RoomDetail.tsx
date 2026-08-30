@@ -716,6 +716,17 @@ export default function RoomDetail() {
     fetchStudents();
   }
 
+  async function checkout(studentId: string) {
+    const existing = students.find(s => s.id === studentId)?.attendance;
+    if (existing) {
+      await supabase.from("attendance").update({
+        status: "checked_out",
+        checkout_time: new Date().toISOString(),
+      }).eq("id", existing.id);
+    }
+    fetchStudents();
+  }
+
   async function markAbsent(studentId: string) {
     const existing = students.find(s => s.id === studentId)?.attendance;
     if (existing) {
@@ -819,31 +830,52 @@ export default function RoomDetail() {
                           </Link>
                         </td>
                         <td className="px-5 py-3">
-                          {status ? (
-                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium capitalize
-                              ${status === "checked_in" ? "bg-emerald-100 text-emerald-700" :
-                                status === "absent" ? "bg-red-100 text-red-600" :
-                                "bg-gray-100 text-gray-500"}`}>
-                              {status.replace("_", " ")}
+                          {/* Status badge */}
+                          {status === "checked_in" && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                              Present
                             </span>
-                          ) : (
+                          )}
+                          {status === "checked_out" && (
+                            <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                              Checked out
+                            </span>
+                          )}
+                          {status === "absent" && (
+                            <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">
+                              Absent
+                            </span>
+                          )}
+                          {!status && (
                             <span className="text-gray-300 text-xs">Not recorded</span>
                           )}
                         </td>
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-2">
-                            {status !== "checked_in" && (
+                            {/* Not recorded or absent → Check In */}
+                            {(!status || status === "absent" || status === "checked_out") && (
                               <button
                                 onClick={() => checkin(s.id)}
-                                className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium"
+                                className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium transition-colors"
                               >
                                 <UserCheck size={12} /> Check In
                               </button>
                             )}
-                            {status !== "absent" && (
+                            {/* Checked in → Check Out */}
+                            {status === "checked_in" && (
+                              <button
+                                onClick={() => checkout(s.id)}
+                                className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 font-medium transition-colors"
+                              >
+                                <UserX size={12} /> Check Out
+                              </button>
+                            )}
+                            {/* Mark absent — available unless already absent */}
+                            {status !== "absent" && status !== "checked_out" && (
                               <button
                                 onClick={() => markAbsent(s.id)}
-                                className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-medium"
+                                className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-medium transition-colors"
                               >
                                 <UserX size={12} /> Mark Absent
                               </button>
