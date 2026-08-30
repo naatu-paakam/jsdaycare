@@ -8,6 +8,7 @@ import { Room, Student } from "@/lib/types";
 
 interface RoomCard extends Room {
   students: Pick<Student, "id" | "first_name" | "last_name" | "photo_url">[];
+  checkedInIds: Set<string>; // student IDs currently checked in
 }
 
 function ageRange(min: number | null, max: number | null) {
@@ -42,12 +43,22 @@ export default function RoomList() {
 
     const cards: RoomCard[] = await Promise.all(
       roomData.map(async room => {
-        const { data: students } = await supabase
-          .from("students")
-          .select("id, first_name, last_name, photo_url")
-          .eq("homeroom_id", room.id)
-          .eq("enrollment_status", "active");
-        return { ...room, students: students ?? [] };
+        const today = new Date().toISOString().split("T")[0];
+        const [{ data: students }, { data: attendance }] = await Promise.all([
+          supabase
+            .from("students")
+            .select("id, first_name, last_name, photo_url")
+            .eq("homeroom_id", room.id)
+            .eq("enrollment_status", "active"),
+          supabase
+            .from("attendance")
+            .select("student_id, status")
+            .eq("room_id", room.id)
+            .eq("date", today)
+            .eq("status", "checked_in"),
+        ]);
+        const checkedInIds = new Set<string>((attendance ?? []).map(a => a.student_id));
+        return { ...room, students: students ?? [], checkedInIds };
       })
     );
 
@@ -145,17 +156,25 @@ export default function RoomList() {
                   </div>
                 </div>
 
-                {/* Student avatars */}
+                {/* Student avatars — green dot if currently checked in */}
                 <div className="flex items-center gap-1 flex-wrap">
-                  {room.students.slice(0, 8).map(s => (
-                    s.photo_url ? (
-                      <img key={s.id} src={s.photo_url} alt="" className="w-7 h-7 rounded-full object-cover border-2 border-white" />
-                    ) : (
-                      <div key={s.id} className="w-7 h-7 rounded-full bg-orange-100 border-2 border-white flex items-center justify-center text-orange-500 font-semibold text-[10px]">
-                        {s.first_name[0]}{s.last_name[0]}
+                  {room.students.slice(0, 8).map(s => {
+                    const isIn = room.checkedInIds.has(s.id);
+                    return (
+                      <div key={s.id} className="relative">
+                        {s.photo_url ? (
+                          <img src={s.photo_url} alt="" className="w-7 h-7 rounded-full object-cover border-2 border-white" />
+                        ) : (
+                          <div className={`w-7 h-7 rounded-full border-2 border-white flex items-center justify-center font-semibold text-[10px] ${isIn ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-500"}`}>
+                            {s.first_name[0]}{s.last_name[0]}
+                          </div>
+                        )}
+                        {isIn && (
+                          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-white" title="Present" />
+                        )}
                       </div>
-                    )
-                  ))}
+                    );
+                  })}
                   {room.students.length > 8 && (
                     <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-[10px] font-medium">
                       +{room.students.length - 8}
