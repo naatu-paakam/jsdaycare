@@ -53,7 +53,7 @@ export default function AddStudent() {
       setError(err.message);
       setSaving(false);
     } else {
-      navigate("/students");
+      navigate("/admissions");
     }
   }
 
@@ -73,8 +73,8 @@ export default function AddStudent() {
   return (
     <Layout>
       <div className="p-6 max-w-2xl mx-auto space-y-5">
-        <Link to="/students" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800">
-          <ArrowLeft size={15} /> Back to Students
+        <Link to="/admissions" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800">
+          <ArrowLeft size={15} /> Back to Admissions
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">Add Student</h1>
 
@@ -131,7 +131,7 @@ export default function AddStudent() {
           )}
 
           <div className="flex justify-end gap-3 pt-2">
-            <Link to="/students" className="btn-secondary">Cancel</Link>
+            <Link to="/admissions" className="btn-secondary">Cancel</Link>
             <button type="submit" disabled={saving} className="btn-primary">
               {saving ? "Saving..." : "Add Student"}
             </button>

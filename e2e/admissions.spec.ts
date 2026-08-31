@@ -62,7 +62,7 @@ test.describe("Admissions page", () => {
 
     await page.getByRole("button", { name: /add student/i }).click();
     // Should redirect to /students on success
-    await expect(page).toHaveURL(/\/students/, { timeout: 8_000 });
+    await expect(page).toHaveURL(/\/admissions/, { timeout: 8_000 });
 
     // Verify on admissions page
     await page.goto("/admissions");
@@ -88,7 +88,7 @@ test.describe("Admissions page", () => {
     await page.locator("label:has-text('Last Name') ~ div input, label:has-text('Last Name') ~ input").first().fill("StatusTest");
     await page.locator("select").filter({ hasText: /active|waitlist/i }).selectOption("waitlist");
     await page.getByRole("button", { name: /add student/i }).click();
-    await expect(page).toHaveURL(/\/students/, { timeout: 8_000 });
+    await expect(page).toHaveURL(/\/admissions/, { timeout: 8_000 });
 
     await page.goto("/admissions");
     await page.getByRole("button", { name: /waitlist only/i }).click();
@@ -147,7 +147,7 @@ test.describe("Admissions page", () => {
     await page.locator("label:has-text('First Name') ~ div input, label:has-text('First Name') + input").first().fill("TC-Delete");
     await page.locator("label:has-text('Last Name') ~ div input, label:has-text('Last Name') ~ input").first().fill("MeNow");
     await page.getByRole("button", { name: /add student/i }).click();
-    await expect(page).toHaveURL(/\/students/, { timeout: 8_000 });
+    await expect(page).toHaveURL(/\/admissions/, { timeout: 8_000 });
 
     await page.goto("/admissions");
     await page.getByRole("button", { name: /all students/i }).click();
