@@ -118,3 +118,22 @@ Available via **Settings → Front Desk QR Code**.
 - Taps Check In or Check Out
 - Multi-kid: checkboxes to select one or all children
 - Activity logged automatically → appears in student's Daily Report
+
+---
+
+## School Website (Coming in R1)
+Each school gets a public website auto-generated from settings, hosted at `daycareportal.com/s/<school-slug>`.
+
+In Settings → **School Website** you'll be able to set:
+- **Tagline** — hero headline ("Where Little Hearts Find Joy")
+- **About description** — 2-3 sentences shown in the About section
+- **Address, Phone, Email** — shown in footer and contact section
+- **Logo + hero image** — upload via settings
+- **Accent color** — brand color (default orange)
+- **URL slug** — auto-generated from school name, editable
+- **Testimonials** — add/edit/delete parent quotes
+- **Contact form link** + social links (Facebook, Instagram)
+
+The website auto-populates programs (from rooms), operating hours, and staff count from your existing DayCarePortal data — no duplication needed.
+
+Preview your site: `daycareportal.com/s/<your-slug>`

@@ -46,6 +46,7 @@
 | Daily report activity edit/delete (inline confirm + modal) | ✅ |
 | Schedule upsert (no overlaps), delete schedule button | ✅ |
 | Stories page stub (R1 feature, nav item present) | 🔲 R1 |
+| School public website (`/s/<slug>` from settings template) | 🔲 R1 |
 
 ---
 
