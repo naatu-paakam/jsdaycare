@@ -6,3 +6,8 @@ dist/
 .claude
 supabase/.temp/
 .notes
+
+# Playwright
+test-results/
+playwright-report/
+.playwright-mcp/
