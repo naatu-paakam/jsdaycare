@@ -10,7 +10,7 @@ Personas: portal admin / school admin / teacher / parent — credentials in `.no
 | dashboard.spec.ts | 4 | Home page stats / ratios / alerts |
 | navigation.spec.ts | 28 | All nav links, 3 personas, school name, settings |
 | rooms.spec.ts | ~6 | Room list, detail, check-in full flow |
-| students.spec.ts | ~55 | Full student profile — all tabs, contacts, immunizations, rooms, daily report edit/delete |
+| students.spec.ts | ~55 | Full student profile — all tabs, contacts, immunizations, rooms, daily activities edit/delete |
 | schedules.spec.ts | ~15 | Grid, dialogs, week nav, bug regressions |
 | calendar.spec.ts | 10 | Holiday calendar, operating hours, policies |
 | menus.spec.ts | 11 | Weekly menu, food library, role-based tabs |
@@ -37,12 +37,12 @@ Personas: portal admin / school admin / teacher / parent — credentials in `.no
 - Portal admin: redirected to /portal, blocked from /home and /students
 
 ### Student Profile
-- All 5 tabs (Profile, Contacts, Immunizations, Daily Report, Documents)
+- All 5 tabs (Profile, Contacts, Immunizations, Daily Activities, Documents)
 - Profile editing (personal info, address, room assignment)
 - Contacts: PIN reveal, Add contact/pickup, photo upload, invite URL
 - Contact type expanded (8 types), non-parent = no portal invite
 - Immunizations: CDC grid, dates, skip, exempt, delete, custom vaccines, settings modal
-- Daily Report: inline feed, edit/delete per activity, parent read-only
+- Daily Activities: inline feed, edit/delete per activity, parent read-only
 - Emergency contacts: add/edit/delete
 
 ### Rooms
@@ -77,7 +77,7 @@ Personas: portal admin / school admin / teacher / parent — credentials in `.no
 - TC-checkin-invalid-pin: Error stays on PIN step
 - TC-checkin-valid-pin: Correct PIN shows student list
 - TC-checkin-toggle: Check In → success → auto-reset
-- TC-checkin-activity-logged: Activity appears in Daily Report
+- TC-checkin-activity-logged: Activity appears in Daily Activities
 - TC-checkin-qr-in-settings: QR code, Download, Copy Link
 - TC-checkin-qr-encodes-school: Link contains /checkin?school=
 - TC-home-refresh-button / TC-home-refresh-updates-counts
@@ -98,7 +98,7 @@ Each bug found during testing has a dedicated TC:
 | TC-schedules-staff-upsert-no-overlap | Staff schedule save created duplicates instead of overwriting |
 | TC-schedules-delete-button-exists | No delete button on schedule dialog |
 | TC-checkin-toggle | checkin_student FK violation (created_by referenced wrong table) |
-| TC-daily-report-delete-no-cancel | Delete inline confirm cancel worked |
+| TC-daily-activities-delete-no-cancel | Delete inline confirm cancel worked |
 | TC-contacts-nonparent-no-invite | Non-parent contact type showed invite URL incorrectly |
 
 ---

@@ -40,7 +40,7 @@ Click your child's name to open their profile.
 
 **Immunizations tab** — view your child's vaccination status against the CDC schedule. You can enter/edit dates, mark doses as Skipped, or mark a vaccine as Exempt. Use ⚙ Immunization Settings to show/hide vaccines.
 
-**Daily Report tab** — see what your child did today: meals eaten, nap duration, mood, activities. Select a date to browse past days.
+**Daily Activities tab** — see what your child did today: meals eaten, nap duration, mood, activities. Select a date to browse past days.
 
 **Documents tab** — link to Paperwork.
 

@@ -16,7 +16,7 @@ Staff log activities throughout the day as a chronological event feed per child.
 - Action type filter (dropdown — filter by activity type)
 - Two tabs:
   - **Today** — live chronological feed of all activity entries
-  - **Daily Report** — assembled report view (what parent sees after Done)
+  - **Daily Activities** — assembled activity view (what parent sees after Done)
 - Each entry shows: activity icon, description, timestamp, Edit link
 - Entries logged with staff name and room (e.g. "In JsJoyFamily3428 by Jaya Bijjala")
 - Times shown in school timezone
@@ -112,7 +112,7 @@ Staff tap **+ Add Activity** and select from:
 
 ---
 
-## Daily Report
+## Daily Activities
 - Auto-assembled from all non-staff-only entries for the day
 - Staff marks report **Done** → parent portal unlocks the report
 - Parent view is read-only in MVP
@@ -122,7 +122,7 @@ Staff tap **+ Add Activity** and select from:
 
 ## Staff Only Flag
 - Any entry can be marked Staff Only at time of logging
-- Staff Only entries appear in the staff feed but are excluded from the parent Daily Report
+- Staff Only entries appear in the staff feed but are excluded from the parent Daily Activities
 - Useful for internal notes, health observations not ready to share
 
 ---

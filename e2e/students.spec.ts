@@ -245,7 +245,7 @@ test.describe("Student profile tabs", () => {
     await expect(page.getByText(/vaccine name is required/i)).toBeVisible();
   });
 
-  test("TC-daily-report-inline: daily activities tab shows inline feed (not navigate away)", async ({ page }) => {
+  test("TC-daily-activities-inline: daily activities tab shows inline feed (not navigate away)", async ({ page }) => {
     const url = page.url();
     await page.getByRole("button", { name: /^daily activities$/i }).click();
     // Should stay on the same student page
@@ -436,7 +436,7 @@ test.describe("daily activities — edit and delete activities", () => {
     await page.locator('input[type="date"]').first().waitFor({ timeout: 8_000 });
   });
 
-  test("TC-daily-report-edit-button: Admin sees edit button on each activity row", async ({ page }) => {
+  test("TC-daily-activities-edit-button: Admin sees edit button on each activity row", async ({ page }) => {
     // If there are activities today, pencil buttons should be visible
     const activities = page.locator(".card").filter({ has: page.locator("svg") });
     const count = await activities.count();
@@ -447,7 +447,7 @@ test.describe("daily activities — edit and delete activities", () => {
     )).toBeVisible({ timeout: 5_000 });
   });
 
-  test("TC-daily-report-delete-inline-confirm: Delete button shows inline Yes/No confirm", async ({ page }) => {
+  test("TC-daily-activities-delete-inline-confirm: Delete button shows inline Yes/No confirm", async ({ page }) => {
     const rows = page.locator(".card.p-4");
     const count = await rows.count();
     if (count === 0) { test.skip(); return; }
@@ -462,7 +462,7 @@ test.describe("daily activities — edit and delete activities", () => {
     await expect(page.getByText("No").first()).toBeVisible();
   });
 
-  test("TC-daily-report-delete-no-cancel: Clicking No cancels delete confirm", async ({ page }) => {
+  test("TC-daily-activities-delete-no-cancel: Clicking No cancels delete confirm", async ({ page }) => {
     const rows = page.locator(".card.p-4");
     const count = await rows.count();
     if (count === 0) { test.skip(); return; }
@@ -476,7 +476,7 @@ test.describe("daily activities — edit and delete activities", () => {
     await expect(page.getByText("Delete?")).not.toBeVisible();
   });
 
-  test("TC-daily-report-edit-modal-opens: Clicking edit opens edit activity modal", async ({ page }) => {
+  test("TC-daily-activities-edit-modal-opens: Clicking edit opens edit activity modal", async ({ page }) => {
     const rows = page.locator(".card.p-4");
     const count = await rows.count();
     if (count === 0) { test.skip(); return; }
@@ -493,7 +493,7 @@ test.describe("daily activities — edit and delete activities", () => {
     await expect(page.getByRole("button", { name: /save|cancel/i }).first()).toBeVisible();
   });
 
-  test("TC-daily-report-edit-modal-cancel: Cancel closes edit modal without saving", async ({ page }) => {
+  test("TC-daily-activities-edit-modal-cancel: Cancel closes edit modal without saving", async ({ page }) => {
     const rows = page.locator(".card.p-4");
     const count = await rows.count();
     if (count === 0) { test.skip(); return; }
@@ -511,7 +511,7 @@ test.describe("daily activities — edit and delete activities", () => {
     await expect(page.getByRole("button", { name: /save changes/i })).not.toBeVisible({ timeout: 3_000 });
   });
 
-  test("TC-daily-report-parent-no-edit: Parent cannot see edit/delete buttons", async ({ page }) => {
+  test("TC-daily-activities-parent-no-edit: Parent cannot see edit/delete buttons", async ({ page }) => {
     await loginAsParent(page);
     await page.goto(`/students/${ADRITH_ID_REPORT}`);
     await page.waitForURL("**/students/**", { timeout: 10_000 });

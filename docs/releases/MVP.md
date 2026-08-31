@@ -52,7 +52,7 @@
 
 ## Feature 1 — Child & Family Management ✅
 
-**5 profile tabs:** Profile · Contacts · Immunizations · Daily Report · Documents
+**5 profile tabs:** Profile · Contacts · Immunizations · Daily Activities · Documents
 
 **Profile:** Personal info (DOB, gender, race, allergies, medications, doctor) + Address + Room assignment + School/enrollment/financial details (admin-only).
 
@@ -71,7 +71,7 @@
 - QR code check-in (public `/checkin?school=id` page)
 - PIN pad → student list with current status → Check In / Check Out toggle
 - Multi-kid checkboxes for parents with multiple children
-- Each check-in/out logs a `name_to_face` activity → visible in Daily Report
+- Each check-in/out logs a `name_to_face` activity → visible in Daily Activities
 - Green dot on room list avatars when student is present
 
 ---

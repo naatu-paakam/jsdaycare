@@ -22,7 +22,7 @@ Full student registry under **My School → Students**.
 - **Profile** — personal info (DOB, allergies, medications, doctor), address, enrollment details, financial details, room assignment (admin editable)
 - **Contacts** — unified table of parents/guardians + pickup contacts. 6-digit PIN auto-generated. Check-in code Reveal button. Send Invite link. Photo upload. Pickup valid from/to dates.
 - **Immunizations** — 11 CDC vaccines with dose tracking (Overdue/Completed/Skipped/Exempt). Immunization Settings gear to show/hide per student.
-- **Daily Report** — inline activity feed filtered by date
+- **Daily Activities** — inline activity feed filtered by date
 - **Documents** — link to Paperwork
 
 **Key actions:**
@@ -117,7 +117,7 @@ Available via **Settings → Front Desk QR Code**.
 - Sees linked student(s) with current status (Present / Checked out / Not recorded)
 - Taps Check In or Check Out
 - Multi-kid: checkboxes to select one or all children
-- Activity logged automatically → appears in student's Daily Report
+- Activity logged automatically → appears in student's Daily Activities
 
 ---
 

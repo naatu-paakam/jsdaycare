@@ -13,7 +13,7 @@ See today's stats, room ratios, and compliance alerts — same as admin view.
 ## Students
 Browse students in your assigned rooms. Click a student to see their profile.
 
-**Daily Report tab** — view the student's activity feed for any date. As staff, you can **edit** or **delete** any activity entry (✏ / 🗑 buttons on each row).
+**Daily Activities tab** — view the student's activity feed for any date. As staff, you can **edit** or **delete** any activity entry (✏ / 🗑 buttons on each row).
 
 ---
 
