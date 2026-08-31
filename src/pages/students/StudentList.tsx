@@ -51,20 +51,25 @@ function EditAdmissionModal({ student, onClose, onSaved }: {
 
   async function save() {
     setSaving(true); setError("");
-    const update: Record<string, unknown> = {
+    // Always update status/dates first (student still in current school → passes RLS)
+    const { error: err } = await supabase.from("students").update({
       enrollment_status: status,
       start_date: startDate || null,
       end_date: endDate || null,
       notes: notes || null,
-    };
-    // Moving to a different school: update school_id and clear homeroom (room belongs to old school)
+    }).eq("id", student.id);
+    if (err) { setError(err.message); setSaving(false); return; }
+
+    // Then move school via security-definer RPC (bypasses cross-school RLS)
     if (schoolChanged) {
-      update.school_id = schoolId;
-      update.homeroom_id = null;
+      const { error: rpcErr } = await supabase.rpc("move_student_to_school", {
+        p_student_id: student.id,
+        p_target_school_id: schoolId,
+      });
+      if (rpcErr) { setError(rpcErr.message); setSaving(false); return; }
     }
-    const { error: err } = await supabase.from("students").update(update).eq("id", student.id);
+
     setSaving(false);
-    if (err) { setError(err.message); return; }
     onSaved();
   }
 
