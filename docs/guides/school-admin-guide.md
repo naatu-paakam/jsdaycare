@@ -137,3 +137,34 @@ In Settings → **School Website** you'll be able to set:
 The website auto-populates programs (from rooms), operating hours, and staff count from your existing DayCarePortal data — no duplication needed.
 
 Preview your site: `daycareportal.com/s/<your-slug>`
+
+---
+
+## Admissions
+
+**Admissions → Add Student** navigates to a full form: First/Last Name (required), DOB, Gender, Enrollment Status (Active/Waitlist/Withdrawn), Meal Type, Doctor, Allergies, Medications, Notes.
+
+**In the student list:**
+- ✏ **Edit** (pencil) — opens a modal to update Enrollment Status, Start Date, End/Exit Date, and Notes
+- 🗑 **Delete** (trash) — shows inline "Delete? Yes / No" confirm; permanently removes the student
+
+Filter tabs: **Waitlist Only** (default) · **All Students**
+
+Stats bar shows live counts: Waitlist / Active / Withdrawn / Graduated
+
+---
+
+## Staff Management
+
+**Staff & Payroll → Add Staff** opens a dialog to capture:
+- Full Name*, Email* (required for invite), Phone, Role (Staff/Admin)
+- Photo upload (avatar circle)
+- Clicking **Generate Invite Link** creates a 7-day invite token and shows a copyable link to send the staff member
+
+**In the staff list:**
+- ✏ **Edit** — opens modal to update name, phone, role
+- 🗑 **Remove** — inline confirm; removes staff from this school (you cannot remove yourself)
+
+**Staff profile page** — click any staff name to open their full profile. All fields are inline-editable on hover for admins (pencil icon appears):
+- Header: Full Name, Role, Phone
+- Staff Details: Hire Date, Birthday, Degree, Certification, ECE Credits, Infant/Toddler Credits, Address, Emergency Contact, Doctor, Notes
