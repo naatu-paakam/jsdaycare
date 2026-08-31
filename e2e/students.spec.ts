@@ -35,7 +35,7 @@ test.describe("Student profile tabs", () => {
     await expect(page.getByRole("button", { name: /^profile$/i })).toBeVisible({ timeout: 8_000 });
     await expect(page.getByRole("button", { name: /^contacts$/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /^immunizations$/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /^daily report$/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^daily activities$/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /^documents$/i })).toBeVisible();
   });
 
@@ -245,9 +245,9 @@ test.describe("Student profile tabs", () => {
     await expect(page.getByText(/vaccine name is required/i)).toBeVisible();
   });
 
-  test("TC-daily-report-inline: Daily Report tab shows inline feed (not navigate away)", async ({ page }) => {
+  test("TC-daily-report-inline: daily activities tab shows inline feed (not navigate away)", async ({ page }) => {
     const url = page.url();
-    await page.getByRole("button", { name: /^daily report$/i }).click();
+    await page.getByRole("button", { name: /^daily activities$/i }).click();
     // Should stay on the same student page
     await expect(page).toHaveURL(url);
     // Date picker should appear
@@ -424,15 +424,15 @@ test.describe.serial("Room detail — settings, activity, add student", () => {
   });
 });
 
-// ─── Daily report — edit and delete activities ────────────────────────────────
+// ─── daily activities — edit and delete activities ────────────────────────────────
 const ADRITH_ID_REPORT = "1cd2d725-70ce-429b-9070-7dbc59a157f2";
 
-test.describe("Daily report — edit and delete activities", () => {
+test.describe("daily activities — edit and delete activities", () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
     await page.goto(`/students/${ADRITH_ID_REPORT}`);
     await page.waitForURL("**/students/**", { timeout: 10_000 });
-    await page.getByRole("button", { name: /^daily report$/i }).click();
+    await page.getByRole("button", { name: /^daily activities$/i }).click();
     await page.locator('input[type="date"]').first().waitFor({ timeout: 8_000 });
   });
 
@@ -515,7 +515,7 @@ test.describe("Daily report — edit and delete activities", () => {
     await loginAsParent(page);
     await page.goto(`/students/${ADRITH_ID_REPORT}`);
     await page.waitForURL("**/students/**", { timeout: 10_000 });
-    await page.getByRole("button", { name: /^daily report$/i }).click();
+    await page.getByRole("button", { name: /^daily activities$/i }).click();
     await page.locator('input[type="date"]').first().waitFor({ timeout: 8_000 });
     // No "Delete?" confirm or edit modal buttons for parents
     await expect(page.getByText("Delete?")).not.toBeVisible();

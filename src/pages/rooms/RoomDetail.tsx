@@ -230,6 +230,8 @@ interface ActivityFormState {
   // health_check
   temperature: string;
   symptoms: string;
+  // nap
+  napStatus: "started" | "ended";
   // observation
   obsArea: "social" | "motor" | "language" | "emotional";
   // incident
@@ -263,6 +265,7 @@ function ActivityForm({ activityType, roomId, checkedInStudents, schoolId, userI
     mealType: "breakfast",
     mealItem: "",
     pottyType: "wet",
+    napStatus: "started",
     medName: "",
     medDose: "",
     temperature: "",
@@ -296,6 +299,7 @@ function ActivityForm({ activityType, roomId, checkedInStudents, schoolId, userI
       case "potty":     return { potty_type: form.pottyType };
       case "meds":      return { medication: form.medName, dose: form.medDose };
       case "health_check": return { temperature: form.temperature, symptoms: form.symptoms };
+      case "nap":         return { nap_status: form.napStatus };
       case "observation": return { area: form.obsArea };
       case "incident":  return { description: form.incidentDesc, injury_type: form.injuryType, action_taken: form.actionTaken, parent_notified: form.parentNotified };
       default:          return {};
@@ -420,7 +424,22 @@ function ActivityForm({ activityType, roomId, checkedInStudents, schoolId, userI
         </>
       );
 
-      case "nap": return <>{notesField}</>;
+      case "nap": return (
+        <>
+          <div>
+            <label className="label">Nap status</label>
+            <div className="flex gap-4 mt-1">
+              {(["started", "ended"] as const).map(v => (
+                <label key={v} className="flex items-center gap-2 cursor-pointer text-sm capitalize">
+                  <input type="radio" name="napStatus" value={v} checked={form.napStatus === v} onChange={() => set("napStatus", v)} />
+                  Nap {v}
+                </label>
+              ))}
+            </div>
+          </div>
+          {notesField}
+        </>
+      );
 
       case "potty": return (
         <>
@@ -551,7 +570,7 @@ function ActivityForm({ activityType, roomId, checkedInStudents, schoolId, userI
     photo:        "Add photo",
     video:        "Add video",
     food:         "Add food",
-    nap:          "Start nap",
+    nap:          form.napStatus === "ended" ? "End nap" : "Start nap",
     potty:        "Add potty",
     note:         "Add note",
     kudos:        "Add kudos",

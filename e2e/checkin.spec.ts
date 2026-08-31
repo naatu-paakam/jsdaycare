@@ -157,7 +157,7 @@ test("TC-checkin-checkout-toggle: After check-in, same PIN shows Check Out butto
 
 // ─── Activity logging ─────────────────────────────────────────────────────────
 
-test("TC-checkin-activity-logged: After check-in, activity appears in student daily report", async ({ page }) => {
+test("TC-checkin-activity-logged: After check-in, activity appears in student daily activities", async ({ page }) => {
   // Clear and do a fresh check-in
   await clearAttendance("1cd2d725-70ce-429b-9070-7dbc59a157f2");
   await page.goto(CHECKIN_URL);
@@ -168,11 +168,11 @@ test("TC-checkin-activity-logged: After check-in, activity appears in student da
   await page.getByRole("button", { name: /check in/i }).first().click();
   await expect(page.getByText(/checked in/i)).toBeVisible({ timeout: 8_000 });
 
-  // Now check the student's daily report tab (as admin)
+  // Now check the student's daily activities tab (as admin)
   await loginAsAdmin(page);
   const ADRITH_ID = "1cd2d725-70ce-429b-9070-7dbc59a157f2";
   await page.goto(`/students/${ADRITH_ID}`);
-  await page.getByRole("button", { name: /daily report/i }).click();
+  await page.getByRole("button", { name: /daily activities/i }).click();
   const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
   // Activity shows in the feed — look for "QR code" text
   await expect(page.getByText(/QR code|via qr/i).first()).toBeVisible({ timeout: 10_000 });

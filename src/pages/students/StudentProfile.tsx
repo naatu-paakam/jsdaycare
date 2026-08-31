@@ -4,6 +4,8 @@ import {
   ArrowLeft, Eye, EyeOff, Plus, Shield, AlertTriangle,
   Pencil, X, Check, Coffee, Moon, MessageSquare, Image,
   Pill, Heart, Activity as ActivityIcon, Star, UserCheck, Trash2, Settings2,
+  Apple, BedDouble, Toilet, PenLine, HeartPulse, Bandage, ClipboardList,
+  Camera, Video as VideoIcon, PersonStanding,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
@@ -734,6 +736,258 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
 }
 
 // ─── Edit Activity Modal ──────────────────────────────────────────────────────
+// ─── Add Activity (student-specific) ─────────────────────────────────────────
+
+const STUDENT_ACTIVITY_GRID: { type: ActivityType; label: string; icon: React.ReactNode }[] = [
+  { type: "food",         label: "Food",         icon: <Apple size={26} /> },
+  { type: "nap",          label: "Nap",          icon: <BedDouble size={26} /> },
+  { type: "potty",        label: "Potty",        icon: <Toilet size={26} /> },
+  { type: "note",         label: "Note",         icon: <PenLine size={26} /> },
+  { type: "kudos",        label: "Kudos",        icon: <Star size={26} /> },
+  { type: "meds",         label: "Meds",         icon: <Pill size={26} /> },
+  { type: "health_check", label: "Health Check", icon: <HeartPulse size={26} /> },
+  { type: "observation",  label: "Observation",  icon: <ClipboardList size={26} /> },
+  { type: "incident",     label: "Incident",     icon: <Bandage size={26} /> },
+];
+
+function StudentActivityTypePicker({ onSelect, onClose }: {
+  onSelect: (type: ActivityType) => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h2 className="text-base font-semibold text-gray-900">Select activity</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+        </div>
+        <div className="p-5 grid grid-cols-3 gap-3">
+          {STUDENT_ACTIVITY_GRID.map(a => (
+            <button key={a.type} onClick={() => onSelect(a.type)}
+              className="flex flex-col items-center gap-2 p-3 rounded-xl border border-gray-100 hover:border-orange-300 hover:bg-orange-50 text-gray-600 hover:text-orange-500 transition-colors">
+              {a.icon}
+              <span className="text-xs font-medium text-center leading-tight">{a.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StudentActivityForm({ activityType, studentId, schoolId, roomId, userId, date, onClose, onSaved }: {
+  activityType: ActivityType;
+  studentId: string;
+  schoolId: string;
+  roomId: string | null;
+  userId: string;
+  date: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const now = new Date();
+  const [time, setTime]           = useState(now.toTimeString().slice(0, 5));
+  const [notes, setNotes]         = useState("");
+  const [staffOnly, setStaffOnly] = useState(false);
+  const [saving, setSaving]       = useState(false);
+  const [error, setError]         = useState("");
+  // nap
+  const [napStatus, setNapStatus] = useState<"started" | "ended">("started");
+  // food
+  const [mealType, setMealType]   = useState("breakfast");
+  const [foodQty, setFoodQty]     = useState<"all" | "most" | "some" | "none">("all");
+  // potty
+  const [pottyType, setPottyType] = useState<"wet" | "bm" | "dry" | "used_potty">("wet");
+  // meds
+  const [medName, setMedName]     = useState("");
+  const [medDose, setMedDose]     = useState("");
+  // health check
+  const [temperature, setTemp]    = useState("");
+  // observation
+  const [obsArea, setObsArea]     = useState<"social" | "motor" | "language" | "emotional">("social");
+  // incident
+  const [incidentDesc, setIncidentDesc] = useState("");
+  const [parentNotified, setParentNotified] = useState(false);
+
+  function buildData(): Record<string, unknown> {
+    switch (activityType) {
+      case "food":         return { meal_type: mealType, quantity: foodQty };
+      case "nap":          return { nap_status: napStatus };
+      case "potty":        return { potty_type: pottyType };
+      case "meds":         return { medication: medName, dose: medDose };
+      case "health_check": return { temperature };
+      case "observation":  return { area: obsArea };
+      case "incident":     return { description: incidentDesc, parent_notified: parentNotified };
+      default:             return {};
+    }
+  }
+
+  async function handleSave() {
+    if (activityType === "note" && !notes.trim()) { setError("Note text is required"); return; }
+    if (activityType === "kudos" && !notes.trim()) { setError("Kudos message is required"); return; }
+    if (activityType === "incident" && !incidentDesc.trim()) { setError("Description is required"); return; }
+    setSaving(true); setError("");
+    const { error: err } = await supabase.from("activities").insert({
+      school_id: schoolId, room_id: roomId, student_id: studentId,
+      created_by: userId, activity_type: activityType,
+      activity_date: date, activity_time: time || null,
+      staff_only: activityType === "kudos" ? false : staffOnly,
+      notes: notes || null, data: buildData(),
+    });
+    setSaving(false);
+    if (err) { setError(err.message); return; }
+    onSaved();
+  }
+
+  const label = STUDENT_ACTIVITY_GRID.find(a => a.type === activityType)?.label ?? activityType;
+
+  const timeField = (
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <label className="label">Date</label>
+        <input type="date" className="input" value={date} readOnly />
+      </div>
+      <div>
+        <label className="label">Time</label>
+        <input type="time" className="input" value={time} onChange={e => setTime(e.target.value)} />
+      </div>
+    </div>
+  );
+
+  const notesField = (
+    <div>
+      <label className="label">Note</label>
+      <textarea className="input" rows={3} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional note…" />
+    </div>
+  );
+
+  function typeFields() {
+    switch (activityType) {
+      case "food": return (
+        <>
+          <div>
+            <label className="label">Meal type</label>
+            <select className="input" value={mealType} onChange={e => setMealType(e.target.value)}>
+              {["breakfast","am_snack","lunch","pm_snack"].map(m => (
+                <option key={m} value={m}>{m.replace(/_/g, " ")}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label">Amount eaten</label>
+            <div className="flex gap-3 flex-wrap">
+              {(["all","most","some","none"] as const).map(v => (
+                <label key={v} className="flex items-center gap-2 cursor-pointer text-sm capitalize">
+                  <input type="radio" name="foodQty" value={v} checked={foodQty === v} onChange={() => setFoodQty(v)} /> {v}
+                </label>
+              ))}
+            </div>
+          </div>
+          {notesField}
+        </>
+      );
+      case "nap": return (
+        <>
+          <div>
+            <label className="label">Nap status</label>
+            <div className="flex gap-4 mt-1">
+              {(["started","ended"] as const).map(v => (
+                <label key={v} className="flex items-center gap-2 cursor-pointer text-sm capitalize">
+                  <input type="radio" name="napStatus" value={v} checked={napStatus === v} onChange={() => setNapStatus(v)} /> Nap {v}
+                </label>
+              ))}
+            </div>
+          </div>
+          {notesField}
+        </>
+      );
+      case "potty": return (
+        <>
+          <div>
+            <label className="label">Type</label>
+            <div className="flex gap-4 flex-wrap">
+              {([["wet","Wet"],["bm","BM"],["dry","Dry"],["used_potty","Used potty"]] as const).map(([v,lbl]) => (
+                <label key={v} className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input type="radio" name="pottyType" value={v} checked={pottyType === v} onChange={() => setPottyType(v)} /> {lbl}
+                </label>
+              ))}
+            </div>
+          </div>
+          {notesField}
+        </>
+      );
+      case "meds": return (
+        <>
+          <div><label className="label">Medication</label><input className="input" value={medName} onChange={e => setMedName(e.target.value)} placeholder="e.g. Tylenol" /></div>
+          <div><label className="label">Dose</label><input className="input" value={medDose} onChange={e => setMedDose(e.target.value)} placeholder="e.g. 5ml" /></div>
+          {notesField}
+        </>
+      );
+      case "health_check": return (
+        <>
+          <div><label className="label">Temperature (°F)</label><input type="number" step="0.1" className="input" value={temperature} onChange={e => setTemp(e.target.value)} placeholder="e.g. 98.6" /></div>
+          {notesField}
+        </>
+      );
+      case "observation": return (
+        <>
+          <div>
+            <label className="label">Area</label>
+            <select className="input" value={obsArea} onChange={e => setObsArea(e.target.value as typeof obsArea)}>
+              {["social","motor","language","emotional"].map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </div>
+          {notesField}
+        </>
+      );
+      case "incident": return (
+        <>
+          <div><label className="label">Description</label><textarea className="input" rows={3} value={incidentDesc} onChange={e => setIncidentDesc(e.target.value)} placeholder="What happened?" /></div>
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="checkbox" checked={parentNotified} onChange={e => setParentNotified(e.target.checked)} className="rounded" /> Parent notified
+          </label>
+          {notesField}
+        </>
+      );
+      default: return notesField;
+    }
+  }
+
+  const saveLabel: Record<ActivityType, string> = {
+    food: "Add food", nap: napStatus === "ended" ? "End nap" : "Start nap",
+    potty: "Add potty", note: "Add note", kudos: "Add kudos", meds: "Add meds",
+    health_check: "Add health check", observation: "Add observation", incident: "Add incident",
+    photo: "Add photo", video: "Add video", name_to_face: "Add",
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h2 className="text-base font-semibold text-gray-900">{label}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+        </div>
+        <div className="px-6 py-5 space-y-4">
+          {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+          {timeField}
+          {typeFields()}
+          {activityType !== "kudos" && (
+            <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <input type="checkbox" checked={staffOnly} onChange={e => setStaffOnly(e.target.checked)} className="rounded" /> Staff only
+            </label>
+          )}
+        </div>
+        <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
+          <button onClick={onClose} className="btn-secondary">Cancel</button>
+          <button onClick={handleSave} disabled={saving} className="btn-primary">
+            {saving ? "Saving…" : saveLabel[activityType]}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EditActivityModal({ activity, onClose, onSaved }: {
   activity: Activity;
   onClose: () => void;
@@ -741,6 +995,7 @@ function EditActivityModal({ activity, onClose, onSaved }: {
 }) {
   const [notes, setNotes]       = useState(activity.notes ?? "");
   const [staffOnly, setStaffOnly] = useState(activity.staff_only ?? false);
+  const [activityTime, setActivityTime] = useState(activity.activity_time?.slice(0, 5) ?? "");
   const [data, setData]         = useState<Record<string, unknown>>(
     (activity.data as Record<string, unknown>) ?? {}
   );
@@ -754,7 +1009,7 @@ function EditActivityModal({ activity, onClose, onSaved }: {
     setSaving(true);
     await supabase
       .from("activities")
-      .update({ notes: notes || null, staff_only: staffOnly, data })
+      .update({ notes: notes || null, staff_only: staffOnly, data, activity_time: activityTime || null })
       .eq("id", activity.id);
     setSaving(false);
     onSaved();
@@ -773,6 +1028,12 @@ function EditActivityModal({ activity, onClose, onSaved }: {
         </div>
 
         <div className="space-y-3">
+          {/* time field — always editable */}
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-1 block">Time</label>
+            <input type="time" className="input w-auto text-sm" value={activityTime} onChange={e => setActivityTime(e.target.value)} />
+          </div>
+
           {/* food fields */}
           {t === "food" && (
             <>
@@ -960,8 +1221,10 @@ export default function StudentProfile() {
   const [feedDate, setFeedDate] = useState(new Date().toISOString().split("T")[0]);
   const [immunizationSettings, setImmunizationSettings] = useState<string[]>(VACCINE_NAMES);
   const [showImmSettings, setShowImmSettings] = useState(false);
-  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
-  const [confirmDelete, setConfirmDelete]     = useState<string | null>(null);
+  const [editingActivity, setEditingActivity]   = useState<Activity | null>(null);
+  const [confirmDelete, setConfirmDelete]       = useState<string | null>(null);
+  const [showAddActivity, setShowAddActivity]   = useState(false);
+  const [addActivityType, setAddActivityType]   = useState<ActivityType | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -1095,7 +1358,7 @@ export default function StudentProfile() {
     { id: "profile",       label: "Profile" },
     { id: "contacts",      label: "Contacts" },
     { id: "immunizations", label: "Immunizations" },
-    { id: "daily_report",  label: "Daily Report" },
+    { id: "daily_report",  label: "Daily Activities" },
     { id: "documents",     label: "Documents" },
   ];
 
@@ -1112,6 +1375,25 @@ export default function StudentProfile() {
           currentSettings={immunizationSettings}
           onApply={(settings) => { setImmunizationSettings(settings); setShowImmSettings(false); }}
           onClose={() => setShowImmSettings(false)}
+        />
+      )}
+
+      {showAddActivity && !addActivityType && (
+        <StudentActivityTypePicker
+          onSelect={type => setAddActivityType(type)}
+          onClose={() => setShowAddActivity(false)}
+        />
+      )}
+      {showAddActivity && addActivityType && school && authProfile && (
+        <StudentActivityForm
+          activityType={addActivityType}
+          studentId={student.id}
+          schoolId={school.id}
+          roomId={student.homeroom_id ?? null}
+          userId={authProfile.id}
+          date={feedDate}
+          onClose={() => { setShowAddActivity(false); setAddActivityType(null); }}
+          onSaved={() => { setShowAddActivity(false); setAddActivityType(null); loadActivities(feedDate); }}
         />
       )}
 
@@ -1735,6 +2017,14 @@ export default function StudentProfile() {
             <div className="flex items-center gap-3">
               <input type="date" value={feedDate} onChange={e => setFeedDate(e.target.value)} className="input" />
               <span className="text-sm text-gray-500">{activities.length} {activities.length === 1 ? "entry" : "entries"}</span>
+              {(isAdmin || authProfile?.role === "staff") && (
+                <button
+                  onClick={() => setShowAddActivity(true)}
+                  className="ml-auto btn-primary inline-flex items-center gap-1.5 text-sm"
+                >
+                  <Plus size={14} /> Add Activity
+                </button>
+              )}
             </div>
 
             {activities.length === 0 ? (
