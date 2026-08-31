@@ -1,16 +1,16 @@
 /**
- * Admissions page — full CRUD tests.
+ * Admissions summary on Students page — full CRUD tests.
  * Covers: Add Student (via /students/add), Edit (status/dates inline modal),
  * Delete (inline confirm Yes/No), filter tabs, stats bar.
  */
 import { test, expect } from "@playwright/test";
 import { loginAsAdmin } from "./helpers/auth";
 
-test.describe("Admissions page", () => {
+test.describe("Admissions summary on Students page", () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto("/admissions");
-    await page.getByRole("heading", { name: "Admissions" }).waitFor({ timeout: 8_000 });
+    await page.goto("/students");
+    await page.getByRole("heading", { name: /students/i }).waitFor({ timeout: 8_000 });
   });
 
   // ── Stats bar ─────────────────────────────────────────────────────────────
@@ -62,10 +62,10 @@ test.describe("Admissions page", () => {
 
     await page.getByRole("button", { name: /add student/i }).click();
     // Should redirect to /students on success
-    await expect(page).toHaveURL(/\/admissions/, { timeout: 8_000 });
+    await expect(page).toHaveURL(/\/students/, { timeout: 8_000 });
 
     // Verify on admissions page
-    await page.goto("/admissions");
+    await page.goto("/students");
     await page.getByRole("button", { name: /waitlist only/i }).click();
     await expect(page.getByText("TC-Student AutoTest")).toBeVisible({ timeout: 6_000 });
   });
@@ -88,9 +88,9 @@ test.describe("Admissions page", () => {
     await page.locator("label:has-text('Last Name') ~ div input, label:has-text('Last Name') ~ input").first().fill("StatusTest");
     await page.locator("select").filter({ hasText: /active|waitlist/i }).selectOption("waitlist");
     await page.getByRole("button", { name: /add student/i }).click();
-    await expect(page).toHaveURL(/\/admissions/, { timeout: 8_000 });
+    await expect(page).toHaveURL(/\/students/, { timeout: 8_000 });
 
-    await page.goto("/admissions");
+    await page.goto("/students");
     await page.getByRole("button", { name: /waitlist only/i }).click();
     const row = page.locator("tbody tr").filter({ hasText: "TC-Edit StatusTest" });
     await row.waitFor({ timeout: 6_000 });
@@ -147,9 +147,9 @@ test.describe("Admissions page", () => {
     await page.locator("label:has-text('First Name') ~ div input, label:has-text('First Name') + input").first().fill("TC-Delete");
     await page.locator("label:has-text('Last Name') ~ div input, label:has-text('Last Name') ~ input").first().fill("MeNow");
     await page.getByRole("button", { name: /add student/i }).click();
-    await expect(page).toHaveURL(/\/admissions/, { timeout: 8_000 });
+    await expect(page).toHaveURL(/\/students/, { timeout: 8_000 });
 
-    await page.goto("/admissions");
+    await page.goto("/students");
     await page.getByRole("button", { name: /all students/i }).click();
     const row = page.locator("tbody tr").filter({ hasText: "TC-Delete MeNow" });
     await row.waitFor({ timeout: 6_000 });

@@ -33,7 +33,6 @@ const navItems: NavItem[] = [
     ],
   },
   { label: "Staff & Payroll", to: "/staff", icon: <UserCheck size={18} /> },
-  { label: "Admissions", to: "/admissions", icon: <BookOpen size={18} /> },
   { label: "Paperwork", to: "/paperwork", icon: <FileText size={18} /> },
   {
     label: "Reporting",

@@ -47,7 +47,7 @@
 | Schedule upsert (no overlaps), delete schedule button | ✅ |
 | Stories page stub (R1 feature, nav item present) | 🔲 R1 |
 | School public website (`/s/<slug>` from settings template) | 🔲 R1 |
-| Admissions: Edit status/dates + Delete with inline confirm | ✅ |
+| Students: Admissions summary bar (stats + filter by status + edit/delete per row) | ✅ |
 | Staff: Add Staff dialog (name/email/phone/photo/invite link) | ✅ |
 | Staff: Edit + Remove from list, self-delete protected | ✅ |
 | Staff profile: all fields inline-editable on hover (admin) | ✅ |

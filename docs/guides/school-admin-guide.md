@@ -99,7 +99,7 @@ View and manage staff profiles. Each staff member has: personal info, emergency 
 
 ---
 
-## Admissions
+## Students — Admissions Summary
 Pipeline view: Waitlist / Active / Withdrawn / Graduated counts + filterable table.
 
 ---
@@ -140,9 +140,9 @@ Preview your site: `daycareportal.com/s/<your-slug>`
 
 ---
 
-## Admissions
+## Students — Admissions Summary
 
-**Admissions → Add Student** navigates to a full form: First/Last Name (required), DOB, Gender, Enrollment Status (Active/Waitlist/Withdrawn), Meal Type, Doctor, Allergies, Medications, Notes.
+**Students → Add Student (removed Admissions page — summary now at top of Students)** navigates to a full form: First/Last Name (required), DOB, Gender, Enrollment Status (Active/Waitlist/Withdrawn), Meal Type, Doctor, Allergies, Medications, Notes.
 
 **In the student list:**
 - ✏ **Edit** (pencil) — opens a modal to update Enrollment Status, Start Date, End/Exit Date, and Notes
