@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  Home, Users, BookOpen, DoorOpen, Calendar, Clock,
+  Home, Users, BookOpen, DoorOpen, Calendar, Clock, BookHeart,
   UtensilsCrossed, Settings, UserCheck, FileText, BarChart2,
   ChevronDown, ChevronRight, Building2, Baby, LogOut
 } from "lucide-react";
@@ -23,6 +23,7 @@ const navItems: NavItem[] = [
     icon: <Building2 size={18} />,
     children: [
       { label: "Students", to: "/students", icon: <Baby size={18} /> },
+      { label: "Stories", to: "/stories", icon: <BookHeart size={18} /> },
       // Parents page removed — contact management is per-student in the student profile
       { label: "Rooms", to: "/rooms", icon: <DoorOpen size={18} /> },
       { label: "Calendar", to: "/calendar", icon: <Calendar size={18} /> },

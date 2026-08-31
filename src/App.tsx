@@ -20,6 +20,7 @@ import CalendarPage from "@/pages/calendar/Calendar";
 import Menus from "@/pages/menus/Menus";
 import Settings from "@/pages/settings/Settings";
 import Admissions from "@/pages/admissions/Admissions";
+import Stories from "@/pages/stories/Stories";
 import PortalAdmin from "@/pages/portal/PortalAdmin";
 import CheckIn from "@/pages/checkin/CheckIn";
 
@@ -48,6 +49,7 @@ export default function App() {
         <Route path="/menus" element={<ProtectedRoute allowedRoles={["admin","staff","parent"]}><Menus /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute allowedRoles={["admin"]}><Settings /></ProtectedRoute>} />
         <Route path="/admissions" element={<ProtectedRoute allowedRoles={["admin"]}><Admissions /></ProtectedRoute>} />
+        <Route path="/stories" element={<ProtectedRoute allowedRoles={["admin","staff","parent"]}><Stories /></ProtectedRoute>} />
 
         {/* Public check-in route */}
         <Route path="/checkin" element={<CheckIn />} />

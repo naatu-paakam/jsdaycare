@@ -1,141 +1,160 @@
 # MVP Release — DayCarePortal
 
-**Status: Feature-complete, in testing**
-**Stack:** React 18 + Vite + TypeScript + Tailwind + Supabase (ap-south-1)
-**Dev:** http://localhost:5174 (`npm run dev`)
-**GitHub:** https://github.com/naatu-paakam/jsdaycare
+**Status: Feature-complete, testing in progress**  
+**Stack:** React 18 + Vite + TypeScript + Tailwind + Supabase (ap-south-1)  
+**Dev:** http://localhost:5174 (`npm run dev`)  
+**GitHub:** https://github.com/naatu-paakam/jsdaycare  
+**Tests:** 150 Playwright tests, pre-push hook enforced
 
 ---
 
-## Build Status
+## Feature Build Status
 
-| # | Feature Area | Status |
-|---|---|---|
-| 1 | Child & Family Management | ✅ Complete |
-| 2 | Attendance Tracking | ✅ Check In/Out wired, mark absent |
-| 3 | Daily Activity Reports | ✅ 12 activity types, room-level bulk logging |
-| 4 | Staff Management | ✅ List, profile, room assignment |
-| 5 | Classroom / Room Management | ✅ Settings modal, add activity, add student |
-| 6 | Scheduling + Menus | ✅ Interactive grid, dialogs, weekly menu CRUD |
-| 7 | Admin Dashboard | ✅ Live stats, ratios, activity coverage, alerts |
-| 8 | Forms & Compliance | ✅ Forms list, paperwork page |
+| # | Feature | Status | Notes |
+|---|---|---|---|
+| 1 | Child & Family Management | ✅ Complete | Full profile, contacts, immunizations, emergency contacts |
+| 2 | Attendance Tracking | ✅ Complete | Check In/Out wired to DB, Present badge with pulse, QR check-in |
+| 3 | Daily Activity Reports | ✅ Complete | 12 activity types, edit/delete per entry, activity in daily report |
+| 4 | Staff Management | ✅ Complete | List, profile, invite, room assignment |
+| 5 | Classroom / Room Management | ✅ Complete | Settings modal, add activity, add student, check-in status |
+| 6 | Scheduling + Menus | ✅ Complete | Interactive grid, upsert (no overlaps), delete button, weekly menu |
+| 7 | Admin Dashboard | ✅ Complete | Live stats, ratios, closing-time alerts, 30s auto-refresh |
+| 8 | Forms & Compliance | 🔲 Partial | Forms list page built; form builder/signing in R1 |
 
 ---
 
-## Platform Features (beyond MVP scope, built)
+## Platform Features (beyond original MVP scope — built)
 
 | Feature | Status |
 |---|---|
-| Portal Admin persona | ✅ /portal dashboard, create/manage schools |
-| Multi-school admin | ✅ School switcher in sidebar, memberships table |
-| Invitation + Registration | ✅ Token-based invite links, /register page |
-| Calendar redesign | ✅ Holiday calendar, special events, operating hours, policies |
-| Immunization settings | ✅ Per-student vaccine visibility config |
-| Role permissions table | ✅ school-configurable permission rules |
-| 6-digit unique PINs | ✅ Auto-generated, unique per school |
-| Parent/admin isolation | ✅ RLS with security definer functions |
-| Custom contact types | ✅ 8 types (grandparent, babysitter, nanny, etc.) |
+| Portal Admin persona + /portal dashboard | ✅ |
+| Users tab in Portal Admin (all users, search, invite, remove) | ✅ |
+| Multi-school admin (sidebar switcher, school_memberships) | ✅ |
+| Invitation + Registration system (token-based, 7-day expiry) | ✅ |
+| User ID login (username, no email required) | ✅ |
+| No email verification (admin API, instant account) | ✅ |
+| Calendar redesign (holiday calendar, operating hours, policies) | ✅ |
+| Immunization settings per student (show/hide vaccines) | ✅ |
+| Role permissions table (school-configurable) | ✅ |
+| 6-digit unique PINs (auto-generated, unique per school) | ✅ |
+| Parent/admin data isolation (RLS with security definer) | ✅ |
+| QR code check-in/out (public page, PIN pad, activity logged) | ✅ |
+| QR printable card (school name, date, welcome message) | ✅ |
+| Room list: green dot on checked-in student avatars | ✅ |
+| Compliance alert: students not checked out after closing | ✅ |
+| Home dashboard 30s auto-refresh + manual refresh button | ✅ |
+| Daily report activity edit/delete (inline confirm + modal) | ✅ |
+| Schedule upsert (no overlaps), delete schedule button | ✅ |
+| Stories page stub (R1 feature, nav item present) | 🔲 R1 |
 
 ---
 
 ## Feature 1 — Child & Family Management ✅
 
-### Profile (5 tabs)
-- **Profile:** Personal info, DOB, gender, race, ethnicity, allergies (flagged), medications, doctor — editable by admin + parent. Address editable by admin + parent. Room assignment dropdown (admin). School/enrollment/financial details (admin-only).
-- **Contacts:** Unified table (parents + pickup people). Auto-generated 6-digit PIN per contact. Check-in code Reveal/Hide (admin). Send Invite link. Photo upload. Pickup valid from/to dates. 8 contact types.
-- **Immunizations:** 11 CDC vaccines, dose-by-dose (Overdue/Completed/Skipped/Exempt). Editable dates + Skip checkbox + Exempt toggle + Delete per dose. Custom/additional vaccines. Immunization settings (admin/parent choose which vaccines show).
-- **Daily Report:** Inline activity feed, date-filterable.
-- **Documents:** Links to Paperwork.
+**5 profile tabs:** Profile · Contacts · Immunizations · Daily Report · Documents
 
-### Emergency Contacts
-- Add/Edit/Delete inline — admin + parent.
+**Profile:** Personal info (DOB, gender, race, allergies, medications, doctor) + Address + Room assignment + School/enrollment/financial details (admin-only).
 
-### Enrollment
-- Enrollment pipeline dates, sibling, programs, subsidy — admin only.
+**Contacts:** Unified table (parents + pickup people). Auto-generated 6-digit PIN. Check-in code Reveal/Hide. Send Invite link. Photo upload. Pickup valid from/to dates. 8 contact types. Non-parent contacts cannot get portal access.
+
+**Immunizations:** 11 CDC vaccines. Dose-by-dose tracking (Overdue/Completed/Skipped/Exempt). Editable dates + Skip + Exempt + Delete per dose. Custom vaccines (add + delete). Immunization Settings (show/hide per student).
+
+**Emergency Contacts:** Add/Edit/Delete inline — admin + parent.
+
+---
+
+## Feature 2 — Attendance Tracking ✅
+
+- Staff Check In / Check Out per student in Room detail
+- Mark Absent with reason
+- QR code check-in (public `/checkin?school=id` page)
+- PIN pad → student list with current status → Check In / Check Out toggle
+- Multi-kid checkboxes for parents with multiple children
+- Each check-in/out logs a `name_to_face` activity → visible in Daily Report
+- Green dot on room list avatars when student is present
+
+---
+
+## Feature 3 — Daily Activity Reports ✅
+
+- 12 activity types logged via room feed or room-level bulk
+- Staff Only flag hides entries from parent view
+- **Edit** (pencil) + **Delete** (trash, inline confirm) on each activity row
+- Edit modal adapts to activity type (food, nap, potty, meds, etc.)
+- Parents: read-only view, no edit/delete buttons
 
 ---
 
 ## Feature 5 — Rooms ✅
-- Students/Feed tabs (no Parents tab)
-- Room settings: name, age range, capacity, ratio, delete
-- **+ Add Activity:** 12-type selector → type-specific form (food/nap/potty/note/kudos/meds/health check/observation/photo/video/incident/name-to-face) with student selector, date/time, Staff Only flag
-- **+ Add Student:** searchable modal to assign students
-- Room-level bulk activity (logged to all checked-in students)
+
+- Students tab: Check In / Check Out / Mark Absent inline
+- Feed tab: consolidated activity feed
+- Room Settings: edit name, age range, capacity, ratio, delete
+- + Add Activity: 12-type selector → type-specific form
+- + Add Student: searchable assignment modal
+- Room list: green dot on checked-in student avatars
 
 ---
 
 ## Feature 6 — Scheduling + Menus ✅
 
-### Schedules
-- Weekly grid (staff rows + student rows × 7 days)
-- Clickable cells open **Add Staff/Student Schedule** dialog
-- Staff dialog: multi-staff tags, room, repeat weekly, date range, time range, day pills
-- Student dialog: student selector, type (full/half/AM/PM), date range
+**Schedules:** Weekly grid, clickable cells, staff/student dialogs. Default Mon–Fri, 8:30 AM–6:00 PM. Upsert (delete existing for same staff+day before inserting). Delete Schedule button on filled cells.
 
-### Menus
-- **Weekly Menu tab** — browse any week, create/edit via grid dialog (4 meals × 5 days, food library autocomplete)
-- **Food Item Library tab** — admin only; manage items with categories + allergens
-- Parents see Weekly Menu tab only (library hidden)
+**Menus:** Weekly menu grid (5-day × 4-meal, food library autocomplete). Food Item Library (admin only). Parents see Weekly Menu tab only.
 
 ---
 
 ## Feature 7 — Admin Dashboard ✅
-- Today snapshot: Expected / Checked In / Absent / Staff on duty
-- Current Room Ratios (live) with traffic-light status
-- Today's activity coverage per room
-- Compliance alerts + upcoming birthdays
+
+- Today snapshot: Expected / Checked In / Absent / Rooms
+- Current Room Ratios (sorted alphabetically, live)
+- Today's activity coverage
+- Compliance Alerts:
+  - Ratio violations (red)
+  - Students not checked out after school closing time (amber)
+- Upcoming birthdays
+- 30-second auto-refresh + manual ↻ Refresh button
 
 ---
 
 ## Calendar ✅
-Two-column redesign:
-- Left: Holiday Calendar (month-grouped, admin can add/delete), Special Events (table with type badges)
-- Right: Operating Schedule (per-day hours, admin edits inline), Holiday Policy (editable bullets), Birthday Policy (editable bullets)
+
+Two-column redesign: Holiday Calendar (month-grouped, admin add/delete) + Special Events. Operating Schedule (per-day hours, admin edits inline) + Holiday/Birthday Policy (editable bullets).
+
+---
+
+## QR Check-In/Out System ✅
+
+**Settings → Front Desk QR Code:** Generates branded printable card (school name, date, welcome message, orange banner). Download as PNG.
+
+**Public page `/checkin?school=id`:**
+- PIN pad (6 digits, masked)
+- Student list with current status + Check In/Out toggle
+- Multi-kid checkboxes + bulk action
+- Activity logged on every check-in/out
+- Auto-resets after 2.5 seconds for next family
 
 ---
 
 ## Invitation + Registration ✅
-- `invitations` table with 7-day token expiry
-- **InviteDialog** component — generates link, copy-to-clipboard
-- **Portal Admin** → Invite School Admin (in Manage School panel)
-- **School Admin** → Invite Staff (Staff List), Invite Parent (Parents page)
-- **/register?token=xxx** — validates token, pre-fills email/school/role, creates account
-- Login page → "Have an invitation? Register here →" link
+
+- **Invitations table** — 7-day expiry, one-time use. Permanent links for school admin registration (never expire).
+- **InviteDialog** — generates `/register?token=xxx` link. Copy-to-clipboard. Available in: Portal Admin (Manage School), Staff List, Parents page, Student Contact modal.
+- **Registration page** — school + role pre-filled. User enters: User ID, First/Last name, Email (optional), Phone, Password. Account active immediately.
+- **Login** — accepts User ID OR email.
 
 ---
 
-## Portal Admin ✅
-- **/portal** — standalone dashboard (no sidebar)
-- Schools table: name, timezone, admin count, created date, Manage →
-- Create School modal
-- Manage School panel: rename, view/remove admins, assign existing user, generate invite link
-- Blocked from school-level data
-
----
-
-## Multi-School Admin ✅
-- `school_memberships` table tracks all schools per admin
-- `profiles.school_id` = currently active school
-- Sidebar school switcher (dropdown) when admin belongs to multiple schools
-- `switch_active_school(school_id)` DB function — validates membership before switching
-
----
-
-## Roles & Permissions
-See [../personas.md](../personas.md) for full permission matrix.
-
-| Role | Access |
-|---|---|
-| Portal Admin | All schools; create/manage schools; invite school admins |
-| School Admin | All data in their school(s); invite staff and parents |
-| Staff | Students in assigned rooms; log activities; view schedule |
-| Parent | Own children only; edit personal info + immunizations; view daily reports |
+## Deployment
+- [ ] Netlify deploy pending
+- [ ] Custom domain pending
+- Note: QR code URL uses `window.location.origin` — automatically correct on Netlify
 
 ---
 
 ## Definition of Done
 - [x] All 8 MVP feature areas functional end-to-end
-- [x] 114 Playwright tests (see [MVP-testing.md](MVP-testing.md))
+- [x] 150 Playwright tests (see [MVP-testing.md](MVP-testing.md))
 - [x] Pre-push hook enforces tests on every commit
 - [ ] Netlify deployment
 - [ ] At least 1 real child enrolled with 1 full day of reports
