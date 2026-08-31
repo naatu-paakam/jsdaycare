@@ -38,6 +38,8 @@ function EditAdmissionModal({ student, onClose, onSaved }: {
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { allSchools } = useAuth();
+  const [schoolId, setSchoolId] = useState(student.school_id ?? "");
   const [status, setStatus]   = useState(student.enrollment_status ?? "active");
   const [startDate, setStart] = useState(student.start_date ?? "");
   const [endDate, setEnd]     = useState(student.end_date ?? "");
@@ -45,14 +47,22 @@ function EditAdmissionModal({ student, onClose, onSaved }: {
   const [saving, setSaving]   = useState(false);
   const [error, setError]     = useState("");
 
+  const schoolChanged = schoolId !== (student.school_id ?? "");
+
   async function save() {
     setSaving(true); setError("");
-    const { error: err } = await supabase.from("students").update({
+    const update: Record<string, unknown> = {
       enrollment_status: status,
       start_date: startDate || null,
       end_date: endDate || null,
       notes: notes || null,
-    }).eq("id", student.id);
+    };
+    // Moving to a different school: update school_id and clear homeroom (room belongs to old school)
+    if (schoolChanged) {
+      update.school_id = schoolId;
+      update.homeroom_id = null;
+    }
+    const { error: err } = await supabase.from("students").update(update).eq("id", student.id);
     setSaving(false);
     if (err) { setError(err.message); return; }
     onSaved();
@@ -69,6 +79,19 @@ function EditAdmissionModal({ student, onClose, onSaved }: {
         </div>
         <div className="px-6 py-5 space-y-4">
           {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+          {allSchools.length > 1 && (
+            <div>
+              <label className="label">School</label>
+              <select className="input" value={schoolId} onChange={e => setSchoolId(e.target.value)}>
+                {allSchools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              {schoolChanged && (
+                <p className="text-xs text-amber-600 mt-1">
+                  ⚠ Moving to a different school will unassign the student from their current room.
+                </p>
+              )}
+            </div>
+          )}
           <div>
             <label className="label">Enrollment Status</label>
             <select className="input" value={status} onChange={e => setStatus(e.target.value as typeof status)}>
