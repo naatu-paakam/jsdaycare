@@ -188,3 +188,32 @@ Edit this file and ask Claude to roll out the changes.
 | Immunizations | ✅ | — | ✅ (own child) |
 | Daily Activities | ✅ | ✅ | ✅ (read-only) |
 | Documents | ✅ | — | — |
+
+---
+
+## Rooms Permissions
+
+| Action | Admin | Staff |
+|---|---|---|
+| View rooms list | ✅ | ✅ |
+| Create new room | ✅ | — |
+| Edit room settings | ✅ | — |
+| Delete room | ✅ | — |
+| Add student to room | ✅ | — |
+| Check in / check out student | ✅ | ✅ |
+| Mark absent | ✅ | ✅ |
+| Add activity (any type) | ✅ | ✅ |
+| View Feed tab | ✅ | ✅ |
+
+## Schedules Permissions
+
+| Action | Admin | Staff |
+|---|---|---|
+| View schedule grid | ✅ | ✅ |
+| Print schedule | ✅ | ✅ |
+| Add staff schedule | ✅ | — |
+| Edit staff schedule | ✅ | — |
+| Delete staff schedule | ✅ | — |
+| Add student schedule | ✅ | — |
+| Edit student schedule | ✅ | — |
+| Delete student schedule | ✅ | — |

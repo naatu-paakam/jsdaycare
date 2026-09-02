@@ -41,23 +41,29 @@ Room detail has 2 tabs:
 - **Students** — Check In / Check Out / Mark Absent per student
 - **Feed** — consolidated activity log for the room
 
-**Room actions:**
-- ⚙ Room Settings — edit name, capacity, ratio, delete
+**Room actions (admin only):**
+- **+ New Room** — create a new room (from the Rooms list page)
+- ⚙ **Room Settings** — edit name, capacity, age range, ratio, or delete room
+- **+ Add Student** — assign a student to this room
+
+**Room actions (admin + staff):**
 - **+ Add Activity** — 12-type selector (food, nap, potty, note, kudos, meds, health check, observation, photo, video, incident, name-to-face)
-- **+ Add Student** — assign from active students
+- Check In / Check Out / Mark Absent per student
 
 ---
 
 ## Schedules
-**My School → Schedules** — weekly grid (staff rows + student rows × 7 days).
+**My School → Schedules** — weekly grid (staff rows + student rows × 7 days). **Admin only — staff can view but not edit.**
 
-**Adding a schedule:**
-1. Click **+ Staff schedule** (or click any staff cell)
-2. Select staff members, room, repeat weekly, time range (default 8:30–18:00), days (default Mon–Fri)
+**Adding a staff schedule:**
+1. Click **+ Staff schedule** (or click any staff cell in the grid)
+2. Select staff member, room, repeat weekly, time range (default 8:30–18:00), days (default Mon–Fri)
 3. Save → overwrites any existing schedule for that staff+day (no duplicates)
 4. Click a filled cell → dialog pre-fills + shows **🗑 Delete Schedule** button
 
-**Student schedule:** + Student schedule → select student, type (Full/AM/PM/Half), days, date range
+**Adding a student schedule:** Click **+ Student schedule** → select student, type (Full/AM/PM/Half), days, date range
+
+> Staff members can view the schedule grid and print it, but only admins can add, edit, or delete schedules.
 
 ---
 
