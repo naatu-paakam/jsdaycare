@@ -22,7 +22,9 @@ At the login screen, enter either:
 ---
 
 ## Parent Portal
-After login you see your child's information. If you have multiple children at the same school, they're all listed.
+After login you see your child's card with today's activity feed. The portal has three quick links at the bottom: **Weekly Menu**, **Calendar**, and **Stories**.
+
+Click your child's name/card to open their full profile. If you have multiple children, tap their name to switch between them.
 
 ---
 

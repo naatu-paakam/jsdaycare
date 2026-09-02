@@ -44,7 +44,7 @@ export default function App() {
         <Route path="/reporting" element={<ProtectedRoute allowedRoles={["admin"]}><Reporting /></ProtectedRoute>} />
         <Route path="/reporting/attendance" element={<ProtectedRoute allowedRoles={["admin"]}><Reporting /></ProtectedRoute>} />
         <Route path="/parents" element={<ProtectedRoute allowedRoles={["admin","staff"]}><Parents /></ProtectedRoute>} />
-        <Route path="/calendar" element={<ProtectedRoute allowedRoles={["admin","staff"]}><CalendarPage /></ProtectedRoute>} />
+        <Route path="/calendar" element={<ProtectedRoute allowedRoles={["admin","staff","parent"]}><CalendarPage /></ProtectedRoute>} />
         <Route path="/menus" element={<ProtectedRoute allowedRoles={["admin","staff","parent"]}><Menus /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute allowedRoles={["admin"]}><Settings /></ProtectedRoute>} />
         <Route path="/stories" element={<ProtectedRoute allowedRoles={["admin","staff","parent"]}><Stories /></ProtectedRoute>} />
