@@ -117,3 +117,31 @@ node_modules/.bin/playwright test --ui
 # Re-seed data if tests fail due to stale DB state
 node scripts/seed.js --reset
 ```
+
+---
+
+## Persona access control (added)
+
+### Staff persona — `e2e/staff-persona.spec.ts` (20 TCs)
+- Nav hidden: Settings, Staff & Payroll, Paperwork, Reporting
+- School dropdown: no switcher (single school only)
+- Student profile: only Profile + Daily Activities tabs
+- Student list: no Add/Edit/Delete buttons
+
+### Staff rooms & schedules — `e2e/staff-rooms-schedules.spec.ts` (16 TCs)
+- Rooms: no New Room, no Room Settings, no Add Student; Add Activity ✅
+- Schedules: view-only; no + Staff schedule / + Student schedule buttons; cells non-clickable
+- Admin regression: all admin buttons confirmed still visible
+
+### Parent persona — `e2e/parent-persona.spec.ts` (25 TCs)
+- Home (`/parent`): student cards, check-in/out toggle, activity feed, profile link
+- Sidebar: Home, Students (own kids), Stories, Calendar, Menus only
+- Students list: own child only (RLS), no Add/Edit/Delete
+- Student profile: all 5 tabs, "Back to My Portal" link
+- Quick pages: Menus (read-only), Calendar (read-only), Stories
+
+### School-move — `e2e/student-school-move.spec.ts` (8 TCs)
+- School dropdown visible for multi-school admin
+- Amber warning on school change
+- Move succeeds via security-definer RPC
+- Admin isolation verified

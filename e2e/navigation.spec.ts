@@ -155,9 +155,13 @@ test.describe("Parent — portal and access", () => {
     await expect(page).not.toHaveURL(/\/home/, { timeout: 5_000 });
   });
 
-  test("TC-parent-no-students: parent cannot access /students directly", async ({ page }) => {
+  test("TC-parent-students-own-child-only: parent can access /students but sees only their own child", async ({ page }) => {
     await page.goto("/students");
-    await expect(page).not.toHaveURL(/\/students/, { timeout: 5_000 });
+    // Parent is now allowed on /students (RLS filters to their kids)
+    await expect(page).toHaveURL(/\/students/, { timeout: 5_000 });
+    await expect(page.getByText(/adrith/i)).toBeVisible({ timeout: 8_000 });
+    // Should NOT see other students like Vihaan (different parent)
+    await expect(page.getByText(/vihaan/i)).not.toBeVisible();
   });
 });
 
