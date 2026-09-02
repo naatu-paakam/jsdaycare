@@ -97,14 +97,34 @@ export default function Sidebar() {
   const { profile, school, allSchools, switchSchool, signOut } = useAuth();
   const [schoolOpen, setSchoolOpen] = useState(false);
 
+  const isStaff = profile?.role === "staff";
+  const isAdmin = profile?.role === "admin";
+
+  // Staff-only nav: hide Settings, Staff & Payroll, Paperwork, Reporting
+  const STAFF_HIDDEN = ["Settings", "Staff & Payroll", "Paperwork", "Reporting"];
+  // Within the My School children, also hide Settings for staff
+  const filteredNav = navItems
+    .filter(item => !isStaff || !STAFF_HIDDEN.includes(item.label))
+    .map(item => {
+      if (item.children && isStaff) {
+        return { ...item, children: item.children.filter(c => !STAFF_HIDDEN.includes(c.label)) };
+      }
+      return item;
+    });
+
   // Replace "My School" label with actual school name in nav
-  const resolvedNav = navItems.map(item =>
+  const resolvedNav = filteredNav.map(item =>
     item.label === "My School" && school?.name
       ? { ...item, label: school.name }
       : item
   );
 
-  const multiSchool = allSchools.length > 1;
+  // Staff sees only their own school; admins see all schools they manage
+  const visibleSchools = isStaff
+    ? allSchools.filter(s => s.id === profile?.school_id)
+    : allSchools;
+
+  const multiSchool = visibleSchools.length > 1;
 
   return (
     <aside className="w-60 shrink-0 h-screen flex flex-col bg-white border-r border-gray-200">
@@ -136,7 +156,7 @@ export default function Sidebar() {
           {/* School dropdown */}
           {multiSchool && schoolOpen && (
             <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1">
-              {allSchools.map(s => (
+              {visibleSchools.map(s => (
                 <button
                   key={s.id}
                   onClick={async () => { await switchSchool(s.id); setSchoolOpen(false); }}

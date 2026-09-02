@@ -1192,6 +1192,7 @@ export default function StudentProfile() {
   const { profile: authProfile, school } = useAuth();
   const isAdmin   = authProfile?.role === "admin";
   const isParent  = authProfile?.role === "parent";
+  const isStaff   = authProfile?.role === "staff";
   const canEdit   = isAdmin || isParent;
 
   const [student,      setStudent]      = useState<Student | null>(null);
@@ -1354,12 +1355,13 @@ export default function StudentProfile() {
   if (loading) return <Layout><div className="p-10 text-center text-gray-400">Loading student profile…</div></Layout>;
   if (!student) return <Layout><div className="p-10 text-center text-gray-400">Student not found</div></Layout>;
 
+  // Staff see Profile + Daily Activities only; Contacts/Immunizations/Documents are admin/parent only
   const TABS: { id: Tab; label: string }[] = [
     { id: "profile",       label: "Profile" },
-    { id: "contacts",      label: "Contacts" },
-    { id: "immunizations", label: "Immunizations" },
+    ...(!isStaff ? [{ id: "contacts" as Tab,      label: "Contacts" }] : []),
+    ...(!isStaff ? [{ id: "immunizations" as Tab, label: "Immunizations" }] : []),
     { id: "daily_report",  label: "Daily Activities" },
-    { id: "documents",     label: "Documents" },
+    ...(!isStaff ? [{ id: "documents" as Tab,     label: "Documents" }] : []),
   ];
 
   const immMap: Record<string, StudentImmunization> = {};

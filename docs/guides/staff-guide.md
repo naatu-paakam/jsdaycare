@@ -60,3 +60,29 @@ Read-only view of school holidays, events, and operating hours.
 
 ## Check-In (QR)
 You can also use the front desk QR code to check students in/out. Enter your 6-digit staff PIN.
+
+---
+
+## What staff can and cannot access
+
+### Left navigation — Staff sees:
+- Home (dashboard)
+- My School → Students, Stories, Rooms, Calendar, Schedules, Menus
+
+### Left navigation — Staff does NOT see:
+- Settings (school configuration — admin only)
+- Staff & Payroll (admin only)
+- Paperwork (admin only)
+- Reporting (admin only)
+
+### Student profile tabs — Staff sees:
+- **Profile** — personal info, allergies, doctor, address (read-only view)
+- **Daily Activities** — full access: view feed, add activities, edit/delete own entries
+
+### Student profile tabs — Staff does NOT see:
+- **Contacts** — parent/guardian contact details (admin/parent only)
+- **Immunizations** — vaccination records (admin/parent only)
+- **Documents** — paperwork and forms (admin only)
+
+### School dropdown:
+Staff members see only the school they belong to — no multi-school switcher.

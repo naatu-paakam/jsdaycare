@@ -160,3 +160,31 @@ Edit this file and ask Claude to roll out the changes.
    - The Playwright tests to verify the new access rules
 
 > Note: Supabase RLS policies enforce data-layer security. UI permissions above control what's visible/editable in the app interface. Both must be consistent.
+
+---
+
+## Staff Navigation Permissions
+
+| Nav Item | Admin | Staff | Parent |
+|---|---|---|---|
+| Home | ✅ | ✅ | — |
+| Students | ✅ | ✅ (view + daily activities only) | — |
+| Stories | ✅ | ✅ | ✅ |
+| Rooms | ✅ | ✅ | — |
+| Calendar | ✅ | ✅ | ✅ |
+| Schedules | ✅ | ✅ | ✅ (own child) |
+| Menus | ✅ | ✅ | ✅ (read-only) |
+| Settings | ✅ | — | — |
+| Staff & Payroll | ✅ | — | — |
+| Paperwork | ✅ | — | — |
+| Reporting | ✅ | — | — |
+
+## Student Profile Tab Permissions
+
+| Tab | Admin | Staff | Parent |
+|---|---|---|---|
+| Profile | ✅ | ✅ (read-only) | ✅ (limited) |
+| Contacts | ✅ | — | ✅ (own child) |
+| Immunizations | ✅ | — | ✅ (own child) |
+| Daily Activities | ✅ | ✅ | ✅ (read-only) |
+| Documents | ✅ | — | — |
