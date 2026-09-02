@@ -97,17 +97,29 @@ export default function Sidebar() {
   const { profile, school, allSchools, switchSchool, signOut } = useAuth();
   const [schoolOpen, setSchoolOpen] = useState(false);
 
-  const isStaff = profile?.role === "staff";
-  const isAdmin = profile?.role === "admin";
+  const isStaff  = profile?.role === "staff";
+  const isAdmin  = profile?.role === "admin";
+  const isParent = profile?.role === "parent";
 
-  // Staff-only nav: hide Settings, Staff & Payroll, Paperwork, Reporting
+  // Items hidden from staff
   const STAFF_HIDDEN = ["Settings", "Staff & Payroll", "Paperwork", "Reporting"];
-  // Within the My School children, also hide Settings for staff
+  // Staff-child items hidden (inside My School)
+  const STAFF_CHILD_HIDDEN = ["Settings"];
+  // Parent: top-level items hidden
+  const PARENT_HIDDEN = ["Home", "Settings", "Staff & Payroll", "Paperwork", "Reporting"];
+  // Parent: only these My School children are shown
+  const PARENT_CHILD_ALLOWED = ["Stories", "Menus", "Calendar"];
+
   const filteredNav = navItems
-    .filter(item => !isStaff || !STAFF_HIDDEN.includes(item.label))
+    .filter(item => {
+      if (isParent) return !PARENT_HIDDEN.includes(item.label);
+      if (isStaff)  return !STAFF_HIDDEN.includes(item.label);
+      return true;
+    })
     .map(item => {
-      if (item.children && isStaff) {
-        return { ...item, children: item.children.filter(c => !STAFF_HIDDEN.includes(c.label)) };
+      if (item.children) {
+        if (isParent) return { ...item, children: item.children.filter(c => PARENT_CHILD_ALLOWED.includes(c.label)) };
+        if (isStaff)  return { ...item, children: item.children.filter(c => !STAFF_CHILD_HIDDEN.includes(c.label)) };
       }
       return item;
     });

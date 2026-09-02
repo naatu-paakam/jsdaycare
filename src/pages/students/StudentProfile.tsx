@@ -1417,8 +1417,8 @@ export default function StudentProfile() {
       )}
 
       <div className="p-6 max-w-6xl mx-auto space-y-5">
-        <Link to="/students" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800">
-          <ArrowLeft size={15} /> Back to Students
+        <Link to={isParent ? "/parent" : "/students"} className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800">
+          <ArrowLeft size={15} /> {isParent ? "Back to My Portal" : "Back to Students"}
         </Link>
 
         {/* Header */}
