@@ -21,6 +21,7 @@ function ageRange(min: number | null, max: number | null) {
 
 export default function RoomList() {
   const { profile } = useAuth();
+  const isAdmin = profile?.role === "admin";
   const [rooms, setRooms] = useState<RoomCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
@@ -92,9 +93,11 @@ export default function RoomList() {
             <h1 className="text-2xl font-bold text-gray-900">Rooms</h1>
             <p className="text-sm text-gray-500 mt-0.5">{rooms.length} rooms</p>
           </div>
-          <button onClick={() => setShowNew(true)} className="btn-primary flex items-center gap-2">
-            <Plus size={16} /> New Room
-          </button>
+          {isAdmin && (
+            <button onClick={() => setShowNew(true)} className="btn-primary flex items-center gap-2">
+              <Plus size={16} /> New Room
+            </button>
+          )}
         </div>
 
         {/* New Room Modal */}

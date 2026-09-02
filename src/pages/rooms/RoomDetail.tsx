@@ -677,7 +677,8 @@ function AssignStudentModal({ roomId, onClose, onAssigned }: {
 export default function RoomDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, school } = useAuth();
+  const { user, school, profile: authProfile } = useAuth();
+  const isAdmin = authProfile?.role === "admin";
   const today = new Date().toISOString().split("T")[0];
 
   const [room,       setRoom]       = useState<Room | null>(null);
@@ -786,18 +787,22 @@ export default function RoomDetail() {
             <span className="text-gray-300">/</span>
             <span className="text-sm text-gray-500">{students.length} enrolled</span>
 
-            <button
-              onClick={() => setShowSettings(true)}
-              className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium"
-            >
-              <Settings size={14} /> Room settings
-            </button>
-            <button
-              onClick={() => setShowAssign(true)}
-              className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium"
-            >
-              <Plus size={14} /> Add Student
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setShowSettings(true)}
+                className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium"
+              >
+                <Settings size={14} /> Room settings
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                onClick={() => setShowAssign(true)}
+                className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium"
+              >
+                <Plus size={14} /> Add Student
+              </button>
+            )}
             <button
               onClick={() => setShowActivityPick(true)}
               className="btn-primary inline-flex items-center gap-1.5 text-sm"
