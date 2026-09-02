@@ -456,6 +456,7 @@ function StudentScheduleDialog({ state, students, weekStart, onClose, onSaved }:
 
 export default function Schedules() {
   const { profile } = useAuth();
+  const isAdmin = profile?.role === "admin";
   const schoolId = profile?.school_id;
 
   // week navigation
@@ -550,18 +551,22 @@ export default function Schedules() {
             <p className="text-sm text-gray-500 mt-0.5">Manage staff and student schedules</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => openStaffDialog(null, null)}
-              className="btn btn-primary text-sm flex items-center gap-1"
-            >
-              <Plus size={14} /> Staff schedule
-            </button>
-            <button
-              onClick={() => openStudentDialog(null, null)}
-              className="btn btn-ghost text-sm flex items-center gap-1"
-            >
-              <Plus size={14} /> Student schedule
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => openStaffDialog(null, null)}
+                className="btn btn-primary text-sm flex items-center gap-1"
+              >
+                <Plus size={14} /> Staff schedule
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                onClick={() => openStudentDialog(null, null)}
+                className="btn btn-ghost text-sm flex items-center gap-1"
+              >
+                <Plus size={14} /> Student schedule
+              </button>
+            )}
             <button
               onClick={() => window.print()}
               className="btn btn-ghost text-sm flex items-center gap-1"
@@ -648,8 +653,8 @@ export default function Schedules() {
                     return (
                       <div
                         key={i}
-                        onClick={() => openStaffDialog(s.id, i)}
-                        className="border-l border-gray-100 px-1.5 py-1.5 min-h-[52px] cursor-pointer hover:bg-orange-50 transition-colors group"
+                        onClick={() => isAdmin && openStaffDialog(s.id, i)}
+                        className={`border-l border-gray-100 px-1.5 py-1.5 min-h-[52px] transition-colors group ${isAdmin ? "cursor-pointer hover:bg-orange-50" : "cursor-default"}`}
                       >
                         {chips.length > 0 ? (
                           <div className="space-y-0.5">
@@ -712,8 +717,8 @@ export default function Schedules() {
                     return (
                       <div
                         key={i}
-                        onClick={() => openStudentDialog(st.id, i)}
-                        className="border-l border-gray-100 px-1.5 py-1.5 min-h-[52px] cursor-pointer hover:bg-purple-50 transition-colors group"
+                        onClick={() => isAdmin && openStudentDialog(st.id, i)}
+                        className={`border-l border-gray-100 px-1.5 py-1.5 min-h-[52px] transition-colors group ${isAdmin ? "cursor-pointer hover:bg-purple-50" : "cursor-default"}`}
                       >
                         {chips.length > 0 ? (
                           <div className="space-y-0.5">

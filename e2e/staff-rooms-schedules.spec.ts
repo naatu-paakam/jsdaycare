@@ -119,24 +119,28 @@ test.describe("Schedules — staff access", () => {
     await expect(page.getByText("Nidhi Patel")).toBeVisible({ timeout: 5_000 });
   });
 
-  test("TC-staff-schedules-add-staff-button: Staff sees + Staff schedule button", async ({ page }) => {
-    await expect(page.getByRole("button", { name: /staff schedule/i })).toBeVisible({ timeout: 5_000 });
+  test("TC-staff-schedules-no-add-staff-button: Staff does NOT see + Staff schedule button", async ({ page }) => {
+    await expect(page.getByRole("button", { name: /staff schedule/i })).not.toBeVisible();
   });
 
-  test("TC-staff-schedules-add-student-button: Staff sees + Student schedule button", async ({ page }) => {
-    await expect(page.getByRole("button", { name: /student schedule/i })).toBeVisible({ timeout: 5_000 });
+  test("TC-staff-schedules-no-add-student-button: Staff does NOT see + Student schedule button", async ({ page }) => {
+    await expect(page.getByRole("button", { name: /student schedule/i })).not.toBeVisible();
   });
 
-  test("TC-staff-schedules-dialog-opens: Clicking + Staff schedule opens the dialog", async ({ page }) => {
-    await page.getByRole("button", { name: /staff schedule/i }).click();
-    await expect(page.getByText("Add staff to schedule")).toBeVisible({ timeout: 5_000 });
-    await page.getByRole("button", { name: /cancel/i }).click();
+  test("TC-staff-schedules-print-visible: Staff sees Print button (read-only action)", async ({ page }) => {
+    await expect(page.getByRole("button", { name: /print/i })).toBeVisible({ timeout: 5_000 });
   });
 
-  test("TC-staff-schedules-student-dialog-opens: Clicking + Student schedule opens the dialog", async ({ page }) => {
-    await page.getByRole("button", { name: /student schedule/i }).click();
-    await expect(page.getByText(/add student to schedule/i)).toBeVisible({ timeout: 5_000 });
-    await page.getByRole("button", { name: /cancel/i }).click();
+  test("TC-staff-schedules-cells-not-clickable: Clicking a staff schedule cell does NOT open a dialog", async ({ page }) => {
+    // Staff row cells should be non-interactive — no dialog should appear
+    const staffRow = page.locator("tbody tr").first();
+    await staffRow.waitFor({ timeout: 6_000 });
+    const cell = staffRow.locator("td, div[class*='border-l']").nth(1);
+    if (await cell.isVisible()) {
+      await cell.click();
+      // Dialog should NOT appear
+      await expect(page.getByText(/add staff to schedule/i)).not.toBeVisible();
+    }
   });
 
   test("TC-staff-schedules-week-nav: Staff can navigate between weeks", async ({ page }) => {

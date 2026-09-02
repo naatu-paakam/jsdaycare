@@ -172,7 +172,7 @@ Edit this file and ask Claude to roll out the changes.
 | Stories | ✅ | ✅ | ✅ |
 | Rooms | ✅ | ✅ | — |
 | Calendar | ✅ | ✅ | ✅ |
-| Schedules | ✅ | ✅ | ✅ (own child) |
+| Schedules | ✅ | ✅ (view only — no add/delete) | ✅ (own child) |
 | Menus | ✅ | ✅ | ✅ (read-only) |
 | Settings | ✅ | — | — |
 | Staff & Payroll | ✅ | — | — |
