@@ -32,7 +32,7 @@ export default function App() {
 
         {/* Admin / Staff routes */}
         <Route path="/home" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><Home /></ProtectedRoute>} />
-        <Route path="/students" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><StudentList /></ProtectedRoute>} />
+        <Route path="/students" element={<ProtectedRoute allowedRoles={["admin", "staff", "parent"]}><StudentList /></ProtectedRoute>} />
         <Route path="/students/add" element={<ProtectedRoute allowedRoles={["admin"]}><AddStudent /></ProtectedRoute>} />
         <Route path="/students/:id" element={<ProtectedRoute allowedRoles={["admin", "staff", "parent"]}><StudentProfile /></ProtectedRoute>} />
         <Route path="/rooms" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><RoomList /></ProtectedRoute>} />

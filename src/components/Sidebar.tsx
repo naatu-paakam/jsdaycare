@@ -106,9 +106,9 @@ export default function Sidebar() {
   // Staff-child items hidden (inside My School)
   const STAFF_CHILD_HIDDEN = ["Settings"];
   // Parent: top-level items hidden
-  const PARENT_HIDDEN = ["Home", "Settings", "Staff & Payroll", "Paperwork", "Reporting"];
+  const PARENT_HIDDEN = ["Settings", "Staff & Payroll", "Paperwork", "Reporting"];
   // Parent: only these My School children are shown
-  const PARENT_CHILD_ALLOWED = ["Stories", "Menus", "Calendar"];
+  const PARENT_CHILD_ALLOWED = ["Students", "Stories", "Menus", "Calendar"];
 
   const filteredNav = navItems
     .filter(item => {
@@ -124,12 +124,12 @@ export default function Sidebar() {
       return item;
     });
 
-  // Replace "My School" label with actual school name in nav
-  const resolvedNav = filteredNav.map(item =>
-    item.label === "My School" && school?.name
-      ? { ...item, label: school.name }
-      : item
-  );
+  // Replace "My School" label with actual school name + reroute Home for parents
+  const resolvedNav = filteredNav.map(item => {
+    if (item.label === "My School" && school?.name) return { ...item, label: school.name };
+    if (item.label === "Home" && isParent) return { ...item, to: "/parent" };
+    return item;
+  });
 
   // Staff sees only their own school; admins see all schools they manage
   const visibleSchools = isStaff
