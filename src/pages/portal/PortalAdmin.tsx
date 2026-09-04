@@ -769,7 +769,7 @@ export default function PortalAdmin() {
                           <button
                             title={s.activeStudents > 0 ? `${s.activeStudents} active students — deleting will remove them` : "Delete school"}
                             onClick={() => setDeleteSchoolConfirm(s)}
-                            className={`p-1.5 rounded-lg transition-colors ${s.activeStudents > 0 ? "text-amber-400 hover:text-red-500 hover:bg-red-50" : "text-gray-400 hover:text-red-500 hover:bg-red-50"}`}
+                            className={`p-1.5 rounded-lg transition-colors ${s.activeStudents > 0 ? "text-amber-400 hover:text-amber-600 hover:bg-amber-50" : "text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50"}`}
                           >
                             <Trash2 size={14} />
                           </button>
