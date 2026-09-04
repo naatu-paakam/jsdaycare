@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { useAuth } from "@/lib/auth";
 import { School } from "@/lib/types";
 import { Building2, Users, UserCheck, Plus, X, ChevronRight, Pencil, Trash2, Copy, Check, Link as LinkIcon } from "lucide-react";
@@ -239,6 +240,10 @@ export default function PortalAdmin() {
   const [inviteError, setInviteError] = useState("");
   const [editName, setEditName] = useState("");
   const [editingName, setEditingName] = useState(false);
+  const [editSchoolPhone, setEditSchoolPhone] = useState("");
+  const [editSchoolEmail, setEditSchoolEmail] = useState("");
+  const [editSchoolAddress, setEditSchoolAddress] = useState({ street: "", city: "", state: "", zip: "" });
+  const [savingSchoolDetails, setSavingSchoolDetails] = useState(false);
   const [savingName, setSavingName] = useState(false);
 
   // Persistent admin invite link
@@ -318,11 +323,13 @@ export default function PortalAdmin() {
     let totalStaff = 0;
 
     for (const s of schoolData) {
+      // Use supabaseAdmin for student/staff counts — portal admin is RLS-blocked from cross-school reads
+      const db = supabaseAdmin ?? supabase;
       const [{ data: memberAdmins }, { count: students }, { count: staff }, { count: activeStudents }] = await Promise.all([
         supabase.from("school_memberships").select("profile_id, profiles(id, full_name, phone)").eq("school_id", s.id).eq("role", "admin"),
-        supabase.from("students").select("id", { count: "exact", head: true }).eq("school_id", s.id),
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("school_id", s.id).eq("role", "staff"),
-        supabase.from("students").select("id", { count: "exact", head: true }).eq("school_id", s.id).eq("enrollment_status", "active"),
+        db.from("students").select("id", { count: "exact", head: true }).eq("school_id", s.id),
+        db.from("profiles").select("id", { count: "exact", head: true }).eq("school_id", s.id).eq("role", "staff"),
+        db.from("students").select("id", { count: "exact", head: true }).eq("school_id", s.id).eq("enrollment_status", "active"),
       ]);
       const admins: SchoolAdmin[] = (memberAdmins ?? []).map((m: any) => m.profiles).filter(Boolean);
       enriched.push({ ...s, admins, activeStudents: activeStudents ?? 0 });
@@ -499,6 +506,20 @@ export default function PortalAdmin() {
         return [...filtered, ...(data as unknown as typeof prev)];
       });
     }
+  }
+
+  async function saveSchoolDetails() {
+    if (!managedSchool) return;
+    setSavingSchoolDetails(true);
+    const address = (editSchoolAddress.street || editSchoolAddress.city) ? editSchoolAddress : null;
+    await supabase.from("schools").update({
+      phone: editSchoolPhone.trim() || null,
+      email: editSchoolEmail.trim() || null,
+      address,
+    }).eq("id", managedSchool.id);
+    setSchools(prev => prev.map(s => s.id === managedSchool.id ? { ...s, phone: editSchoolPhone.trim() || null, email: editSchoolEmail.trim() || null, address } : s));
+    setManagedSchool(prev => prev ? { ...prev, phone: editSchoolPhone.trim() || null, email: editSchoolEmail.trim() || null, address } : null);
+    setSavingSchoolDetails(false);
   }
 
   async function deleteUser(userId: string) {
@@ -732,6 +753,10 @@ export default function PortalAdmin() {
                               setManagedSchool(s);
                               setEditName(s.name);
                               setEditingName(false);
+                              setEditSchoolPhone(s.phone ?? "");
+                              setEditSchoolEmail(s.email ?? "");
+                              const a2 = (s.address as {street?:string;city?:string;state?:string;zip?:string}|null) ?? {};
+                              setEditSchoolAddress({ street: a2.street ?? "", city: a2.city ?? "", state: a2.state ?? "", zip: a2.zip ?? "" });
                               setAssignProfileId("");
                               setAssignProfileSearch("");
                               setInviteError("");
@@ -1117,6 +1142,33 @@ export default function PortalAdmin() {
                     </button>
                   </div>
                 )}
+              </div>
+
+              {/* Contact & Address */}
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Contact & Address</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Phone</label>
+                    <input className="input text-sm w-full" value={editSchoolPhone} onChange={e => setEditSchoolPhone(e.target.value)} placeholder="e.g. 555-1234" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Email</label>
+                    <input className="input text-sm w-full" value={editSchoolEmail} onChange={e => setEditSchoolEmail(e.target.value)} placeholder="info@school.com" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Street address</label>
+                  <input className="input text-sm w-full mb-2" value={editSchoolAddress.street} onChange={e => setEditSchoolAddress(a => ({...a, street: e.target.value}))} placeholder="Street address" />
+                  <div className="grid grid-cols-3 gap-2">
+                    <input className="input text-sm" value={editSchoolAddress.city} onChange={e => setEditSchoolAddress(a => ({...a, city: e.target.value}))} placeholder="City" />
+                    <input className="input text-sm" value={editSchoolAddress.state} onChange={e => setEditSchoolAddress(a => ({...a, state: e.target.value}))} placeholder="State" />
+                    <input className="input text-sm" value={editSchoolAddress.zip} onChange={e => setEditSchoolAddress(a => ({...a, zip: e.target.value}))} placeholder="ZIP" />
+                  </div>
+                </div>
+                <button onClick={saveSchoolDetails} disabled={savingSchoolDetails} className="btn-primary text-sm">
+                  {savingSchoolDetails ? "Saving…" : "Save Contact Info"}
+                </button>
               </div>
 
               {/* Admin Registration Link */}
