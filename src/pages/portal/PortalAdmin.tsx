@@ -72,6 +72,87 @@ interface InviteTarget {
 
 type TabKey = "schools" | "users";
 
+// ─── Edit / Manage User Modal ─────────────────────────────────────────────────
+function EditUserModal({ user, memberships, schools, onSave, onRemoveFromSchool, onClose }: {
+  user: UserProfile;
+  memberships: { school_id: string; schools?: { name: string } | null }[];
+  schools: { id: string; name: string }[];
+  onSave: (userId: string, updates: { full_name: string; role: string; phone: string }) => Promise<{ message: string } | null | undefined>;
+  onRemoveFromSchool: (schoolId: string, schoolName: string) => void;
+  onClose: () => void;
+}) {
+  const [fullName, setFullName] = useState(user.full_name ?? "");
+  const [role, setRole]         = useState(user.role);
+  const [phone, setPhone]       = useState(user.phone ?? "");
+  const [saving, setSaving]     = useState(false);
+  const [error, setError]       = useState("");
+
+  async function handleSave() {
+    if (!fullName.trim()) { setError("Name is required"); return; }
+    setSaving(true);
+    const err = await onSave(user.id, { full_name: fullName, role, phone });
+    setSaving(false);
+    if (err) setError(err.message);
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h2 className="text-base font-semibold text-gray-900">Manage User</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+        </div>
+        <div className="px-6 py-5 space-y-4">
+          {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+
+          <div>
+            <label className="label">Full Name <span className="text-red-500">*</span></label>
+            <input className="input" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Full name" />
+          </div>
+          <div>
+            <label className="label">Phone</label>
+            <input className="input" value={phone} onChange={e => setPhone(e.target.value)} placeholder="e.g. 555-1234" />
+          </div>
+          <div>
+            <label className="label">Role</label>
+            <select className="input" value={role} onChange={e => setRole(e.target.value)}>
+              <option value="admin">Admin</option>
+              <option value="staff">Staff</option>
+              <option value="parent">Parent</option>
+            </select>
+          </div>
+
+          {/* Schools — with remove per school */}
+          {memberships.length > 0 && (
+            <div>
+              <label className="label">Schools</label>
+              <div className="space-y-1.5">
+                {memberships.map(m => (
+                  <div key={m.school_id} className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">{m.schools?.name ?? m.school_id}</span>
+                    <button
+                      onClick={() => onRemoveFromSchool(m.school_id, m.schools?.name ?? m.school_id)}
+                      className="text-xs text-red-500 hover:text-red-700 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
+          <button onClick={onClose} className="btn-secondary">Cancel</button>
+          <button onClick={handleSave} disabled={saving} className="btn-primary">
+            {saving ? "Saving…" : "Save Changes"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function PortalAdmin() {
   const { signOut } = useAuth();
   const [schools, setSchools] = useState<SchoolWithAdmins[]>([]);
@@ -92,6 +173,7 @@ export default function PortalAdmin() {
   const [userRoleFilter, setUserRoleFilter] = useState("");
   const [removeConfirm, setRemoveConfirm] = useState<RemoveConfirm | null>(null);
   const [removing, setRemoving] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [inviteTarget, setInviteTarget] = useState<InviteTarget | null>(null);
   const [showInviteUserDialog, setShowInviteUserDialog] = useState(false);
   const [inviteUserSchool, setInviteUserSchool] = useState("");
@@ -344,6 +426,19 @@ export default function PortalAdmin() {
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function saveUserEdit(userId: string, updates: { full_name: string; role: string; phone: string }) {
+    const { error } = await supabase.from("profiles").update({
+      full_name: updates.full_name.trim() || null,
+      role: updates.role,
+      phone: updates.phone.trim() || null,
+    }).eq("id", userId);
+    if (!error) {
+      setUserProfiles(prev => prev.map((u: UserProfile) => u.id === userId ? { ...u, ...updates, full_name: updates.full_name.trim() || null, phone: updates.phone.trim() || null } : u));
+      setEditingUser(null);
+    }
+    return error;
   }
 
   async function deleteInvite(inviteId: string) {
@@ -637,49 +732,14 @@ export default function PortalAdmin() {
                             Active
                           </span>
                         </td>
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-2 justify-end">
-                            {userMemberships.length > 1 ? (
-                              <select
-                                className="text-xs border border-gray-200 rounded px-1.5 py-1 text-red-500 focus:outline-none"
-                                defaultValue=""
-                                onChange={e => {
-                                  const schoolId = e.target.value;
-                                  if (!schoolId) return;
-                                  const school = schools.find(s => s.id === schoolId);
-                                  setRemoveConfirm({
-                                    profileId: u.id,
-                                    profileName: u.full_name ?? "User",
-                                    schoolId,
-                                    schoolName: school?.name ?? schoolId,
-                                  });
-                                  e.target.value = "";
-                                }}
-                              >
-                                <option value="">🗑 Remove from…</option>
-                                {userMemberships.map(m => (
-                                  <option key={m.school_id} value={m.school_id}>{m.schools?.name ?? m.school_id}</option>
-                                ))}
-                              </select>
-                            ) : (
-                              <button
-                                title="Remove from school"
-                                onClick={() => {
-                                  const m = userMemberships[0];
-                                  if (!m) return;
-                                  setRemoveConfirm({
-                                    profileId: u.id,
-                                    profileName: u.full_name ?? "User",
-                                    schoolId: m.school_id,
-                                    schoolName: m.schools?.name ?? m.school_id,
-                                  });
-                                }}
-                                className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            )}
-                          </div>
+                        <td className="px-5 py-3 text-right">
+                          <button
+                            title="Manage user"
+                            onClick={() => setEditingUser(u)}
+                            className="p-1.5 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                          >
+                            <Pencil size={14} />
+                          </button>
                         </td>
                       </tr>
                     );
@@ -1034,6 +1094,24 @@ export default function PortalAdmin() {
           </div>
         </div>
       )}
+
+      {/* Edit / Manage User modal */}
+      {editingUser && (() => {
+        const userMemberships = memberships.filter(m => m.profile_id === editingUser.id);
+        return (
+          <EditUserModal
+            user={editingUser}
+            memberships={userMemberships}
+            schools={schools}
+            onSave={saveUserEdit}
+            onRemoveFromSchool={(schoolId, schoolName) => {
+              setEditingUser(null);
+              setRemoveConfirm({ profileId: editingUser.id, profileName: editingUser.full_name ?? "User", schoolId, schoolName });
+            }}
+            onClose={() => setEditingUser(null)}
+          />
+        );
+      })()}
 
       {/* Remove confirmation modal */}
       {removeConfirm && (
