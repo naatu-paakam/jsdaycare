@@ -2,9 +2,9 @@
  * JsDayCare — Test Data Seed Script
  *
  * Creates 3 personas with realistic, fully testable data:
- *   1. Admin   — Jaya Bijjala     (admin@jsdaycare.com / JsDaycare@2026)
- *   2. Teacher — Nidhi Patel      (teacher@jsdaycare.com / JsDaycare@2026)
- *   3. Parent  — Arudeepa Kumar   (parent@jsdaycare.com / JsDaycare@2026)
+ *   1. Admin   — school admin account (credentials in .notes, gitignored)
+ *   2. Teacher — staff account (credentials in .notes, gitignored)
+ *   3. Parent  — parent account (credentials in .notes, gitignored)
  *
  * Usage:
  *   node scripts/seed.js           # seed all data
@@ -12,10 +12,16 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { config } from "dotenv";
+config({ path: new URL("../.env", import.meta.url).pathname });
 
-const SUPABASE_URL = "https://onlgefdllyognicihmgo.supabase.co";
-const SERVICE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ubGdlZmRsbHlvZ25pY2lobWdvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzYzNjY2MywiZXhwIjoyMTAzMjEyNjYzfQ.g6frKPhikpYmK-XA7TPr0aGdYk7gnb60hFlAIylYLxY";
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+const SERVICE_KEY  = process.env.VITE_SUPABASE_SERVICE_KEY;
+
+if (!SUPABASE_URL || !SERVICE_KEY) {
+  console.error("❌ Missing VITE_SUPABASE_URL or VITE_SUPABASE_SERVICE_KEY in .env");
+  process.exit(1);
+}
 
 const sb = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },

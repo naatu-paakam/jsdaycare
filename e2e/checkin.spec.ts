@@ -1,11 +1,11 @@
 import { test, expect } from "@playwright/test";
 import { loginAsAdmin } from "./helpers/auth";
 
-const SCHOOL_ID   = "08f7413b-1aa9-4679-b80b-d59ffc1fd749";
+const SCHOOL_ID   = process.env.VITE_TEST_SCHOOL_ID ?? "08f7413b-1aa9-4679-b80b-d59ffc1fd749";
 const CHECKIN_URL = `/checkin?school=${SCHOOL_ID}`;
 const VALID_PIN   = "100001"; // Arudeepa Kumar → Adrith Ram (single student)
-const SB_URL      = "https://onlgefdllyognicihmgo.supabase.co";
-const SB_SK       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ubGdlZmRsbHlvZ25pY2lobWdvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzYzNjY2MywiZXhwIjoyMTAzMjEyNjYzfQ.g6frKPhikpYmK-XA7TPr0aGdYk7gnb60hFlAIylYLxY";
+const SB_URL      = process.env.VITE_SUPABASE_URL ?? "";
+const SB_SK       = process.env.VITE_SUPABASE_SERVICE_KEY ?? "";
 
 // Helper: enter a 6-digit PIN via the on-screen keypad
 async function enterPin(page: import("@playwright/test").Page, pin: string) {
