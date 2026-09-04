@@ -18,8 +18,12 @@ export default async function globalTeardown() {
     supabase.from("students").delete().ilike("first_name", "TC-%"),
     // Test food items
     supabase.from("food_items").delete().ilike("name", "TC-%"),
-    // Test invitations
+    // Test invitations — tc- prefix + known test domains
     supabase.from("invitations").delete().ilike("email", "tc-%"),
+    supabase.from("invitations").delete().ilike("email", "%testinvite%"),
+    supabase.from("invitations").delete().eq("email", "newstaff@test.com"),
+    supabase.from("invitations").delete().eq("email", "test@test.com"),
+    supabase.from("invitations").delete().eq("email", "tc-staff@jsdaycare.com"),
     // Orphaned test schedules for TC- students are cascade-deleted with students
   ]);
 
