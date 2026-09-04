@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -e
+
+# Check if dev server is running on port 5174
+if ! curl -s -o /dev/null -w "%{http_code}" http://localhost:5174 | grep -q "200"; then
+  echo "❌ Dev server is not running on port 5174."
+  echo "   Start it first: npm run dev"
+  exit 1
+fi
+
+echo "✅ Dev server detected. Running e2e tests..."
+npx playwright test
+STATUS=$?
+
+if [ $STATUS -ne 0 ]; then
+  echo "❌ Playwright tests failed. Push blocked."
+  exit 1
+fi
+
+echo "✅ All tests passed. Proceeding with push."
+
+# ── Test data cleanup ──────────────────────────────────────────────────────────
+# Purge TC-* test data from DB (global-teardown already runs after playwright,
+# but this ensures cleanup even if teardown was skipped or tests ran partially)
+echo "🧹 Purging TC-* test data from DB..."
+node -e "
+require('dotenv').config({ path: '.env' });
+const { createClient } = require('@supabase/supabase-js');
+const sb = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_SERVICE_KEY);
+Promise.all([
+  sb.from('students').delete().ilike('first_name','TC-%'),
+  sb.from('food_items').delete().ilike('name','TC-%'),
+  sb.from('invitations').delete().ilike('email','tc-%'),
+  sb.from('invitations').delete().ilike('email','%testinvite%'),
+  sb.from('invitations').delete().eq('email','newstaff@test.com'),
+  sb.from('invitations').delete().eq('email','test@test.com'),
+  sb.from('invitations').delete().eq('email','tc-staff@jsdaycare.com'),
+]).then(results => {
+  const errors = results.filter(r => r.error).map(r => r.error.message);
+  if (errors.length) console.warn('Cleanup warnings:', errors.join(', '));
+  else console.log('✅ Test data purged.');
+}).catch(e => console.warn('Cleanup skipped:', e.message));
+" 2>/dev/null || echo "⚠️  Cleanup skipped (node/supabase unavailable)"
+
+# ── User guide reminder ────────────────────────────────────────────────────────
+# Warn if src/ changed but docs/guides/ was not touched in this push
+SRC_CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | grep "^src/" | wc -l | tr -d ' ')
+DOCS_CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | grep "^docs/" | wc -l | tr -d ' ')
+
+if [ "$SRC_CHANGED" -gt "0" ] && [ "$DOCS_CHANGED" -eq "0" ]; then
+  echo ""
+  echo "⚠️  Source files changed but no docs/ files were updated."
+  echo "   Consider updating the relevant user guide(s) in docs/guides/"
+  echo "   Guides: school-admin-guide.md · staff-guide.md · parent-guide.md · portal-admin-guide.md"
+  echo "   (Push is NOT blocked — this is a reminder only)"
+  echo ""
+fi
+
+exit 0
