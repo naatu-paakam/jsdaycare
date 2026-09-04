@@ -323,15 +323,21 @@ export default function PortalAdmin() {
     let totalStaff = 0;
 
     for (const s of schoolData) {
-      // Use supabaseAdmin for student/staff counts — portal admin is RLS-blocked from cross-school reads
+      // Use supabaseAdmin for all queries — portal admin is RLS-blocked from cross-school reads
       const db = supabaseAdmin ?? supabase;
-      const [{ data: memberAdmins }, { count: students }, { count: staff }, { count: activeStudents }] = await Promise.all([
-        supabase.from("school_memberships").select("profile_id, profiles(id, full_name, phone)").eq("school_id", s.id).eq("role", "admin"),
+      const [{ data: memberAdmins }, { data: profileAdmins }, { count: students }, { count: staff }, { count: activeStudents }] = await Promise.all([
+        db.from("school_memberships").select("profile_id, profiles(id, full_name, phone)").eq("school_id", s.id).eq("role", "admin"),
+        db.from("profiles").select("id, full_name, phone").eq("school_id", s.id).eq("role", "admin"),
         db.from("students").select("id", { count: "exact", head: true }).eq("school_id", s.id),
         db.from("profiles").select("id", { count: "exact", head: true }).eq("school_id", s.id).eq("role", "staff"),
         db.from("students").select("id", { count: "exact", head: true }).eq("school_id", s.id).eq("enrollment_status", "active"),
       ]);
-      const admins: SchoolAdmin[] = (memberAdmins ?? []).map((m: any) => m.profiles).filter(Boolean);
+      // Merge admins from memberships + direct school_id, de-duplicate by id
+      const adminsFromMemberships: SchoolAdmin[] = (memberAdmins ?? []).map((m: any) => m.profiles).filter(Boolean);
+      const adminsFromProfiles: SchoolAdmin[] = (profileAdmins ?? []) as SchoolAdmin[];
+      const adminMap = new Map<string, SchoolAdmin>();
+      [...adminsFromMemberships, ...adminsFromProfiles].forEach(a => { if (a?.id) adminMap.set(a.id, a); });
+      const admins: SchoolAdmin[] = [...adminMap.values()];
       enriched.push({ ...s, admins, activeStudents: activeStudents ?? 0 });
       totalStudents += students ?? 0;
       totalStaff += staff ?? 0;
