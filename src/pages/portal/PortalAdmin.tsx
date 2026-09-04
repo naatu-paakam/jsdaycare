@@ -233,6 +233,7 @@ export default function PortalAdmin() {
   const [managedSchool, setManagedSchool] = useState<SchoolWithAdmins | null>(null);
   const [schoolSearch, setSchoolSearch] = useState("");
   const [deleteSchoolConfirm, setDeleteSchoolConfirm] = useState<SchoolWithAdmins | null>(null);
+  const [deleteUserConfirm, setDeleteUserConfirm] = useState<UserProfile | null>(null);
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState("");
   const [editName, setEditName] = useState("");
@@ -496,6 +497,16 @@ export default function PortalAdmin() {
         return [...filtered, ...(data as unknown as typeof prev)];
       });
     }
+  }
+
+  async function deleteUser(userId: string) {
+    // Remove memberships, profile, then auth user via admin API
+    await supabase.from("school_memberships").delete().eq("profile_id", userId);
+    await supabase.from("profiles").delete().eq("id", userId);
+    // Auth user deletion requires service role — attempt it
+    await supabase.auth.admin.deleteUser(userId).catch(() => {});
+    setUserProfiles(prev => prev.filter(u => u.id !== userId));
+    setDeleteUserConfirm(null);
   }
 
   async function deleteSchool(schoolId: string) {
@@ -823,14 +834,23 @@ export default function PortalAdmin() {
                             Active
                           </span>
                         </td>
-                        <td className="px-5 py-3 text-right">
-                          <button
-                            title="Manage user"
-                            onClick={() => setEditingUser(u)}
-                            className="p-1.5 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
-                          >
-                            <Pencil size={14} />
-                          </button>
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-1 justify-end">
+                            <button
+                              title="Manage user"
+                              onClick={() => setEditingUser(u)}
+                              className="p-1.5 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              title="Delete user"
+                              onClick={() => setDeleteUserConfirm(u)}
+                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -1247,6 +1267,28 @@ export default function PortalAdmin() {
                 className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700"
               >
                 Delete School
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete user confirmation */}
+      {deleteUserConfirm && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+            <h3 className="font-semibold text-gray-900">Delete user?</h3>
+            <p className="text-sm text-gray-600">
+              Permanently delete <span className="font-medium">{deleteUserConfirm.full_name ?? deleteUserConfirm.login_id ?? "this user"}</span>? They will lose all access immediately.
+            </p>
+            <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">⚠ This action cannot be undone.</p>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setDeleteUserConfirm(null)} className="btn-secondary">Cancel</button>
+              <button
+                onClick={() => deleteUser(deleteUserConfirm.id)}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700"
+              >
+                Delete User
               </button>
             </div>
           </div>

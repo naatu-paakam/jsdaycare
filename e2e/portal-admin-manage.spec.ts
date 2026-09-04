@@ -129,6 +129,17 @@ test.describe("Portal admin — Users tab manage", () => {
     }
   });
 
+  test("TC-portal-users-delete-icon: Each active user row has a delete (trash) icon", async ({ page }) => {
+    await expect(page.locator("tbody tr button[title='Delete user']").first()).toBeVisible({ timeout: 5_000 });
+  });
+
+  test("TC-portal-users-delete-confirm: Delete icon shows confirm dialog with warning", async ({ page }) => {
+    await page.locator("tbody tr button[title='Delete user']").first().click();
+    await expect(page.getByText(/delete user\?/i)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText(/cannot be undone/i)).toBeVisible();
+    await page.getByRole("button", { name: /cancel/i }).click();
+  });
+
   test("TC-portal-users-invite-delete-button: Pending invite rows have delete button", async ({ page }) => {
     const invitedRow = page.locator("tbody tr").filter({ has: page.getByText("Invited") }).first();
     if (await invitedRow.isVisible({ timeout: 3_000 }).catch(() => false)) {
