@@ -346,6 +346,11 @@ export default function PortalAdmin() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  async function deleteInvite(inviteId: string) {
+    await supabase.from("invitations").delete().eq("id", inviteId);
+    setPendingInvites(prev => prev.filter(i => i.id !== inviteId));
+  }
+
   async function removeUserFromSchool(profileId: string, schoolId: string) {
     setRemoving(true);
     await supabase.from("school_memberships")
@@ -713,8 +718,19 @@ export default function PortalAdmin() {
                         <td className="px-5 py-3">
                           <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">Invited</span>
                         </td>
-                        <td className="px-5 py-3 text-xs text-gray-400">
-                          {inv.expires_at ? `Expires ${new Date(inv.expires_at).toLocaleDateString()}` : "—"}
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-gray-400">
+                              {inv.expires_at ? `Expires ${new Date(inv.expires_at).toLocaleDateString()}` : "—"}
+                            </span>
+                            <button
+                              onClick={() => deleteInvite(inv.id)}
+                              title="Delete invite"
+                              className="p-1 text-gray-300 hover:text-red-500 transition-colors rounded"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
