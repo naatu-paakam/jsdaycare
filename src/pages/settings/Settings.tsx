@@ -18,7 +18,7 @@ const TIMEZONES = [
 export default function Settings() {
   const { profile } = useAuth();
   const [school, setSchool] = useState<School | null>(null);
-  const [form, setForm] = useState({ name: "", timezone: "America/Los_Angeles" });
+  const [form, setForm] = useState({ name: "", timezone: "America/Los_Angeles", phone: "", email: "", street: "", city: "", state: "", zip: "" });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -28,7 +28,11 @@ export default function Settings() {
     if (!profile?.school_id) return;
     supabase.from("schools").select("*").eq("id", profile.school_id).single()
       .then(({ data }) => {
-        if (data) { setSchool(data); setForm({ name: data.name, timezone: data.timezone ?? "America/Los_Angeles" }); }
+        if (data) {
+          const a = (data.address as { street?: string; city?: string; state?: string; zip?: string } | null) ?? {};
+          setSchool(data);
+          setForm({ name: data.name, timezone: data.timezone ?? "America/Los_Angeles", phone: data.phone ?? "", email: data.email ?? "", street: a.street ?? "", city: a.city ?? "", state: a.state ?? "", zip: a.zip ?? "" });
+        }
       });
   }, [profile?.school_id]);
 
@@ -130,7 +134,8 @@ export default function Settings() {
   async function saveSettings() {
     if (!school) return;
     setSaving(true);
-    await supabase.from("schools").update({ name: form.name, timezone: form.timezone }).eq("id", school.id);
+    const address = (form.street || form.city) ? { street: form.street, city: form.city, state: form.state, zip: form.zip } : null;
+    await supabase.from("schools").update({ name: form.name, timezone: form.timezone, phone: form.phone || null, email: form.email || null, address }).eq("id", school.id);
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -153,6 +158,25 @@ export default function Settings() {
             <select className="input w-full" value={form.timezone} onChange={e => setForm(f => ({...f, timezone: e.target.value}))}>
               {TIMEZONES.map(tz => <option key={tz} value={tz}>{tz}</option>)}
             </select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Phone</label>
+              <input className="input w-full" value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))} placeholder="e.g. 408-555-0100" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Email</label>
+              <input type="email" className="input w-full" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))} placeholder="info@school.com" />
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-1 block">Address</label>
+            <input className="input w-full mb-2" value={form.street} onChange={e => setForm(f => ({...f, street: e.target.value}))} placeholder="Street address" />
+            <div className="grid grid-cols-3 gap-2">
+              <input className="input" value={form.city} onChange={e => setForm(f => ({...f, city: e.target.value}))} placeholder="City" />
+              <input className="input" value={form.state} onChange={e => setForm(f => ({...f, state: e.target.value}))} placeholder="State" />
+              <input className="input" value={form.zip} onChange={e => setForm(f => ({...f, zip: e.target.value}))} placeholder="ZIP" />
+            </div>
           </div>
           <button onClick={saveSettings} disabled={saving} className="btn-primary flex items-center gap-2">
             <Save size={15} />{saved ? "Saved!" : saving ? "Saving..." : "Save Changes"}

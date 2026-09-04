@@ -73,19 +73,33 @@ interface InviteTarget {
 type TabKey = "schools" | "users";
 
 // ─── Edit / Manage User Modal ─────────────────────────────────────────────────
-function EditUserModal({ user, memberships, schools, onSave, onRemoveFromSchool, onClose }: {
+function EditUserModal({ user, memberships, schools, onSave, onRemoveFromSchool, onAssignSchool, onClose }: {
   user: UserProfile;
   memberships: { school_id: string; schools?: { name: string } | null }[];
   schools: { id: string; name: string }[];
   onSave: (userId: string, updates: { full_name: string; role: string; phone: string }) => Promise<{ message: string } | null | undefined>;
   onRemoveFromSchool: (schoolId: string, schoolName: string) => void;
+  onAssignSchool: (schoolId: string) => Promise<void>;
   onClose: () => void;
 }) {
-  const [fullName, setFullName] = useState(user.full_name ?? "");
-  const [role, setRole]         = useState(user.role);
-  const [phone, setPhone]       = useState(user.phone ?? "");
-  const [saving, setSaving]     = useState(false);
-  const [error, setError]       = useState("");
+  const [fullName, setFullName]     = useState(user.full_name ?? "");
+  const [role, setRole]             = useState(user.role);
+  const [phone, setPhone]           = useState(user.phone ?? "");
+  const [assignSchoolId, setAssignSchoolId] = useState("");
+  const [assigning, setAssigning]   = useState(false);
+  const [saving, setSaving]         = useState(false);
+  const [error, setError]           = useState("");
+
+  const currentSchoolIds = new Set(memberships.map(m => m.school_id));
+  const availableSchools = schools.filter(s => !currentSchoolIds.has(s.id));
+
+  async function handleAssign() {
+    if (!assignSchoolId) return;
+    setAssigning(true);
+    await onAssignSchool(assignSchoolId);
+    setAssignSchoolId("");
+    setAssigning(false);
+  }
 
   async function handleSave() {
     if (!fullName.trim()) { setError("Name is required"); return; }
@@ -122,25 +136,45 @@ function EditUserModal({ user, memberships, schools, onSave, onRemoveFromSchool,
             </select>
           </div>
 
-          {/* Schools — with remove per school */}
-          {memberships.length > 0 && (
-            <div>
-              <label className="label">Schools</label>
-              <div className="space-y-1.5">
-                {memberships.map(m => (
-                  <div key={m.school_id} className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-700">{m.schools?.name ?? m.school_id}</span>
-                    <button
-                      onClick={() => onRemoveFromSchool(m.school_id, m.schools?.name ?? m.school_id)}
-                      className="text-xs text-red-500 hover:text-red-700 hover:underline"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
+          {/* Schools — only for admin/staff (parents get school from student contacts) */}
+          {role !== "parent" && <div>
+            <label className="label">Schools</label>
+            <div className="space-y-1.5">
+              {memberships.map(m => (
+                <div key={m.school_id} className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg">
+                  <span className="text-sm text-gray-700">{m.schools?.name ?? m.school_id}</span>
+                  <button
+                    onClick={() => onRemoveFromSchool(m.school_id, m.schools?.name ?? m.school_id)}
+                    className="text-xs text-red-500 hover:text-red-700 hover:underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              {memberships.length === 0 && (
+                <p className="text-xs text-gray-400 px-3 py-2">No schools assigned</p>
+              )}
             </div>
-          )}
+            {availableSchools.length > 0 && (
+              <div className="flex gap-2 mt-2">
+                <select
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  value={assignSchoolId}
+                  onChange={e => setAssignSchoolId(e.target.value)}
+                >
+                  <option value="">+ Assign to school…</option>
+                  {availableSchools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+                <button
+                  onClick={handleAssign}
+                  disabled={!assignSchoolId || assigning}
+                  className="px-3 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors"
+                >
+                  {assigning ? "…" : "Assign"}
+                </button>
+              </div>
+            )}
+          </div>}
         </div>
         <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
           <button onClick={onClose} className="btn-secondary">Cancel</button>
@@ -183,6 +217,9 @@ export default function PortalAdmin() {
   const [showCreate, setShowCreate] = useState(false);
   const [createName, setCreateName] = useState("");
   const [createTz, setCreateTz] = useState("America/New_York");
+  const [createPhone, setCreatePhone] = useState("");
+  const [createEmail, setCreateEmail] = useState("");
+  const [createAddress, setCreateAddress] = useState({ street: "", city: "", state: "", zip: "" });
   const [creating, setCreating] = useState(false);
   const [createAssignUserId, setCreateAssignUserId] = useState("");
   const [createProfileSearch, setCreateProfileSearch] = useState("");
@@ -194,6 +231,8 @@ export default function PortalAdmin() {
 
   // Manage school panel
   const [managedSchool, setManagedSchool] = useState<SchoolWithAdmins | null>(null);
+  const [schoolSearch, setSchoolSearch] = useState("");
+  const [deleteSchoolConfirm, setDeleteSchoolConfirm] = useState<SchoolWithAdmins | null>(null);
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState("");
   const [editName, setEditName] = useState("");
@@ -328,7 +367,11 @@ export default function PortalAdmin() {
 
     const { data: newSchool } = await supabase
       .from("schools")
-      .insert({ name: createName.trim(), timezone: createTz })
+      .insert({
+        name: createName.trim(), timezone: createTz,
+        phone: createPhone.trim() || null, email: createEmail.trim() || null,
+        address: (createAddress.street || createAddress.city) ? createAddress : null,
+      })
       .select("id, name")
       .single();
 
@@ -439,6 +482,26 @@ export default function PortalAdmin() {
       setEditingUser(null);
     }
     return error;
+  }
+
+  async function assignUserToSchool(userId: string, schoolId: string) {
+    await supabase.from("school_memberships").upsert({ profile_id: userId, school_id: schoolId, role: editingUser?.role ?? "staff" });
+    // Refresh memberships by reloading users
+    const { data } = await supabase.from("school_memberships")
+      .select("profile_id, school_id, schools(name)")
+      .eq("profile_id", userId);
+    if (data) {
+      setMemberships(prev => {
+        const filtered = prev.filter(m => m.profile_id !== userId);
+        return [...filtered, ...(data as unknown as typeof prev)];
+      });
+    }
+  }
+
+  async function deleteSchool(schoolId: string) {
+    await supabase.from("schools").delete().eq("id", schoolId);
+    setSchools(prev => prev.filter(s => s.id !== schoolId));
+    setDeleteSchoolConfirm(null);
   }
 
   async function deleteInvite(inviteId: string) {
@@ -588,57 +651,85 @@ export default function PortalAdmin() {
         {/* Schools tab */}
         {activeTab === "schools" && (
           <div className="bg-white rounded-xl border border-gray-200">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h2 className="font-semibold text-gray-900">Schools</h2>
-              <button
-                onClick={() => setShowCreate(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors"
-              >
-                <Plus size={14} /> Create school
-              </button>
+            <div className="px-5 py-4 border-b border-gray-100 space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-gray-900">Schools</h2>
+                <button
+                  onClick={() => setShowCreate(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors"
+                >
+                  <Plus size={14} /> Create school
+                </button>
+              </div>
+              <input
+                value={schoolSearch}
+                onChange={e => setSchoolSearch(e.target.value)}
+                placeholder="Search schools..."
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+              />
             </div>
 
-            {schools.length === 0 ? (
-              <p className="text-center text-gray-400 py-12">No schools yet</p>
-            ) : (
+            {(() => {
+              const filteredSchools = schools.filter(s =>
+                s.name.toLowerCase().includes(schoolSearch.toLowerCase())
+              );
+              return filteredSchools.length === 0 ? (
+                <p className="text-center text-gray-400 py-12">No schools found</p>
+              ) : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-100">
                     <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Name</th>
                     <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Timezone</th>
+                    <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Address</th>
+                    <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Phone</th>
                     <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Admins</th>
-                    <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Created</th>
-                    <th className="px-5 py-2.5" />
+                    <th className="px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {schools.map(s => (
+                  {filteredSchools.map(s => (
                     <tr key={s.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                       <td className="px-5 py-3 font-medium text-gray-900">{s.name}</td>
                       <td className="px-5 py-3 text-gray-500">{s.timezone}</td>
+                      <td className="px-5 py-3 text-gray-500 text-xs">
+                        {s.address ? `${s.address.city ?? ""}${s.address.state ? ", " + s.address.state : ""}` : "—"}
+                      </td>
+                      <td className="px-5 py-3 text-gray-500 text-xs">{s.phone ?? "—"}</td>
                       <td className="px-5 py-3 text-gray-500">{s.admins.length}</td>
                       <td className="px-5 py-3 text-gray-500">{new Date(s.created_at).toLocaleDateString()}</td>
                       <td className="px-5 py-3">
-                        <button
-                          onClick={() => {
-                            setManagedSchool(s);
-                            setEditName(s.name);
-                            setEditingName(false);
-                            setAssignProfileId("");
-                            setAssignProfileSearch("");
-                            setInviteError("");
-                            loadAdminInvite(s.id);
-                          }}
-                          className="flex items-center gap-1 text-orange-500 hover:text-orange-700 text-xs font-medium"
-                        >
-                          Manage <ChevronRight size={12} />
-                        </button>
+                        <div className="flex items-center gap-1 justify-end">
+                          <button
+                            title="Manage school"
+                            onClick={() => {
+                              setManagedSchool(s);
+                              setEditName(s.name);
+                              setEditingName(false);
+                              setAssignProfileId("");
+                              setAssignProfileSearch("");
+                              setInviteError("");
+                              loadAdminInvite(s.id);
+                            }}
+                            className="p-1.5 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            title="Delete school"
+                            onClick={() => setDeleteSchoolConfirm(s)}
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            )}
+              );
+            })()}
           </div>
         )}
 
@@ -867,6 +958,32 @@ export default function PortalAdmin() {
                     >
                       {TIMEZONES.map(tz => <option key={tz} value={tz}>{tz}</option>)}
                     </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Phone</label>
+                      <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+                        value={createPhone} onChange={e => setCreatePhone(e.target.value)} placeholder="e.g. 555-1234" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Email</label>
+                      <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+                        value={createEmail} onChange={e => setCreateEmail(e.target.value)} placeholder="info@school.com" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Address</label>
+                    <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 mb-2"
+                      value={createAddress.street} onChange={e => setCreateAddress(a => ({ ...a, street: e.target.value }))} placeholder="Street address" />
+                    <div className="grid grid-cols-3 gap-2">
+                      <input className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+                        value={createAddress.city} onChange={e => setCreateAddress(a => ({ ...a, city: e.target.value }))} placeholder="City" />
+                      <input className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+                        value={createAddress.state} onChange={e => setCreateAddress(a => ({ ...a, state: e.target.value }))} placeholder="State" />
+                      <input className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+                        value={createAddress.zip} onChange={e => setCreateAddress(a => ({ ...a, zip: e.target.value }))} placeholder="ZIP" />
+                    </div>
                   </div>
 
                   {/* Assign existing admin */}
@@ -1108,10 +1225,33 @@ export default function PortalAdmin() {
               setEditingUser(null);
               setRemoveConfirm({ profileId: editingUser.id, profileName: editingUser.full_name ?? "User", schoolId, schoolName });
             }}
+            onAssignSchool={schoolId => assignUserToSchool(editingUser.id, schoolId)}
             onClose={() => setEditingUser(null)}
           />
         );
       })()}
+
+      {/* Delete school confirmation */}
+      {deleteSchoolConfirm && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+            <h3 className="font-semibold text-gray-900">Delete school?</h3>
+            <p className="text-sm text-gray-600">
+              Delete <span className="font-medium">{deleteSchoolConfirm.name}</span>? This will permanently remove the school and all associated data.
+            </p>
+            <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">⚠ This action cannot be undone.</p>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setDeleteSchoolConfirm(null)} className="btn-secondary">Cancel</button>
+              <button
+                onClick={() => deleteSchool(deleteSchoolConfirm.id)}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700"
+              >
+                Delete School
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Remove confirmation modal */}
       {removeConfirm && (

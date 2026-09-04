@@ -28,6 +28,9 @@ export interface School {
   id: string;
   name: string;
   timezone: string;
+  address?: { street?: string; city?: string; state?: string; zip?: string } | null;
+  phone?: string | null;
+  email?: string | null;
   operating_hours?: Record<string, unknown>;
   ratio_rules?: Record<string, unknown>;
   created_at: string;
