@@ -736,8 +736,8 @@ export default function PortalAdmin() {
                       <td className="px-5 py-3 text-gray-500 text-xs">{s.phone ?? "—"}</td>
                       <td className="px-5 py-3">
                         {s.activeStudents > 0 ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
-                            ⚠ {s.activeStudents} active
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                            {s.activeStudents} active
                           </span>
                         ) : (
                           <span className="text-gray-400 text-sm">0</span>
