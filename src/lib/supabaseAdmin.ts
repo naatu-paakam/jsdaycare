@@ -4,7 +4,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
-const SERVICE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_KEY as string;
+const SERVICE_KEY = import.meta.env.VITE_SUPABASE_SECRET_KEY as string;
 
 export const supabaseAdmin = SERVICE_KEY
   ? createClient(SUPABASE_URL, SERVICE_KEY, {

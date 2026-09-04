@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 async function loginAsPortalAdmin(page: import("@playwright/test").Page) {
   await page.goto("/login");
   await page.fill('input[type="text"], input[type="email"]', "portal@daycareportal.com");
-  await page.fill('input[type="password"]', "DayCarePortal@2026");
+  await page.fill('input[type="password"]', process.env.VITE_TEST_PORTAL_PASSWORD ?? "");
   await page.click('button[type="submit"]');
   await page.waitForURL("**/portal", { timeout: 15_000 });
 }

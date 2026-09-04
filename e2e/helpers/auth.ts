@@ -10,13 +10,13 @@ async function loginAs(page: Page, email: string, password: string) {
 }
 
 export async function loginAsAdmin(page: Page) {
-  await loginAs(page, "admin@jsdaycare.com", "JsDaycare@2026");
+  await loginAs(page, "admin@jsdaycare.com", process.env.VITE_TEST_PASSWORD ?? "");
 }
 
 export async function loginAsTeacher(page: Page) {
-  await loginAs(page, "teacher@jsdaycare.com", "JsDaycare@2026");
+  await loginAs(page, "teacher@jsdaycare.com", process.env.VITE_TEST_PASSWORD ?? "");
 }
 
 export async function loginAsParent(page: Page) {
-  await loginAs(page, "parent@jsdaycare.com", "JsDaycare@2026");
+  await loginAs(page, "parent@jsdaycare.com", process.env.VITE_TEST_PASSWORD ?? "");
 }

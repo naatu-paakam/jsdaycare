@@ -10,7 +10,7 @@ config({ path: ".env" });
 export default async function globalTeardown() {
   const supabase = createClient(
     process.env.VITE_SUPABASE_URL!,
-    process.env.VITE_SUPABASE_SERVICE_KEY!,
+    process.env.VITE_SUPABASE_SECRET_KEY!,
   );
 
   const results = await Promise.all([

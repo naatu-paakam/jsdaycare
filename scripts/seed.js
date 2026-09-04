@@ -16,10 +16,10 @@ import { config } from "dotenv";
 config({ path: new URL("../.env", import.meta.url).pathname });
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SERVICE_KEY  = process.env.VITE_SUPABASE_SERVICE_KEY;
+const SERVICE_KEY  = process.env.VITE_SUPABASE_SECRET_KEY;
 
 if (!SUPABASE_URL || !SERVICE_KEY) {
-  console.error("❌ Missing VITE_SUPABASE_URL or VITE_SUPABASE_SERVICE_KEY in .env");
+  console.error("❌ Missing VITE_SUPABASE_URL or VITE_SUPABASE_SECRET_KEY in .env");
   process.exit(1);
 }
 
@@ -101,17 +101,17 @@ async function seed() {
   log("Admin: Jaya Bijjala (admin@jsdaycare.com)");
 
   // Teacher
-  const TEACHER_ID = await upsertAuthUser("teacher@jsdaycare.com", "JsDaycare@2026", "Nidhi Patel");
+  const TEACHER_ID = await upsertAuthUser("teacher@jsdaycare.com", process.env.VITE_TEST_PASSWORD ?? "", "Nidhi Patel");
   await upsertProfile(TEACHER_ID, "staff", "Nidhi Patel", "+1 (650) 555-0101");
   log("Teacher: Nidhi Patel (teacher@jsdaycare.com)");
 
   // Parent
-  const PARENT_ID = await upsertAuthUser("parent@jsdaycare.com", "JsDaycare@2026", "Arudeepa Kumar");
+  const PARENT_ID = await upsertAuthUser("parent@jsdaycare.com", process.env.VITE_TEST_PASSWORD ?? "", "Arudeepa Kumar");
   await upsertProfile(PARENT_ID, "parent", "Arudeepa Kumar", "+1 (332) 555-0200");
   log("Parent: Arudeepa Kumar (parent@jsdaycare.com)");
 
   // Portal Admin — platform-level super-admin, no school_id
-  const PORTAL_ADMIN_ID = await upsertAuthUser("portal@daycareportal.com", "DayCarePortal@2026", "Portal Administrator");
+  const PORTAL_ADMIN_ID = await upsertAuthUser("portal@daycareportal.com", process.env.VITE_TEST_PORTAL_PASSWORD ?? "", "Portal Administrator");
   await sb.from("profiles").upsert(
     { id: PORTAL_ADMIN_ID, school_id: null, role: "portal_admin", full_name: "Portal Administrator", phone: null },
     { onConflict: "id" }

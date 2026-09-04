@@ -13,7 +13,7 @@ Browser (React SPA)
     │       └── PostgreSQL with Row Level Security
     │
     └── /api/register-user (Netlify serverless function)
-            └── Supabase service role key (server-side only, never in browser)
+            └── Supabase secret key (server-side only, never in browser)
 ```
 
 ---
@@ -30,7 +30,7 @@ Browser (React SPA)
 - `netlify/functions/register-user.ts` handles user account creation
 - Runs Node.js 20 on Netlify's edge, has access to server-only env vars
 - Called from `Register.tsx` via `POST /api/register-user`
-- This is how the Supabase service role key is kept server-side (never in browser)
+- This is how the Supabase secret key is kept server-side (never in browser)
 
 ### Database — Supabase (ap-south-1)
 - PostgreSQL with Row Level Security (RLS) on every table
@@ -45,9 +45,9 @@ Browser (React SPA)
 | Variable | Where | Purpose |
 |---|---|---|
 | `VITE_SUPABASE_URL` | Netlify + local `.env` | Supabase project URL (safe to expose) |
-| `VITE_SUPABASE_ANON_KEY` | Netlify + local `.env` | Supabase anon key (RLS-enforced, safe) |
-| `VITE_SUPABASE_SERVICE_KEY` | Local `.env` only | Service key for PortalAdmin cross-school queries (not needed for production users) |
-| `SUPABASE_SERVICE_KEY` | Netlify server env only | Service key for serverless function (NEVER in browser) |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Netlify + local `.env` | Supabase publishable key (RLS-enforced, safe to expose) |
+| `VITE_SUPABASE_SECRET_KEY` | Local `.env` only | Secret key for PortalAdmin cross-school queries (not needed for production users) |
+| `SUPABASE_SECRET_KEY` | Netlify server env only | Service key for serverless function (NEVER in browser) |
 
 > ⚠️ Never commit `.env` to git. It is gitignored.
 

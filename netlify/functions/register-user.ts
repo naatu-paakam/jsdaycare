@@ -2,7 +2,7 @@
  * Netlify serverless function: register-user
  *
  * Handles user registration using the Supabase service role key — server-side only.
- * The SUPABASE_SERVICE_KEY env var is set in Netlify's server environment and is
+ * The SUPABASE_SECRET_KEY env var is set in Netlify's server environment and is
  * NEVER exposed to the browser.
  *
  * POST /api/register-user
@@ -12,7 +12,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL         = process.env.VITE_SUPABASE_URL!;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY!; // server-only, NOT VITE_ prefixed
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY!; // server-only, NOT VITE_ prefixed
 
 export default async (req: Request) => {
   if (req.method !== "POST") {
@@ -32,7 +32,7 @@ export default async (req: Request) => {
     return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
   }
 
-  if (!SUPABASE_SERVICE_KEY) {
+  if (!SUPABASE_SECRET_KEY) {
     return new Response(JSON.stringify({ error: "Registration service unavailable" }), { status: 503 });
   }
 
@@ -42,10 +42,10 @@ export default async (req: Request) => {
     return new Response(JSON.stringify({ error: "Missing required fields" }), { status: 400 });
   }
 
-  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
-  const supabase = createClient(SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY!);
+  const supabase = createClient(SUPABASE_URL, process.env.VITE_SUPABASE_PUBLISHABLE_KEY!);
 
   // Determine auth email
   const authEmail = email?.trim() || `${loginId.trim().toLowerCase()}@daycareportal.internal`;

@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { loginAsAdmin } from "./helpers/auth";
 
 const ADMIN_EMAIL = "admin@jsdaycare.com";
-const ADMIN_PASSWORD = "JsDaycare@2026";
+const ADMIN_PASSWORD = process.env.VITE_TEST_PASSWORD ?? "";
 
 test("TC-admin-login: navigates to /login and logs in successfully", async ({ page }) => {
   await page.goto("/");

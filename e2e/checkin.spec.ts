@@ -5,7 +5,7 @@ const SCHOOL_ID   = process.env.VITE_TEST_SCHOOL_ID ?? "08f7413b-1aa9-4679-b80b-
 const CHECKIN_URL = `/checkin?school=${SCHOOL_ID}`;
 const VALID_PIN   = "100001"; // Arudeepa Kumar → Adrith Ram (single student)
 const SB_URL      = process.env.VITE_SUPABASE_URL ?? "";
-const SB_SK       = process.env.VITE_SUPABASE_SERVICE_KEY ?? "";
+const SB_SK       = process.env.VITE_SUPABASE_SECRET_KEY ?? "";
 
 // Helper: enter a 6-digit PIN via the on-screen keypad
 async function enterPin(page: import("@playwright/test").Page, pin: string) {

@@ -26,7 +26,7 @@ echo "🧹 Purging TC-* test data from DB..."
 node -e "
 require('dotenv').config({ path: '.env' });
 const { createClient } = require('@supabase/supabase-js');
-const sb = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_SERVICE_KEY);
+const sb = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_SECRET_KEY);
 Promise.all([
   sb.from('students').delete().ilike('first_name','TC-%'),
   sb.from('food_items').delete().ilike('name','TC-%'),

@@ -16,7 +16,7 @@ import { test, expect } from "@playwright/test";
 async function loginAsStaff(page: any) {
   await page.goto("/login");
   await page.locator("input[type='text'], input[type='email']").fill("teacher@jsdaycare.com");
-  await page.locator("input[type='password']").fill("JsDaycare@2026");
+  await page.locator("input[type='password']").fill(process.env.VITE_TEST_PASSWORD ?? "");
   await page.locator("button[type='submit']").click();
   await page.waitForURL("**/home", { timeout: 10_000 });
 }

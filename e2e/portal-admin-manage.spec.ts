@@ -20,7 +20,7 @@ import { test, expect } from "@playwright/test";
 async function loginAsPortalAdmin(page: any) {
   await page.goto("/login");
   await page.locator("input[type='text'], input[type='email']").fill("portal@daycareportal.com");
-  await page.locator("input[type='password']").fill("DayCarePortal@2026");
+  await page.locator("input[type='password']").fill(process.env.VITE_TEST_PORTAL_PASSWORD ?? "");
   await page.locator("button[type='submit']").click();
   await page.waitForURL("**/portal", { timeout: 10_000 });
 }
@@ -174,7 +174,7 @@ test.describe("School admin — Settings page with address", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/login");
     await page.locator("input[type='text'], input[type='email']").fill("admin@jsdaycare.com");
-    await page.locator("input[type='password']").fill("JsDaycare@2026");
+    await page.locator("input[type='password']").fill(process.env.VITE_TEST_PASSWORD ?? "");
     await page.locator("button[type='submit']").click();
     await page.waitForURL("**/home", { timeout: 10_000 });
     await page.goto("/settings");
