@@ -500,18 +500,20 @@ export default function PortalAdmin() {
   }
 
   async function deleteUser(userId: string) {
-    // Remove memberships, profile, then auth user via admin API
-    await supabase.from("school_memberships").delete().eq("profile_id", userId);
-    await supabase.from("profiles").delete().eq("id", userId);
-    // Auth user deletion requires service role — attempt it
+    // Use security-definer RPC: nullifies loose refs, removes memberships, deletes profile
+    await supabase.rpc("delete_portal_user", { p_user_id: userId });
+    // Auth user deletion (service role via admin API — best-effort)
     await supabase.auth.admin.deleteUser(userId).catch(() => {});
     setUserProfiles(prev => prev.filter(u => u.id !== userId));
+    setMemberships(prev => prev.filter(m => m.profile_id !== userId));
     setDeleteUserConfirm(null);
   }
 
   async function deleteSchool(schoolId: string) {
-    await supabase.from("schools").delete().eq("id", schoolId);
+    // Use security-definer RPC: nullifies profiles.school_id, deletes students cascade, then school cascade
+    await supabase.rpc("delete_school_cascade", { p_school_id: schoolId });
     setSchools(prev => prev.filter(s => s.id !== schoolId));
+    setUserProfiles(prev => prev.map(u => u.school_id === schoolId ? { ...u, school_id: null } : u));
     setDeleteSchoolConfirm(null);
   }
 
