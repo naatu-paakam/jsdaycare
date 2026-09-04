@@ -697,6 +697,7 @@ export default function PortalAdmin() {
                     <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Address</th>
                     <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Phone</th>
                     <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Admins</th>
+                    <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Created</th>
                     <th className="px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide text-right">Actions</th>
                   </tr>
                 </thead>
