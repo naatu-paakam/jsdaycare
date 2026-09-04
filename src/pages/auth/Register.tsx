@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { Baby } from "lucide-react";
 
 interface Invitation {
@@ -81,55 +80,27 @@ export default function Register() {
     const authEmail = email.trim() || `${loginId.trim().toLowerCase()}@daycareportal.internal`;
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
 
-    // Use admin client to create user with email_confirm=true (no verification email)
-    if (!supabaseAdmin) {
-      setFormError("Registration service unavailable. Contact your admin.");
-      setSubmitting(false);
-      return;
-    }
-
-    const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
-      email: authEmail,
-      password,
-      email_confirm: true,  // skip email verification
-      user_metadata: { full_name: fullName, phone: phone.trim() },
+    // Call server-side function (service key stays server-side, never in browser bundle)
+    const res = await fetch("/api/register-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        loginId: loginId.trim(), firstName: firstName.trim(), lastName: lastName.trim(),
+        email: email.trim(), phone: phone.trim(), password,
+        invitationToken: token, schoolId: invitation!.school_id,
+        role: invitation!.role, permanent: invitation!.permanent,
+      }),
     });
 
-    if (createErr) {
-      setFormError(createErr.message.includes("already been registered")
-        ? "This User ID or email is already taken. Please choose another."
-        : createErr.message);
+    const result = await res.json();
+    if (!res.ok || result.error) {
+      setFormError(result.error ?? "Registration failed. Please try again.");
       setSubmitting(false);
       return;
     }
 
-    const userId = newUser.user?.id;
-    if (!userId) { setFormError("Account creation failed. Please try again."); setSubmitting(false); return; }
-
-    // Create profile
-    await supabaseAdmin.from("profiles").upsert({
-      id: userId,
-      school_id: invitation!.school_id,
-      role: invitation!.role,
-      full_name: fullName,
-      phone: phone.trim() || null,
-      login_id: loginId.trim().toLowerCase(),
-    }, { onConflict: "id" });
-
-    // Add to school_memberships
-    await supabaseAdmin.from("school_memberships").upsert({
-      profile_id: userId,
-      school_id: invitation!.school_id,
-      role: invitation!.role,
-    }, { onConflict: "profile_id,school_id" });
-
-    // Mark invitation as used (only for non-permanent invites)
-    if (!invitation!.permanent) {
-      await supabase.rpc("use_invitation", { p_token: token });
-    }
-
-    // Sign in immediately (email confirmation already done by admin API)
-    const { error: signInErr } = await supabase.auth.signInWithPassword({ email: authEmail, password });
+    // Sign in immediately (user was created with email_confirm=true on server)
+    const { error: signInErr } = await supabase.auth.signInWithPassword({ email: result.authEmail, password });
     if (signInErr) {
       // Fallback: show success and redirect to login
       setSuccess(true);
