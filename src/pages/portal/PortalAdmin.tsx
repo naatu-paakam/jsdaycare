@@ -23,6 +23,7 @@ interface SchoolAdmin {
 
 interface SchoolWithAdmins extends School {
   admins: SchoolAdmin[];
+  activeStudents: number;
 }
 
 interface Profile {
@@ -317,13 +318,14 @@ export default function PortalAdmin() {
     let totalStaff = 0;
 
     for (const s of schoolData) {
-      const [{ data: memberAdmins }, { count: students }, { count: staff }] = await Promise.all([
+      const [{ data: memberAdmins }, { count: students }, { count: staff }, { count: activeStudents }] = await Promise.all([
         supabase.from("school_memberships").select("profile_id, profiles(id, full_name, phone)").eq("school_id", s.id).eq("role", "admin"),
         supabase.from("students").select("id", { count: "exact", head: true }).eq("school_id", s.id),
         supabase.from("profiles").select("id", { count: "exact", head: true }).eq("school_id", s.id).eq("role", "staff"),
+        supabase.from("students").select("id", { count: "exact", head: true }).eq("school_id", s.id).eq("enrollment_status", "active"),
       ]);
       const admins: SchoolAdmin[] = (memberAdmins ?? []).map((m: any) => m.profiles).filter(Boolean);
-      enriched.push({ ...s, admins });
+      enriched.push({ ...s, admins, activeStudents: activeStudents ?? 0 });
       totalStudents += students ?? 0;
       totalStaff += staff ?? 0;
     }
@@ -696,6 +698,7 @@ export default function PortalAdmin() {
                     <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Timezone</th>
                     <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Address</th>
                     <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Phone</th>
+                    <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Students</th>
                     <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Admins</th>
                     <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Created</th>
                     <th className="px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide text-right">Actions</th>
@@ -710,6 +713,15 @@ export default function PortalAdmin() {
                         {s.address ? `${s.address.city ?? ""}${s.address.state ? ", " + s.address.state : ""}` : "—"}
                       </td>
                       <td className="px-5 py-3 text-gray-500 text-xs">{s.phone ?? "—"}</td>
+                      <td className="px-5 py-3">
+                        {s.activeStudents > 0 ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                            ⚠ {s.activeStudents} active
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-sm">0</span>
+                        )}
+                      </td>
                       <td className="px-5 py-3 text-gray-500">{s.admins.length}</td>
                       <td className="px-5 py-3 text-gray-500">{new Date(s.created_at).toLocaleDateString()}</td>
                       <td className="px-5 py-3">
@@ -730,9 +742,9 @@ export default function PortalAdmin() {
                             <Pencil size={14} />
                           </button>
                           <button
-                            title="Delete school"
+                            title={s.activeStudents > 0 ? `${s.activeStudents} active students — deleting will remove them` : "Delete school"}
                             onClick={() => setDeleteSchoolConfirm(s)}
-                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            className={`p-1.5 rounded-lg transition-colors ${s.activeStudents > 0 ? "text-amber-400 hover:text-red-500 hover:bg-red-50" : "text-gray-400 hover:text-red-500 hover:bg-red-50"}`}
                           >
                             <Trash2 size={14} />
                           </button>
@@ -1262,6 +1274,11 @@ export default function PortalAdmin() {
             <p className="text-sm text-gray-600">
               Delete <span className="font-medium">{deleteSchoolConfirm.name}</span>? This will permanently remove the school and all associated data.
             </p>
+            {deleteSchoolConfirm.activeStudents > 0 && (
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                ⚠ This school has <strong>{deleteSchoolConfirm.activeStudents} active student{deleteSchoolConfirm.activeStudents > 1 ? "s" : ""}</strong>. Deleting will permanently remove their profiles, contacts, immunizations, and activity history.
+              </p>
+            )}
             <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">⚠ This action cannot be undone.</p>
             <div className="flex justify-end gap-2">
               <button onClick={() => setDeleteSchoolConfirm(null)} className="btn-secondary">Cancel</button>
