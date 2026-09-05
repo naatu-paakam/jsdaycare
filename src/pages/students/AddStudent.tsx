@@ -43,6 +43,7 @@ export default function AddStudent() {
     meal_type: "",
     notes: "",
   });
+  const [address, setAddress] = useState({ street: "", city: "", state: "", zip: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -68,6 +69,7 @@ export default function AddStudent() {
       doctor_phone: form.doctor_phone || null,
       meal_type: form.meal_type || null,
       notes: form.notes || null,
+      address: address.street || address.city ? address : null,
     });
 
     if (err) {
@@ -119,6 +121,22 @@ export default function AddStudent() {
             <Field label="Meal Type" name="meal_type" value={form.meal_type} onChange={v => set("meal_type", v)} />
             <Field label="Doctor Name" name="doctor_name" value={form.doctor_name} onChange={v => set("doctor_name", v)} />
             <Field label="Doctor Phone" name="doctor_phone" value={form.doctor_phone} onChange={v => set("doctor_phone", v)} />
+          </div>
+
+          {/* Address */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Address</label>
+            <input
+              className="input w-full mb-2"
+              placeholder="Street address"
+              value={address.street}
+              onChange={e => setAddress(a => ({ ...a, street: e.target.value }))}
+            />
+            <div className="grid grid-cols-3 gap-2">
+              <input className="input" placeholder="City" value={address.city} onChange={e => setAddress(a => ({ ...a, city: e.target.value }))} />
+              <input className="input" placeholder="State" value={address.state} onChange={e => setAddress(a => ({ ...a, state: e.target.value }))} />
+              <input className="input" placeholder="ZIP" value={address.zip} onChange={e => setAddress(a => ({ ...a, zip: e.target.value }))} />
+            </div>
           </div>
 
           <div>
