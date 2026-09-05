@@ -5,6 +5,27 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import Layout from "@/components/Layout";
 
+// Defined OUTSIDE the component to prevent re-creation on every render (causes focus loss)
+function Field({ label, name, type = "text", required = false, value, onChange }: {
+  label: string; name: string; type?: string; required?: boolean;
+  value: string; onChange: (val: string) => void;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+        {label}{required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="input"
+        required={required}
+      />
+    </div>
+  );
+}
+
 export default function AddStudent() {
   const navigate = useNavigate();
   const { profile } = useAuth();
@@ -57,19 +78,6 @@ export default function AddStudent() {
     }
   }
 
-  const Field = ({ label, name, type = "text", required = false }: { label: string; name: string; type?: string; required?: boolean }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}{required && <span className="text-red-500 ml-1">*</span>}</label>
-      <input
-        type={type}
-        value={(form as Record<string, string>)[name]}
-        onChange={e => set(name, e.target.value)}
-        className="input"
-        required={required}
-      />
-    </div>
-  );
-
   return (
     <Layout>
       <div className="p-6 max-w-2xl mx-auto space-y-5">
@@ -80,10 +88,10 @@ export default function AddStudent() {
 
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <Field label="First Name" name="first_name" required />
-            <Field label="Last Name" name="last_name" required />
-            <Field label="Preferred Name" name="preferred_name" />
-            <Field label="Date of Birth" name="dob" type="date" />
+            <Field label="First Name" name="first_name" required value={form.first_name} onChange={v => set("first_name", v)} />
+            <Field label="Last Name" name="last_name" required value={form.last_name} onChange={v => set("last_name", v)} />
+            <Field label="Preferred Name" name="preferred_name" value={form.preferred_name} onChange={v => set("preferred_name", v)} />
+            <Field label="Date of Birth" name="dob" type="date" value={form.dob} onChange={v => set("dob", v)} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -108,9 +116,9 @@ export default function AddStudent() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Meal Type" name="meal_type" />
-            <Field label="Doctor Name" name="doctor_name" />
-            <Field label="Doctor Phone" name="doctor_phone" />
+            <Field label="Meal Type" name="meal_type" value={form.meal_type} onChange={v => set("meal_type", v)} />
+            <Field label="Doctor Name" name="doctor_name" value={form.doctor_name} onChange={v => set("doctor_name", v)} />
+            <Field label="Doctor Phone" name="doctor_phone" value={form.doctor_phone} onChange={v => set("doctor_phone", v)} />
           </div>
 
           <div>
