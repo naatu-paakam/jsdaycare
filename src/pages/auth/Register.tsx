@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { Baby } from "lucide-react";
 
 interface Invitation {
@@ -78,29 +79,55 @@ export default function Register() {
 
     // Determine auth email: use provided email, or generate internal one from loginId
     const authEmail = email.trim() || `${loginId.trim().toLowerCase()}@daycareportal.internal`;
-    const fullName = `${firstName.trim()} ${lastName.trim()}`;
+    const fullName  = `${firstName.trim()} ${lastName.trim()}`;
 
-    // Call server-side function (service key stays server-side, never in browser bundle)
-    const res = await fetch("/api/register-user", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        loginId: loginId.trim(), firstName: firstName.trim(), lastName: lastName.trim(),
-        email: email.trim(), phone: phone.trim(), password,
-        invitationToken: token, schoolId: invitation!.school_id,
-        role: invitation!.role, permanent: invitation!.permanent,
-      }),
-    });
+    // On Netlify (production): call the serverless function (service key stays server-side)
+    // On localhost (dev): use supabaseAdmin directly (service key is in .env, not committed)
+    const isLocalDev = window.location.hostname === "localhost";
 
-    const result = await res.json();
-    if (!res.ok || result.error) {
-      setFormError(result.error ?? "Registration failed. Please try again.");
-      setSubmitting(false);
-      return;
+    if (isLocalDev && supabaseAdmin) {
+      // Local dev path — supabaseAdmin available via VITE_SUPABASE_SECRET_KEY in .env
+      const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+        email: authEmail, password, email_confirm: true,
+        user_metadata: { full_name: fullName, phone: phone.trim() },
+      });
+      if (createErr) {
+        setFormError(createErr.message.includes("already been registered")
+          ? "This User ID or email is already taken. Please choose another."
+          : createErr.message);
+        setSubmitting(false); return;
+      }
+      const userId = newUser.user?.id;
+      if (!userId) { setFormError("Account creation failed. Please try again."); setSubmitting(false); return; }
+      await supabaseAdmin.from("profiles").upsert({
+        id: userId, school_id: invitation!.school_id, role: invitation!.role,
+        full_name: fullName, phone: phone.trim() || null, login_id: loginId.trim().toLowerCase(),
+      }, { onConflict: "id" });
+      await supabaseAdmin.from("school_memberships").upsert({
+        profile_id: userId, school_id: invitation!.school_id, role: invitation!.role,
+      }, { onConflict: "profile_id,school_id" });
+      if (!invitation!.permanent) await supabase.rpc("use_invitation", { p_token: token });
+    } else {
+      // Production path — Netlify serverless function
+      const res = await fetch("/api/register-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          loginId: loginId.trim(), firstName: firstName.trim(), lastName: lastName.trim(),
+          email: email.trim(), phone: phone.trim(), password,
+          invitationToken: token, schoolId: invitation!.school_id,
+          role: invitation!.role, permanent: invitation!.permanent,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok || result.error) {
+        setFormError(result.error ?? "Registration failed. Please try again.");
+        setSubmitting(false); return;
+      }
     }
 
-    // Sign in immediately (user was created with email_confirm=true on server)
-    const { error: signInErr } = await supabase.auth.signInWithPassword({ email: result.authEmail, password });
+    // Sign in immediately (user was created with email_confirm=true)
+    const { error: signInErr } = await supabase.auth.signInWithPassword({ email: authEmail, password });
     if (signInErr) {
       // Fallback: show success and redirect to login
       setSuccess(true);
