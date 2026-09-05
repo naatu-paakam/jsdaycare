@@ -87,12 +87,13 @@ export default function Menus() {
 
   async function fetchWeekMenu() {
     setMenuLoading(true);
+    // Use maybeSingle() to avoid 406 when no menu exists for this week
     const { data } = await supabase
       .from("weekly_menus")
       .select("*")
       .eq("school_id", profile!.school_id!)
       .eq("week_start", weekStart)
-      .single();
+      .maybeSingle();
     if (data?.overrides) {
       setMenuGrid(data.overrides as MenuGrid);
     } else {
@@ -125,7 +126,7 @@ export default function Menus() {
       .select("id")
       .eq("school_id", profile.school_id)
       .eq("week_start", weekStart)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       await supabase.from("weekly_menus").update({ overrides: draftGrid }).eq("id", existing.id);

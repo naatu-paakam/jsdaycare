@@ -143,7 +143,8 @@ test("TC-register-invalid-token: Invalid token shows error, Back to Login link v
 
 test("TC-register-no-token: Missing token shows invitation required message", async ({ page }) => {
   await page.goto("/register");
-  await expect(page.getByText(/invitation/i)).toBeVisible({ timeout: 8_000 });
+  // Shows "Please use your invitation link" or similar
+  await expect(page.getByText(/invitation link|invitation required|use your invitation/i)).toBeVisible({ timeout: 8_000 });
 });
 
 // ─── 6. Form validation ───────────────────────────────────────────────────────
