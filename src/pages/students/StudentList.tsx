@@ -33,13 +33,15 @@ function age(dob: string | null) {
 }
 
 // ─── Inline Edit Admission Modal ──────────────────────────────────────────────
-function EditAdmissionModal({ student, onClose, onSaved }: {
+function EditAdmissionModal({ student, rooms, onClose, onSaved }: {
   student: StudentRow;
+  rooms: Room[];
   onClose: () => void;
   onSaved: () => void;
 }) {
   const { allSchools } = useAuth();
   const [schoolId, setSchoolId] = useState(student.school_id ?? "");
+  const [roomId, setRoomId]     = useState(student.homeroom_id ?? "");
   const [status, setStatus]   = useState(student.enrollment_status ?? "active");
   const [startDate, setStart] = useState(student.start_date ?? "");
   const [endDate, setEnd]     = useState(student.end_date ?? "");
@@ -51,12 +53,13 @@ function EditAdmissionModal({ student, onClose, onSaved }: {
 
   async function save() {
     setSaving(true); setError("");
-    // Always update status/dates first (student still in current school → passes RLS)
+    // Always update status/dates/room first (student still in current school → passes RLS)
     const { error: err } = await supabase.from("students").update({
       enrollment_status: status,
       start_date: startDate || null,
       end_date: endDate || null,
       notes: notes || null,
+      homeroom_id: schoolChanged ? null : (roomId || null),
     }).eq("id", student.id);
     if (err) { setError(err.message); setSaving(false); return; }
 
@@ -97,6 +100,17 @@ function EditAdmissionModal({ student, onClose, onSaved }: {
               )}
             </div>
           )}
+          <div>
+            <label className="label">Room Assignment</label>
+            <select className="input" value={roomId} onChange={e => setRoomId(e.target.value)} disabled={schoolChanged}>
+              <option value="">— Not assigned —</option>
+              {rooms.filter(r => r.school_id === (schoolChanged ? schoolId : student.school_id)).map(r => (
+                <option key={r.id} value={r.id}>{r.name}</option>
+              ))}
+            </select>
+            {schoolChanged && <p className="text-xs text-gray-400 mt-1">Room will be cleared when moving to a different school.</p>}
+          </div>
+
           <div>
             <label className="label">Enrollment Status</label>
             <select className="input" value={status} onChange={e => setStatus(e.target.value as typeof status)}>
@@ -339,6 +353,7 @@ export default function StudentList() {
       {editing && (
         <EditAdmissionModal
           student={editing}
+          rooms={rooms}
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); fetchStudents(); }}
         />
