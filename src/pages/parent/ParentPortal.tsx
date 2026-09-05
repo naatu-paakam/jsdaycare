@@ -4,6 +4,7 @@ import { LogIn, LogOut, ChevronRight, Activity } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import Layout from "@/components/Layout";
+import CheckinCodeCard from "@/components/CheckinCodeCard";
 import { Student, Activity as ActivityType } from "@/lib/types";
 
 interface ChildInfo extends Student {
@@ -166,9 +167,9 @@ export default function ParentPortal() {
   const [error, setError]       = useState("");
 
   useEffect(() => {
-    if (!user?.email) return;
+    if (!user?.id) return;
     fetchChildren();
-  }, [user?.email]);
+  }, [user?.id]);
 
   async function fetchChildren() {
     setLoading(true);
@@ -256,6 +257,9 @@ export default function ParentPortal() {
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>
         )}
+
+        {/* Personal check-in code */}
+        <CheckinCodeCard />
 
         {loading ? (
           <div className="card p-10 text-center text-gray-400">Loading your children's info...</div>

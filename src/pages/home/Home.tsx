@@ -3,6 +3,7 @@ import { Users, DoorOpen, AlertTriangle, Cake, RefreshCw } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import Layout from "@/components/Layout";
+import CheckinCodeCard from "@/components/CheckinCodeCard";
 
 interface RoomRatio {
   room_id: string;
@@ -337,6 +338,9 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Check-in code card — visible to staff only (not admin) */}
+        {profile?.role === "staff" && <CheckinCodeCard />}
 
         {/* Compliance Alerts */}
         <div className="card">

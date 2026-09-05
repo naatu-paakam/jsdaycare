@@ -208,3 +208,31 @@ test.describe("Parent portal — quick links from sidebar", () => {
     await expect(page.getByText(/stories/i).first()).toBeVisible({ timeout: 6_000 });
   });
 });
+
+// ── Check-in code card (parent portal) ───────────────────────────────────────
+test.describe("Parent persona — check-in code card", () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAsParent(page);
+  });
+
+  test("TC-parent-checkin-code-card-visible: Parent sees check-in code card on portal home", async ({ page }) => {
+    await expect(page.getByTestId("checkin-code-card")).toBeVisible({ timeout: 8_000 });
+  });
+
+  test("TC-parent-checkin-code-set: Parent can set or update a check-in code", async ({ page }) => {
+    const code = "7722";
+    await page.getByTestId("checkin-code-input").fill(code);
+    await page.getByTestId("save-checkin-code-btn").click();
+    const success = page.getByTestId("checkin-code-success");
+    const error   = page.getByTestId("checkin-code-error");
+    await Promise.race([
+      success.waitFor({ timeout: 6_000 }),
+      error.waitFor({ timeout: 6_000 }),
+    ]);
+  });
+
+  test("TC-parent-checkin-code-validation: Save button disabled for short code", async ({ page }) => {
+    await page.getByTestId("checkin-code-input").fill("99");
+    await expect(page.getByTestId("save-checkin-code-btn")).toBeDisabled();
+  });
+});

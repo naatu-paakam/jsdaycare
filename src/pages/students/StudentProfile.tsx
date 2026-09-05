@@ -1283,7 +1283,7 @@ export default function StudentProfile() {
   async function loadAll() {
     const [{ data: s }, { data: c }, { data: e }, { data: enr }, { data: imm }] = await Promise.all([
       supabase.from("students").select("*").eq("id", id!).single(),
-      supabase.from("student_contacts").select("*").eq("student_id", id!).order("is_primary", { ascending: false }),
+      supabase.from("student_contacts").select("*, profiles(checkin_code)").eq("student_id", id!).order("is_primary", { ascending: false }),
       supabase.from("student_emergency_contacts").select("*").eq("student_id", id!),
       supabase.from("student_enrollment_details").select("*").eq("student_id", id!).maybeSingle(),
       supabase.from("student_immunizations").select("*").eq("student_id", id!).order("vaccine_name"),
@@ -1840,7 +1840,7 @@ export default function StudentProfile() {
                             {isAdmin && (
                               <td className="px-4 py-3">
                                 <div className="flex items-center gap-1.5">
-                                  <span className="font-mono text-sm">{revealPin[c.id] ? (c.pin_code ?? "—") : "••••"}</span>
+                                  <span className="font-mono text-sm">{revealPin[c.id] ? (c.profiles?.checkin_code ?? c.pin_code ?? "—") : "••••"}</span>
                                   <button onClick={() => setRevealPin(p => ({...p, [c.id]: !p[c.id]}))}
                                     className="text-xs text-orange-500 border border-orange-200 rounded px-1.5 py-0.5 flex items-center gap-1 hover:bg-orange-50 shrink-0">
                                     {revealPin[c.id] ? <><EyeOff size={9} />Hide</> : <><Eye size={9} />Reveal</>}

@@ -13,6 +13,9 @@ export default async function globalTeardown() {
     process.env.VITE_SUPABASE_SECRET_KEY!,
   );
 
+  // Delete test contacts before students (FK dependency)
+  await supabase.from("student_contacts").delete().ilike("full_name", "TestContact%");
+
   const results = await Promise.all([
     // Test students (TC- prefix)
     supabase.from("students").delete().ilike("first_name", "TC-%"),
@@ -24,7 +27,10 @@ export default async function globalTeardown() {
     supabase.from("invitations").delete().eq("email", "newstaff@test.com"),
     supabase.from("invitations").delete().eq("email", "test@test.com"),
     supabase.from("invitations").delete().eq("email", "tc-staff@jsdaycare.com"),
-    // Orphaned test schedules for TC- students are cascade-deleted with students
+    // Test schools (TC-School- prefix) — cascade deletes rooms, students, memberships
+    supabase.from("schools").delete().ilike("name", "TC-School-%"),
+    // Test profiles/users created during tests (TC- login_id prefix)
+    supabase.from("profiles").delete().ilike("login_id", "tc-%"),
   ]);
 
   const errors = results.filter(r => r.error).map(r => r.error!.message);

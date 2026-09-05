@@ -1,4 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
+import { config as loadDotenv } from "dotenv";
+
+// Load .env so VITE_TEST_PASSWORD etc. are available in Node.js Playwright process
+loadDotenv();
 
 export default defineConfig({
   testDir: "./e2e",

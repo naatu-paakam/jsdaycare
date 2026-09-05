@@ -44,6 +44,7 @@ export interface Profile {
   avatar_url: string | null;
   phone: string | null;
   login_id: string | null;
+  checkin_code: string | null;
   created_at: string;
 }
 
@@ -104,6 +105,8 @@ export interface StudentContact {
   can_pickup: boolean;
   photo_url: string | null;
   pin_code: string | null;
+  profile_id: string | null;
+  profiles: { checkin_code: string | null } | null;
   portal_status: PortalStatus;
   pickup_valid_from: string | null;
   pickup_valid_to: string | null;
