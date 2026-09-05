@@ -471,10 +471,24 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
 }) {
   const isEdit = !!initial?.id;  // true only when editing an existing contact (has a real id)
 
-  // Invite URL state — generate a /register?token link for this contact
-  const [inviteLink, setInviteLink]   = useState("");
+  // Invite URL state — load existing + generate new
+  const [inviteLinks, setInviteLinks] = useState<{ id: string; token: string; expires_at: string | null }[]>([]);
   const [generatingLink, setGeneratingLink] = useState(false);
-  const [linkCopied, setLinkCopied]   = useState(false);
+  const [copiedToken, setCopiedToken] = useState<string | null>(null);
+
+  // Load existing pending invites for this contact's email when editing
+  useEffect(() => {
+    if (!isEdit || !initial?.email) return;
+    supabase.from("invitations")
+      .select("id, token, expires_at")
+      .eq("school_id", schoolId)
+      .eq("role", "parent")
+      .eq("email", initial.email)
+      .is("used_at", null)
+      .eq("permanent", false)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => setInviteLinks(data ?? []));
+  }, [isEdit, initial?.email, schoolId]);
 
   async function generateInviteLink() {
     setGeneratingLink(true);
@@ -482,15 +496,20 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
       .from("invitations")
       .insert({ school_id: schoolId, role: "parent", permanent: false,
         email: form.email || null, expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() })
-      .select("token").single();
-    if (data?.token) setInviteLink(`${window.location.origin}/register?token=${data.token}`);
+      .select("id, token, expires_at").single();
+    if (data) setInviteLinks(prev => [data, ...prev]);
     setGeneratingLink(false);
   }
 
-  async function copyLink() {
-    await navigator.clipboard.writeText(inviteLink);
-    setLinkCopied(true);
-    setTimeout(() => setLinkCopied(false), 2000);
+  async function deleteInviteLink(inviteId: string) {
+    await supabase.from("invitations").delete().eq("id", inviteId);
+    setInviteLinks(prev => prev.filter(i => i.id !== inviteId));
+  }
+
+  async function copyLink(token: string) {
+    await navigator.clipboard.writeText(`${window.location.origin}/register?token=${token}`);
+    setCopiedToken(token);
+    setTimeout(() => setCopiedToken(null), 2000);
   }
 
   const [form, setForm] = useState({
@@ -688,37 +707,43 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
         <div className="border-t border-gray-100 pt-4 space-y-2">
           <p className="text-xs font-medium text-gray-600">Portal Access</p>
           {(form.type === "parent" || form.type === "guardian") ? (
-            <>
-              {!inviteLink ? (
-                <div>
-                  <button
-                    type="button"
-                    onClick={generateInviteLink}
-                    disabled={generatingLink}
-                    className="flex items-center gap-2 text-xs text-orange-600 border border-orange-200 rounded-lg px-3 py-1.5 hover:bg-orange-50 disabled:opacity-50"
-                  >
-                    {generatingLink ? "Generating…" : "🔗 Generate Invite URL"}
-                  </button>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Creates a 7-day registration link. Parent/guardian uses it to set up their portal login.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 bg-orange-50 border border-orange-100 rounded-lg px-3 py-2">
-                    <span className="text-xs text-gray-600 truncate flex-1 font-mono">{inviteLink}</span>
-                    <button
-                      type="button"
-                      onClick={copyLink}
-                      className="text-xs text-orange-600 font-medium shrink-0 flex items-center gap-1 hover:text-orange-700"
-                    >
-                      {linkCopied ? "✓ Copied!" : "Copy"}
-                    </button>
+            <div className="space-y-2">
+              {/* Existing pending invite links */}
+              {inviteLinks.map(inv => (
+                <div key={inv.id} className="flex items-center gap-2 bg-orange-50 border border-orange-100 rounded-lg px-3 py-2">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs text-gray-600 font-mono truncate block">
+                      {window.location.origin}/register?token={inv.token.slice(0, 12)}…
+                    </span>
+                    {inv.expires_at && (
+                      <span className="text-xs text-gray-400">
+                        Expires {new Date(inv.expires_at).toLocaleDateString()}
+                      </span>
+                    )}
                   </div>
-                  <p className="text-xs text-gray-400">Link expires in 7 days. Send it directly to the contact.</p>
+                  <button type="button" onClick={() => copyLink(inv.token)}
+                    className="text-xs text-orange-600 font-medium shrink-0 hover:text-orange-700">
+                    {copiedToken === inv.token ? "✓ Copied!" : "Copy"}
+                  </button>
+                  <button type="button" onClick={() => deleteInviteLink(inv.id)}
+                    title="Invalidate this link"
+                    className="text-gray-300 hover:text-red-500 transition-colors shrink-0">
+                    <X size={13} />
+                  </button>
                 </div>
-              )}
-            </>
+              ))}
+
+              {/* Generate new invite link */}
+              <div>
+                <button type="button" onClick={generateInviteLink} disabled={generatingLink}
+                  className="flex items-center gap-2 text-xs text-orange-600 border border-orange-200 rounded-lg px-3 py-1.5 hover:bg-orange-50 disabled:opacity-50">
+                  {generatingLink ? "Generating…" : "🔗 Generate Invite URL"}
+                </button>
+                <p className="text-xs text-gray-400 mt-1">
+                  Creates a 7-day registration link. {inviteLinks.length > 0 ? "Previous links remain valid until deleted or expired." : "Parent/guardian uses it to set up their portal login."}
+                </p>
+              </div>
+            </div>
           ) : (
             <p className="text-xs text-gray-400 italic">
               Portal access is only available for Parent and Guardian contacts.
