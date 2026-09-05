@@ -476,19 +476,29 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
   const [generatingLink, setGeneratingLink] = useState(false);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
-  // Load existing pending invites for this contact's email when editing
+  // Load existing pending invites — by email OR by contact_id in metadata
   useEffect(() => {
-    if (!isEdit || !initial?.email) return;
+    if (!isEdit) return;
+    const contactId = initial?.id;
+    const email = initial?.email;
+    if (!contactId && !email) return;
+
+    // Fetch all pending parent invites for this school, then filter client-side
     supabase.from("invitations")
-      .select("id, token, expires_at")
+      .select("id, token, expires_at, email, metadata")
       .eq("school_id", schoolId)
       .eq("role", "parent")
-      .eq("email", initial.email)
       .is("used_at", null)
       .eq("permanent", false)
       .order("created_at", { ascending: false })
-      .then(({ data }) => setInviteLinks(data ?? []));
-  }, [isEdit, initial?.email, schoolId]);
+      .then(({ data }) => {
+        const matches = (data ?? []).filter(inv =>
+          (email && inv.email === email) ||
+          (contactId && (inv.metadata as any)?.contact_id === contactId)
+        );
+        setInviteLinks(matches);
+      });
+  }, [isEdit, initial?.id, initial?.email, schoolId]);
 
   async function generateInviteLink() {
     setGeneratingLink(true);
@@ -499,6 +509,7 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
       last_name: nameParts.slice(1).join(" ") || "",
       phone: form.phone || null,
       email: form.email || null,
+      contact_id: initial?.id ?? null,  // enables lookup by contact even without email
     };
     const { data } = await supabase
       .from("invitations")
