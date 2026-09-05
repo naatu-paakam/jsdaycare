@@ -1237,7 +1237,7 @@ export default function StudentProfile() {
       supabase.from("students").select("*").eq("id", id!).single(),
       supabase.from("student_contacts").select("*").eq("student_id", id!).order("is_primary", { ascending: false }),
       supabase.from("student_emergency_contacts").select("*").eq("student_id", id!),
-      supabase.from("student_enrollment_details").select("*").eq("student_id", id!).single(),
+      supabase.from("student_enrollment_details").select("*").eq("student_id", id!).maybeSingle(),
       supabase.from("student_immunizations").select("*").eq("student_id", id!).order("vaccine_name"),
     ]);
     setStudent(s); setContacts(c ?? []); setEmergency(e ?? []);
@@ -1247,7 +1247,7 @@ export default function StudentProfile() {
     setImmunizationSettings(Array.isArray(settings) && settings.length > 0 ? settings : VACCINE_NAMES);
     // Fetch current homeroom
     if (s?.homeroom_id) {
-      const { data: r } = await supabase.from("rooms").select("*").eq("id", s.homeroom_id).single();
+      const { data: r } = await supabase.from("rooms").select("*").eq("id", s.homeroom_id).maybeSingle();
       setRoom(r);
     } else {
       setRoom(null);
