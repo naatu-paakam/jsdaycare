@@ -25,7 +25,7 @@ export default function RoomList() {
   const [rooms, setRooms] = useState<RoomCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
-  const [newRoom, setNewRoom] = useState({ name: "", capacity: "", ratio_staff: "1", ratio_children: "4" });
+  const [newRoom, setNewRoom] = useState({ name: "", capacity: "", ratio_staff: "1", ratio_children: "4", min_age: "", max_age: "" });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -77,10 +77,12 @@ export default function RoomList() {
       capacity: parseInt(newRoom.capacity) || null,
       ratio_staff: parseInt(newRoom.ratio_staff),
       ratio_children: parseInt(newRoom.ratio_children),
+      age_range_min_months: parseInt(newRoom.min_age) || null,
+      age_range_max_months: parseInt(newRoom.max_age) || null,
     });
 
     setShowNew(false);
-    setNewRoom({ name: "", capacity: "", ratio_staff: "1", ratio_children: "4" });
+    setNewRoom({ name: "", capacity: "", ratio_staff: "1", ratio_children: "4", min_age: "", max_age: "" });
     setSaving(false);
     fetchRooms();
   }
@@ -110,10 +112,20 @@ export default function RoomList() {
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Room Name <span className="text-red-500">*</span></label>
                   <input value={newRoom.name} onChange={e => setNewRoom(r => ({ ...r, name: e.target.value }))} className="input" required />
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Min Age (months)</label>
+                    <input type="number" min="0" placeholder="e.g. 0" value={newRoom.min_age} onChange={e => setNewRoom(r => ({ ...r, min_age: e.target.value }))} className="input" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Max Age (months)</label>
+                    <input type="number" min="0" placeholder="e.g. 12" value={newRoom.max_age} onChange={e => setNewRoom(r => ({ ...r, max_age: e.target.value }))} className="input" />
+                  </div>
+                </div>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">Capacity</label>
-                    <input type="number" value={newRoom.capacity} onChange={e => setNewRoom(r => ({ ...r, capacity: e.target.value }))} className="input" />
+                    <input type="number" placeholder="e.g. 8" value={newRoom.capacity} onChange={e => setNewRoom(r => ({ ...r, capacity: e.target.value }))} className="input" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">Ratio Staff</label>
@@ -124,6 +136,7 @@ export default function RoomList() {
                     <input type="number" value={newRoom.ratio_children} onChange={e => setNewRoom(r => ({ ...r, ratio_children: e.target.value }))} className="input" />
                   </div>
                 </div>
+                <p className="text-xs text-gray-400">Age range example: Infants 0–12 mo, Toddlers 12–36 mo, Pre-K 36–60 mo</p>
                 <div className="flex justify-end gap-3 pt-2">
                   <button type="button" onClick={() => setShowNew(false)} className="btn-secondary">Cancel</button>
                   <button type="submit" disabled={saving} className="btn-primary">{saving ? "Creating..." : "Create Room"}</button>
