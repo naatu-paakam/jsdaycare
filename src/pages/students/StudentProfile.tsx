@@ -1250,6 +1250,7 @@ export default function StudentProfile() {
   const [showImmSettings, setShowImmSettings] = useState(false);
   const [editingActivity, setEditingActivity]   = useState<Activity | null>(null);
   const [confirmDelete, setConfirmDelete]       = useState<string | null>(null);
+  const [confirmDeleteContact, setConfirmDeleteContact] = useState<string | null>(null);
   const [showAddActivity, setShowAddActivity]   = useState(false);
   const [addActivityType, setAddActivityType]   = useState<ActivityType | null>(null);
 
@@ -1838,13 +1839,31 @@ export default function StudentProfile() {
                                 {/* Invite link available via Edit contact modal */}
                               </div>
                             </td>
-                            {/* Edit */}
+                            {/* Edit + Delete */}
                             {canEdit && (
                               <td className="px-4 py-3">
-                                <button onClick={() => setContactModal({ open: true, contact: c })}
-                                  className="text-xs text-orange-500 hover:underline flex items-center gap-1">
-                                  <Pencil size={11} /> Edit
-                                </button>
+                                <div className="flex items-center gap-2">
+                                  <button onClick={() => setContactModal({ open: true, contact: c })}
+                                    className="text-xs text-orange-500 hover:underline flex items-center gap-1">
+                                    <Pencil size={11} /> Edit
+                                  </button>
+                                  {confirmDeleteContact === c.id ? (
+                                    <span className="flex items-center gap-1 text-xs">
+                                      <span className="text-red-600">Delete?</span>
+                                      <button onClick={async () => {
+                                        await supabase.rpc("delete_contact_safe", { p_contact_id: c.id });
+                                        setConfirmDeleteContact(null);
+                                        loadAll();
+                                      }} className="text-red-600 font-medium hover:underline">Yes</button>
+                                      <button onClick={() => setConfirmDeleteContact(null)} className="text-gray-400 hover:underline">No</button>
+                                    </span>
+                                  ) : (
+                                    <button onClick={() => setConfirmDeleteContact(c.id)}
+                                      className="text-gray-300 hover:text-red-500 transition-colors" title="Delete contact">
+                                      <Trash2 size={13} />
+                                    </button>
+                                  )}
+                                </div>
                               </td>
                             )}
                           </tr>
