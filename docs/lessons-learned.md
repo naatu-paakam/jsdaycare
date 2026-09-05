@@ -290,3 +290,21 @@ A `CLAUDE.md` project file and a memory rule that acts as a first-gate check bef
 | 7 | Playwright crash importing supabase-js | WebAuthn browser API in Node.js | Raw fetch helper for e2e tests |
 | 8 | Portal admin sees 0 students | RLS blocks `school_id = null` user | Security-definer RPCs for cross-school reads |
 | 9 | Credentials in repo | No pre-commit gate | `CLAUDE.md` + git hook |
+
+---
+
+## Test Coverage Map
+
+Every lesson has at least one automated regression TC:
+
+| Lesson | TC ID(s) | Spec file |
+|---|---|---|
+| 1 — Wrong key type (portal admin 0 counts) | `TC-lesson1-portal-admin-student-counts` | `regression-lessons.spec.ts` |
+| 2 — Service key in git history | `TC-lesson9-no-service-key-in-bundle` | `regression-lessons.spec.ts` |
+| 3 — Registration hangs on localhost | `TC-lesson3-register-endpoint-reachable`, `TC-register-school-admin`, `TC-register-staff`, `TC-register-parent` | `regression-lessons.spec.ts`, `registration-flows.spec.ts` |
+| 4 — FK violations on delete | `TC-lesson4-delete-room-safe-rpc`, `TC-lesson4-delete-portal-user-no-fk-error`, `TC-delete-student-rpc-no-fk-error`, `TC-portal-users-delete-rpc-no-column-errors` | `regression-lessons.spec.ts`, `delete-scenarios.spec.ts`, `portal-admin-manage.spec.ts` |
+| 5 — Focus lost on every keystroke | `TC-lesson5-add-student-no-focus-loss` | `regression-lessons.spec.ts` |
+| 6 — `.single()` returns 406 | `TC-lesson6-menus-no-406-empty-week`, `TC-lesson6-portal-students-no-406` | `regression-lessons.spec.ts` |
+| 7 — @supabase/supabase-js crash in Node | Prevented by using `e2e/helpers/supabase-admin.ts` (raw fetch) in all specs | `registration-flows.spec.ts` |
+| 8 — RLS blocks portal admin | `TC-lesson1-portal-admin-student-counts`, `TC-portal-schools-active-students-badge` | `regression-lessons.spec.ts`, `portal-admin-manage.spec.ts` |
+| 9 — Credentials in repo | `TC-lesson9-no-service-key-in-bundle` | `regression-lessons.spec.ts` |
