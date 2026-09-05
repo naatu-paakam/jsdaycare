@@ -64,6 +64,23 @@ function localRegisterPlugin(env: Record<string, string>): Plugin {
                 await sbAnon.rpc("use_invitation", { p_token: invitationToken });
               }
 
+              // If invite had a contact_id in metadata, update that contact's email
+              // so ParentPortal can find their children via student_contacts.email lookup
+              const { body: invBody } = await new Promise<{body: any}>((resolve) => {
+                let rawBody = "";
+                resolve({ body: JSON.parse(JSON.stringify({ loginId, firstName, lastName, email, phone, password, invitationToken, schoolId, role, permanent })) });
+              });
+              // Re-fetch the invitation to get metadata.contact_id
+              const { data: invRecord } = await sbAdmin.from("invitations")
+                .select("metadata").eq("token", invitationToken ?? "").maybeSingle();
+              const contactId = (invRecord?.metadata as any)?.contact_id;
+              if (contactId && authEmail) {
+                await sbAdmin.from("student_contacts")
+                  .update({ email: authEmail })
+                  .eq("id", contactId)
+                  .is("email", null); // only update if email was not set
+              }
+
               res.writeHead(200, { "Content-Type": "application/json" });
               res.end(JSON.stringify({ success: true, userId, authEmail }));
             } catch (e: any) {

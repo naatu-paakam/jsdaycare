@@ -87,6 +87,20 @@ export default async (req: Request) => {
     await supabase.rpc("use_invitation", { p_token: invitationToken });
   }
 
+  // 5. If invite had contact_id in metadata, update that contact's email
+  //    so ParentPortal can find their children via student_contacts.email = auth_email
+  if (invitationToken) {
+    const { data: invRecord } = await supabaseAdmin.from("invitations")
+      .select("metadata").eq("token", invitationToken).maybeSingle();
+    const contactId = (invRecord?.metadata as any)?.contact_id;
+    if (contactId && authEmail) {
+      await supabaseAdmin.from("student_contacts")
+        .update({ email: authEmail })
+        .eq("id", contactId)
+        .is("email", null); // only set email if not already set
+    }
+  }
+
   return new Response(JSON.stringify({ success: true, userId, authEmail }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
