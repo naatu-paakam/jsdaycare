@@ -12,6 +12,7 @@ interface Invitation {
   used_at: string | null;
   school_name: string;
   permanent: boolean;
+  metadata?: { first_name?: string; last_name?: string; phone?: string; email?: string } | null;
 }
 
 const ROLE_LABEL: Record<string, string> = {
@@ -56,7 +57,26 @@ export default function Register() {
     if (!inv.permanent && inv.expires_at && new Date(inv.expires_at) < new Date()) {
       setLoadError("expired"); setLoadingInvite(false); return;
     }
+    // Pre-fill contact info from invitation email and metadata
     if (inv.email) setEmail(inv.email);
+    if (inv.metadata?.first_name) setFirstName(inv.metadata.first_name);
+    if (inv.metadata?.last_name)  setLastName(inv.metadata.last_name);
+    if (inv.metadata?.phone)      setPhone(inv.metadata.phone);
+    // Also fetch from student_contacts if email matches (fallback for invites without metadata)
+    if (inv.email && (!inv.metadata?.first_name)) {
+      const { data: contact } = await supabase
+        .from("student_contacts")
+        .select("full_name, phone")
+        .eq("email", inv.email)
+        .eq("school_id", inv.school_id)
+        .maybeSingle();
+      if (contact?.full_name) {
+        const parts = contact.full_name.trim().split(" ");
+        setFirstName(parts[0] ?? "");
+        setLastName(parts.slice(1).join(" ") || "");
+      }
+      if (contact?.phone) setPhone(contact.phone);
+    }
     setInvitation(inv as Invitation);
     setLoadingInvite(false);
   }

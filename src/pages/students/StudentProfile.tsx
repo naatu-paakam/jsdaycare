@@ -492,10 +492,20 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
 
   async function generateInviteLink() {
     setGeneratingLink(true);
+    // Store contact info in metadata so Register.tsx can pre-fill the form
+    const nameParts = form.full_name.trim().split(" ");
+    const metadata = {
+      first_name: nameParts[0] ?? "",
+      last_name: nameParts.slice(1).join(" ") || "",
+      phone: form.phone || null,
+      email: form.email || null,
+    };
     const { data } = await supabase
       .from("invitations")
       .insert({ school_id: schoolId, role: "parent", permanent: false,
-        email: form.email || null, expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() })
+        email: form.email || null,
+        metadata,
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() })
       .select("id, token, expires_at").single();
     if (data) setInviteLinks(prev => [data, ...prev]);
     setGeneratingLink(false);
