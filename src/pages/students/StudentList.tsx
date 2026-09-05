@@ -172,7 +172,9 @@ export default function StudentList() {
 
   async function deleteStudent(id: string) {
     setDeleting(true);
-    await supabase.from("students").delete().eq("id", id);
+    // Use security-definer RPC: nullifies loose FK refs (form_submissions, shared_files)
+    // before deleting. Student cascade removes contacts, immunizations, activities, etc.
+    await supabase.rpc("delete_student_safe", { p_student_id: id });
     setDeleting(false);
     setConfirmDel(null);
     fetchStudents();

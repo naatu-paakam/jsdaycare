@@ -116,7 +116,9 @@ function RoomSettingsModal({ room, onClose, onSaved, onDeleted }: {
 
   async function handleDelete() {
     setDeleting(true);
-    await supabase.from("rooms").delete().eq("id", room.id);
+    // Use security-definer RPC to safely null loose FK refs before deleting
+    // (students.homeroom_id, activities.room_id, attendance.room_id, staff_schedules.room_id)
+    await supabase.rpc("delete_room_safe", { p_room_id: room.id });
     setDeleting(false);
     onDeleted();
   }
