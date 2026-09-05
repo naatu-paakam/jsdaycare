@@ -1781,12 +1781,11 @@ export default function StudentProfile() {
                               {c.can_pickup ? (
                                 <div className="space-y-0.5">
                                   {ps && <span className={`inline-flex text-xs font-medium px-2 py-0.5 rounded-full ${ps.color}`}>{ps.label}</span>}
-                                  {/* Only show date range when actual dates are set — avoids redundant "Permanent" below "Permanent" badge */}
-                                  {(c.pickup_valid_from || c.pickup_valid_to) && (
-                                    <div className="text-gray-500">
-                                      {c.pickup_valid_from ? fmt(c.pickup_valid_from) : "—"} → {c.pickup_valid_to ? fmt(c.pickup_valid_to) : "ongoing"}
-                                    </div>
-                                  )}
+                                  <div className="text-gray-400 text-xs">
+                                    {c.pickup_valid_from || c.pickup_valid_to
+                                      ? <>{c.pickup_valid_from ? fmt(c.pickup_valid_from) : "—"} → {c.pickup_valid_to ? fmt(c.pickup_valid_to) : "ongoing"}</>
+                                      : "Indefinite"}
+                                  </div>
                                 </div>
                               ) : <span className="text-gray-300">—</span>}
                             </td>
