@@ -10,7 +10,7 @@ as $$
 begin
   -- Nullify loose profile references in activities/attendance
   update activities  set created_by = null where created_by = p_user_id;
-  update attendance  set checked_by = null  where checked_by  = p_user_id;
+  update attendance  set created_by = null where created_by = p_user_id;
 
   -- Remove school memberships (not cascade)
   delete from school_memberships where profile_id = p_user_id;
