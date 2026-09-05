@@ -8,6 +8,15 @@ const SERVICE_KEY = import.meta.env.VITE_SUPABASE_SECRET_KEY as string;
 
 export const supabaseAdmin = SERVICE_KEY
   ? createClient(SUPABASE_URL, SERVICE_KEY, {
-      auth: { autoRefreshToken: false, persistSession: false },
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false,
+        storageKey: "supabase-admin-isolated", // isolated from regular client session
+      },
+      global: {
+        // Explicitly set Authorization so non-JWT sb_secret_* keys work in browser
+        headers: { Authorization: `Bearer ${SERVICE_KEY}` },
+      },
     })
   : null;

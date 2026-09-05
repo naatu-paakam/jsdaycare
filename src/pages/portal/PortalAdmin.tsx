@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { useAuth } from "@/lib/auth";
 import { School } from "@/lib/types";
 import { Building2, Users, UserCheck, Plus, X, ChevronRight, Pencil, Trash2, Copy, Check, Link as LinkIcon } from "lucide-react";
@@ -315,32 +314,33 @@ export default function PortalAdmin() {
   }
 
   async function loadAll() {
-    const { data: schoolData } = await supabase.from("schools").select("*").order("name");
-    if (!schoolData) { setLoading(false); return; }
+    // Use security-definer RPCs — no supabaseAdmin needed, RLS bypass is server-side
+    const { data: schoolsWithStats, error: schoolErr } = await supabase.rpc("get_all_schools_with_stats");
+    if (schoolErr || !schoolsWithStats) { setLoading(false); return; }
+
+    const { data: allMemberships } = await supabase.rpc("get_all_memberships_admin");
 
     const enriched: SchoolWithAdmins[] = [];
     let totalStudents = 0;
     let totalStaff = 0;
 
-    for (const s of schoolData) {
-      // Use supabaseAdmin for all queries — portal admin is RLS-blocked from cross-school reads
-      const db = supabaseAdmin ?? supabase;
-      const [{ data: memberAdmins }, { data: profileAdmins }, { count: students }, { count: staff }, { count: activeStudents }] = await Promise.all([
-        db.from("school_memberships").select("profile_id, profiles(id, full_name, phone)").eq("school_id", s.id).eq("role", "admin"),
-        db.from("profiles").select("id, full_name, phone").eq("school_id", s.id).eq("role", "admin"),
-        db.from("students").select("id", { count: "exact", head: true }).eq("school_id", s.id),
-        db.from("profiles").select("id", { count: "exact", head: true }).eq("school_id", s.id).eq("role", "staff"),
-        db.from("students").select("id", { count: "exact", head: true }).eq("school_id", s.id).eq("enrollment_status", "active"),
-      ]);
-      // Merge admins from memberships + direct school_id, de-duplicate by id
-      const adminsFromMemberships: SchoolAdmin[] = (memberAdmins ?? []).map((m: any) => m.profiles).filter(Boolean);
-      const adminsFromProfiles: SchoolAdmin[] = (profileAdmins ?? []) as SchoolAdmin[];
+    for (const s of (schoolsWithStats as any[])) {
+      // Build admins list from memberships RPC data
+      const schoolMemberships = (allMemberships ?? []).filter((m: any) => m.school_id === s.id && m.role === "admin");
       const adminMap = new Map<string, SchoolAdmin>();
-      [...adminsFromMemberships, ...adminsFromProfiles].forEach(a => { if (a?.id) adminMap.set(a.id, a); });
+      // Also include profiles whose primary school_id matches
+      schoolMemberships.forEach((m: any) => {
+        if (m.profile_id) adminMap.set(m.profile_id, { id: m.profile_id, full_name: m.full_name, phone: m.phone });
+      });
       const admins: SchoolAdmin[] = [...adminMap.values()];
-      enriched.push({ ...s, admins, activeStudents: activeStudents ?? 0 });
-      totalStudents += students ?? 0;
-      totalStaff += staff ?? 0;
+
+      enriched.push({
+        id: s.id, name: s.name, timezone: s.timezone, address: s.address, phone: s.phone, email: s.email, created_at: s.created_at,
+        admins,
+        activeStudents: Number(s.active_students ?? 0),
+      });
+      totalStudents += Number(s.total_students ?? 0);
+      totalStaff += Number(s.total_staff ?? 0);
     }
 
     setSchools(enriched);
