@@ -93,11 +93,12 @@ export default async (req: Request) => {
     const { data: invRecord } = await supabaseAdmin.from("invitations")
       .select("metadata").eq("token", invitationToken).maybeSingle();
     const contactId = (invRecord?.metadata as any)?.contact_id;
-    if (contactId && authEmail) {
+    if (contactId && userId) {
+      // Link the contact directly to the new user profile by UUID
+      // This is the most reliable link — works regardless of email
       await supabaseAdmin.from("student_contacts")
-        .update({ email: authEmail })
-        .eq("id", contactId)
-        .is("email", null); // only set email if not already set
+        .update({ profile_id: userId, portal_status: "signed_up" })
+        .eq("id", contactId);
     }
   }
 

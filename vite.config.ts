@@ -74,11 +74,11 @@ function localRegisterPlugin(env: Record<string, string>): Plugin {
               const { data: invRecord } = await sbAdmin.from("invitations")
                 .select("metadata").eq("token", invitationToken ?? "").maybeSingle();
               const contactId = (invRecord?.metadata as any)?.contact_id;
-              if (contactId && authEmail) {
+              if (contactId && userId) {
+                // Link the contact to the new profile via profile_id (most reliable key)
                 await sbAdmin.from("student_contacts")
-                  .update({ email: authEmail })
-                  .eq("id", contactId)
-                  .is("email", null); // only update if email was not set
+                  .update({ profile_id: userId, portal_status: "signed_up" })
+                  .eq("id", contactId);
               }
 
               res.writeHead(200, { "Content-Type": "application/json" });

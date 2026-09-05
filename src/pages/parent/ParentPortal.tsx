@@ -173,31 +173,20 @@ export default function ParentPortal() {
   async function fetchChildren() {
     setLoading(true);
 
-    // Find contacts matching this parent's auth email
-    // Also includes internal emails like loginid@daycareportal.internal
-    // which are set on the contact record when the parent registers
+    // Primary: look up by profile_id (UUID) — set when parent registers via invite
+    // This is the most reliable link, works for User-ID-only registrations (no email)
     let { data: contacts } = await supabase
       .from("student_contacts")
       .select("id, student_id")
-      .eq("email", user!.email!);
+      .eq("profile_id", user!.id);
 
-    // Fallback: if no contacts found by email, search by profile's login_id embedded in email
-    // e.g. "arifm@daycareportal.internal" → login_id "arifm"
-    if ((!contacts || contacts.length === 0) && user?.email?.includes("@daycareportal.internal")) {
-      const loginId = user.email.split("@")[0];
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id, login_id, phone")
-        .eq("login_id", loginId)
-        .maybeSingle();
-      if (profile?.phone) {
-        // Match by phone as secondary key
-        const { data: byPhone } = await supabase
-          .from("student_contacts")
-          .select("id, student_id")
-          .eq("phone", profile.phone);
-        if (byPhone?.length) contacts = byPhone;
-      }
+    // Fallback: look up by email (for contacts linked before profile_id was introduced)
+    if (!contacts || contacts.length === 0) {
+      const { data: byEmail } = await supabase
+        .from("student_contacts")
+        .select("id, student_id")
+        .eq("email", user!.email!);
+      if (byEmail?.length) contacts = byEmail;
     }
 
     if (!contacts || contacts.length === 0) { setLoading(false); return; }
