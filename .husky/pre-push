@@ -1,0 +1,9 @@
+#!/bin/sh
+# Pre-push hook: typecheck + smoke tests before every push
+echo "⏳ Running TypeScript check..."
+npx tsc --noEmit || { echo "❌ TypeScript errors — fix before pushing"; exit 1; }
+
+echo "⏳ Running smoke tests (auth + checkin-code)..."
+node_modules/.bin/playwright test e2e/auth.spec.ts e2e/checkin-code.spec.ts --reporter=dot || { echo "❌ Tests failed — fix before pushing"; exit 1; }
+
+echo "✅ All checks passed"

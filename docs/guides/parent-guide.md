@@ -76,3 +76,15 @@ View your child's schedule for the week. Read-only.
 
 ## Stories (Coming in R1)
 You'll be able to post short reflections about your child's day — milestones, funny moments, or observations — with optional photos. AI will elaborate your note into a warm narrative and generate a caption for the timeline.
+
+---
+
+## My Check-in Code (Portal Home)
+Your personal check-in code is shown on the **Home** page of the parent portal.
+
+- The code is **yours** — it stays the same even if your child moves to a different school or room.
+- It is **globally unique** across the system — no two people share the same code.
+- Default: masked (dots). Click the eye icon to reveal it.
+- To change it: type a new 4–6 digit code in the "Change code" field and click **Save**.
+  - If the code is already in use by someone else, you'll see an error — choose a different one.
+- Staff can use this code at the kiosk to check your child in or out on your behalf.
