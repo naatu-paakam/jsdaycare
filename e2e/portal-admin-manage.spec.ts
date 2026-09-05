@@ -93,6 +93,29 @@ test.describe("Portal admin — Schools tab", () => {
     }
   });
 
+  test("TC-portal-schools-create-and-verify: Creating a school persists it in the schools list", async ({ page }) => {
+    const schoolName = `TC-School-${Date.now()}`;
+    await page.getByRole("button", { name: /create school/i }).click();
+    await page.getByPlaceholder(/sunshine daycare/i).fill(schoolName);
+    await page.locator("select").first().selectOption("America/Los_Angeles");
+    await page.getByPlaceholder(/555-1234/i).fill("555-9999");
+    await page.getByPlaceholder(/info@school/i).fill("tc@school.com");
+    // Submit
+    await page.getByRole("button", { name: /create/i }).last().click();
+    // School created — modal shows success or closes
+    await page.waitForTimeout(2000);
+    // Close modal if still open
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(500);
+    // Verify in schools list
+    await expect(page.getByText(schoolName)).toBeVisible({ timeout: 8_000 });
+    // Clean up — delete the test school
+    const row = page.locator("tbody tr").filter({ hasText: schoolName });
+    await row.locator("button[title='Delete school']").click();
+    await page.getByRole("button", { name: /delete school/i }).click();
+    await expect(page.getByText(schoolName)).not.toBeVisible({ timeout: 5_000 });
+  });
+
   test("TC-portal-schools-create-has-address: Create School form has address/phone/email fields", async ({ page }) => {
     await page.getByRole("button", { name: /create school/i }).click();
     await expect(page.getByPlaceholder(/sunshine daycare/i)).toBeVisible({ timeout: 5_000 });
