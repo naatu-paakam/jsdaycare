@@ -1666,23 +1666,23 @@ export default function StudentProfile() {
                   onSave={saveEnrollment} onCancel={() => setEditSection(null)}>
                   {editSection === "enrollment" ? (
                     <div className="grid grid-cols-2 gap-3">
-                      <Input label="First contact date"  type="date" value={draftEnrollment.first_contact_date  ?? ""} onChange={v => setDraftEnrollment(d => ({...d, first_contact_date: v}))} />
-                      <Input label="Toured date"         type="date" value={draftEnrollment.toured_date         ?? ""} onChange={v => setDraftEnrollment(d => ({...d, toured_date: v}))} />
-                      <Input label="Paperwork date"      type="date" value={draftEnrollment.paperwork_date      ?? ""} onChange={v => setDraftEnrollment(d => ({...d, paperwork_date: v}))} />
-                      <Input label="Desired start date"  type="date" value={draftEnrollment.desired_start_date  ?? ""} onChange={v => setDraftEnrollment(d => ({...d, desired_start_date: v}))} />
-                      <Input label="Graduation date"     type="date" value={draftEnrollment.graduation_date     ?? ""} onChange={v => setDraftEnrollment(d => ({...d, graduation_date: v}))} />
-                      <Input label="Sibling attending"   value={draftEnrollment.sibling_name    ?? ""} onChange={v => setDraftEnrollment(d => ({...d, sibling_name: v}))} />
+                      <Input label="First Contact Date"  type="date" value={draftEnrollment.first_contact_date  ?? ""} onChange={v => setDraftEnrollment(d => ({...d, first_contact_date: v}))} />
+                      <Input label="Toured Date"         type="date" value={draftEnrollment.toured_date         ?? ""} onChange={v => setDraftEnrollment(d => ({...d, toured_date: v}))} />
+                      <Input label="Paperwork Date"      type="date" value={draftEnrollment.paperwork_date      ?? ""} onChange={v => setDraftEnrollment(d => ({...d, paperwork_date: v}))} />
+                      <Input label="Desired Start Date"  type="date" value={draftEnrollment.desired_start_date  ?? ""} onChange={v => setDraftEnrollment(d => ({...d, desired_start_date: v}))} />
+                      <Input label="Graduation Date"     type="date" value={draftEnrollment.graduation_date     ?? ""} onChange={v => setDraftEnrollment(d => ({...d, graduation_date: v}))} />
+                      <Input label="Sibling Attending"   value={draftEnrollment.sibling_name    ?? ""} onChange={v => setDraftEnrollment(d => ({...d, sibling_name: v}))} />
                       <div className="col-span-2"><Input label="Programs"         value={draftEnrollment.programs         ?? ""} onChange={v => setDraftEnrollment(d => ({...d, programs: v}))} /></div>
                       <div className="col-span-2"><Input label="Additional details" value={draftEnrollment.additional_details ?? ""} onChange={v => setDraftEnrollment(d => ({...d, additional_details: v}))} /></div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-4">
-                      <Field label="First contact"   value={fmt(enrollment?.first_contact_date  ?? null)} />
-                      <Field label="Toured"          value={fmt(enrollment?.toured_date         ?? null)} />
-                      <Field label="Paperwork"       value={fmt(enrollment?.paperwork_date      ?? null)} />
-                      <Field label="Desired start"   value={fmt(enrollment?.desired_start_date  ?? null)} />
+                      <Field label="First Contact Date"   value={fmt(enrollment?.first_contact_date  ?? null)} />
+                      <Field label="Toured Date"          value={fmt(enrollment?.toured_date         ?? null)} />
+                      <Field label="Paperwork Date"       value={fmt(enrollment?.paperwork_date      ?? null)} />
+                      <Field label="Desired Start Date"   value={fmt(enrollment?.desired_start_date  ?? null)} />
                       <Field label="Start date"      value={fmt(student.start_date              ?? null)} />
-                      <Field label="Graduation"      value={fmt(enrollment?.graduation_date     ?? null)} />
+                      <Field label="Graduation Date"      value={fmt(enrollment?.graduation_date     ?? null)} />
                       <Field label="Sibling"         value={enrollment?.sibling_name} />
                       <Field label="Programs"        value={enrollment?.programs} />
                       <div className="col-span-2"><Field label="Additional details" value={enrollment?.additional_details} /></div>
