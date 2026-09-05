@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
+import { fmtPhone } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
 import { School } from "@/lib/types";
 import { Building2, Users, UserCheck, Plus, X, ChevronRight, Pencil, Trash2, Copy, Check, Link as LinkIcon } from "lucide-react";
@@ -739,7 +740,7 @@ export default function PortalAdmin() {
                       <td className="px-5 py-3 text-gray-500 text-xs">
                         {s.address ? `${s.address.city ?? ""}${s.address.state ? ", " + s.address.state : ""}` : "—"}
                       </td>
-                      <td className="px-5 py-3 text-gray-500 text-xs">{s.phone ?? "—"}</td>
+                      <td className="px-5 py-3 text-gray-500 text-xs">{fmtPhone(s.phone)}</td>
                       <td className="px-5 py-3">
                         {s.activeStudents > 0 ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">

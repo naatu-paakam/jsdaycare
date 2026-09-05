@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Phone, Plus, Pencil, Trash2, X, Copy, Check, Camera } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { fmtPhone } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
 import Layout from "@/components/Layout";
 import { Profile } from "@/lib/types";

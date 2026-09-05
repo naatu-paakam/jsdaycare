@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Pencil, Check, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { fmtPhone } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
 import Layout from "@/components/Layout";
 import { Profile, StaffProfile as StaffProfileType } from "@/lib/types";

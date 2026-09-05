@@ -8,6 +8,7 @@ import {
   Camera, Video as VideoIcon, PersonStanding,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { fmtPhone } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
 import Layout from "@/components/Layout";
 import {
@@ -236,7 +237,7 @@ function EmergencyContactsSection({
               <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50">
                 <td className="px-5 py-3 font-medium text-gray-900">{c.full_name}</td>
                 <td className="px-5 py-3 text-gray-600">{c.relationship || "—"}</td>
-                <td className="px-5 py-3 text-gray-600">{c.phone || "—"}</td>
+                <td className="px-5 py-3 text-gray-600">{fmtPhone(c.phone)}</td>
                 {canEdit && (
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
@@ -1772,7 +1773,7 @@ export default function StudentProfile() {
                             </td>
                             {/* Phone / Email */}
                             <td className="px-4 py-3 text-xs text-gray-600">
-                              <div>{c.phone || "—"}</div>
+                              <div>{fmtPhone(c.phone)}</div>
                               <div className="text-gray-400">{c.email || ""}</div>
                             </td>
                             {/* Pickup + valid period */}
