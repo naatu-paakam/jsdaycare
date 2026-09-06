@@ -44,7 +44,6 @@ export default async (req: Request) => {
 
   const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
-    realtime: { params: { eventsPerSecond: -1 } } as any,
   });
 
   // Determine auth email
