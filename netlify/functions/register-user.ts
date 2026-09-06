@@ -44,8 +44,8 @@ export default async (req: Request) => {
 
   const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
+    realtime: { params: { eventsPerSecond: -1 } } as any,
   });
-  const supabase = createClient(SUPABASE_URL, process.env.VITE_SUPABASE_PUBLISHABLE_KEY!);
 
   // Determine auth email
   const authEmail = email?.trim() || `${loginId.trim().toLowerCase()}@daycareportal.internal`;
@@ -84,7 +84,7 @@ export default async (req: Request) => {
 
   // 4. Mark invitation as used (non-permanent only)
   if (!permanent && invitationToken) {
-    await supabase.rpc("use_invitation", { p_token: invitationToken });
+    await supabaseAdmin.rpc("use_invitation", { p_token: invitationToken });
   }
 
   // 5. If invite had contact_id in metadata, update that contact's email
