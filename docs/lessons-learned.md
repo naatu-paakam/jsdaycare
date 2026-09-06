@@ -277,6 +277,80 @@ A `CLAUDE.md` project file and a memory rule that acts as a first-gate check bef
 
 ---
 
+## 10. Netlify Functions Crash on Node 20 with Supabase JS v2
+
+### The mistake
+`netlify.toml` had `NODE_VERSION = "20"`. Supabase JS v2 calls `new WebSocket()` in the `SupabaseClient` constructor to init the realtime module — even when realtime is never used.
+
+### What happened
+Every call to `createClient()` inside the Netlify function threw:
+> `Node.js detected but native WebSocket not found. Ensure you are running Node.js 22+`
+
+Registration failed immediately with a 500 error. The error was confusing because it appeared in the Netlify function even though realtime was never explicitly used.
+
+### The fix
+Upgrade to Node 22 in `netlify.toml`:
+```toml
+[build.environment]
+  NODE_VERSION = "22"
+```
+Node 22 ships native `WebSocket` — no polyfill needed.
+
+### Rule
+Always set `NODE_VERSION = "22"` (or higher) in `netlify.toml` when using Supabase JS v2 in serverless functions. Node 18 and 20 lack native WebSocket.
+
+---
+
+## 11. VITE_ Prefix Exposes Secrets in Browser Bundle
+
+### The mistake
+Created a `supabaseAdmin.ts` in `src/lib/` that read `import.meta.env.VITE_SUPABASE_SECRET_KEY`. Even though the client was never actually used in production code, Vite replaces all `import.meta.env.VITE_*` references at build time with their actual values.
+
+### What happened
+The `sb_secret_...` key was baked into the browser JS bundle — visible to anyone with DevTools → Sources → search.
+
+### The fix
+1. Delete any file in `src/` that reads `import.meta.env.VITE_SUPABASE_SECRET_KEY`
+2. All admin operations must go through Netlify serverless functions using `process.env.SUPABASE_SECRET_KEY` (no VITE_ prefix)
+3. In Netlify env vars, set `SUPABASE_SECRET_KEY` (not `VITE_SUPABASE_SECRET_KEY`) — Netlify only exposes `VITE_*` vars to the Vite build
+
+### Detection
+```bash
+npm run build && grep -r "sb_secret_[A-Za-z0-9_-]\{20,\}" dist/
+```
+If this returns anything, a real key is in the bundle.
+
+### Rule
+**VITE_ prefix = browser-visible.** Never give a secret key a VITE_ prefix. Secrets belong in serverless functions only, accessed via `process.env.SECRET_NAME`.
+
+---
+
+## 12. Email Is Not a Reliable Primary Key for User Lookup
+
+### The context
+Parents can register with a User ID only (no real email). The system assigns them an internal email `loginid@daycareportal.internal`. Contacts pre-created by admins have a real email but the registered parent's auth email is the internal one.
+
+### What happened
+- `get_my_student_ids()` used `WHERE email = auth.email()` → failed for User-ID-only parents
+- `ParentPortal.fetchChildren()` used `eq("email", user.email)` → returned 0 rows for Arif (his contact had no email)
+- Parent portal showed "No children linked" despite the student existing
+
+### The fix
+1. Add `profile_id uuid` column to `student_contacts` — set on registration via invite
+2. Update `get_my_student_ids()` to match by `profile_id = auth.uid()` first, fall back to email only for pre-migration contacts
+3. Update all queries to use `profile_id` as the primary lookup, email as fallback
+
+```sql
+select student_id from student_contacts where profile_id = auth.uid()
+union
+select student_id from student_contacts where email = auth.email() and email is not null
+```
+
+### Rule
+Use UUIDs (profile/user IDs) as database join keys — never email. Email is user-entered, optional, and mutable. UUID is system-assigned and stable.
+
+---
+
 ## Summary Table
 
 | # | Issue | Root Cause | Fix |
@@ -290,6 +364,9 @@ A `CLAUDE.md` project file and a memory rule that acts as a first-gate check bef
 | 7 | Playwright crash importing supabase-js | WebAuthn browser API in Node.js | Raw fetch helper for e2e tests |
 | 8 | Portal admin sees 0 students | RLS blocks `school_id = null` user | Security-definer RPCs for cross-school reads |
 | 9 | Credentials in repo | No pre-commit gate | `CLAUDE.md` + git hook |
+| 10 | Netlify function crashes on Node 20 | Supabase JS v2 needs native WebSocket (Node 22+) | Set `NODE_VERSION = "22"` in `netlify.toml` |
+| 11 | Secret key in browser bundle | `VITE_SUPABASE_SECRET_KEY` in `src/` file | Remove; secrets only in serverless functions via `process.env` |
+| 12 | Parent portal shows "No children" | Email used as join key; optional for User-ID-only users | Add `profile_id` UUID column; use it as primary key |
 
 ---
 
