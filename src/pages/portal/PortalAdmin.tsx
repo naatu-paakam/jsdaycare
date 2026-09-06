@@ -529,7 +529,12 @@ export default function PortalAdmin() {
     setSavingSchoolDetails(false);
   }
 
+  // Users that must never be deleted — core test accounts
+  const PROTECTED_USER_LOGINS = ["admin", "teacher", "arudeepa"];
+
   async function deleteUser(userId: string) {
+    const user = userProfiles.find(u => u.id === userId);
+    if (user && PROTECTED_USER_LOGINS.includes(user?.login_id ?? "")) return; // safety guard
     // Use security-definer RPC: nullifies loose refs, removes memberships, deletes profile
     await supabase.rpc("delete_portal_user", { p_user_id: userId });
     // Auth user deletion (service role via admin API — best-effort)
@@ -897,9 +902,10 @@ export default function PortalAdmin() {
                               <Pencil size={14} />
                             </button>
                             <button
-                              title="Delete user"
-                              onClick={() => setDeleteUserConfirm(u)}
-                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              title={PROTECTED_USER_LOGINS.includes(u.login_id ?? "") ? "Protected — cannot be deleted" : "Delete user"}
+                              onClick={() => !PROTECTED_USER_LOGINS.includes(u.login_id ?? "") && setDeleteUserConfirm(u)}
+                              disabled={PROTECTED_USER_LOGINS.includes(u.login_id ?? "")}
+                              className={`p-1.5 rounded-lg transition-colors ${PROTECTED_USER_LOGINS.includes(u.login_id ?? "") ? "text-gray-200 cursor-not-allowed" : "text-gray-400 hover:text-red-500 hover:bg-red-50"}`}
                             >
                               <Trash2 size={14} />
                             </button>
