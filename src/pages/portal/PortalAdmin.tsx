@@ -539,7 +539,12 @@ export default function PortalAdmin() {
     setDeleteUserConfirm(null);
   }
 
+  // Schools that must never be deleted — used for testing and pilot data
+  const PROTECTED_SCHOOL_NAMES = ["Test Joy Family", "Test Sunshine school"];
+
   async function deleteSchool(schoolId: string) {
+    const school = schools.find(s => s.id === schoolId);
+    if (school && PROTECTED_SCHOOL_NAMES.includes(school.name)) return; // safety guard
     // Use security-definer RPC: nullifies profiles.school_id, deletes students cascade, then school cascade
     await supabase.rpc("delete_school_cascade", { p_school_id: schoolId });
     setSchools(prev => prev.filter(s => s.id !== schoolId));
@@ -774,9 +779,10 @@ export default function PortalAdmin() {
                             <Pencil size={14} />
                           </button>
                           <button
-                            title={s.activeStudents > 0 ? `${s.activeStudents} active students — deleting will remove them` : "Delete school"}
-                            onClick={() => setDeleteSchoolConfirm(s)}
-                            className={`p-1.5 rounded-lg transition-colors ${s.activeStudents > 0 ? "text-amber-400 hover:text-amber-600 hover:bg-amber-50" : "text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50"}`}
+                            title={PROTECTED_SCHOOL_NAMES.includes(s.name) ? "Protected — cannot be deleted" : s.activeStudents > 0 ? `${s.activeStudents} active students — deleting will remove them` : "Delete school"}
+                            onClick={() => !PROTECTED_SCHOOL_NAMES.includes(s.name) && setDeleteSchoolConfirm(s)}
+                            disabled={PROTECTED_SCHOOL_NAMES.includes(s.name)}
+                            className={`p-1.5 rounded-lg transition-colors ${PROTECTED_SCHOOL_NAMES.includes(s.name) ? "text-gray-200 cursor-not-allowed" : s.activeStudents > 0 ? "text-amber-400 hover:text-amber-600 hover:bg-amber-50" : "text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50"}`}
                           >
                             <Trash2 size={14} />
                           </button>
