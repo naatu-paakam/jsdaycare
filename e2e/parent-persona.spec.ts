@@ -88,22 +88,22 @@ test.describe("Parent portal — sidebar nav", () => {
   });
 
   test("TC-parent-nav-stories-visible: Stories link visible in sidebar", async ({ page }) => {
-    await page.locator("nav button").filter({ hasText: /JS Joy/ }).click().catch(() => {});
+    await page.locator("nav button").filter({ hasText: /Test Joy/ }).click().catch(() => {});
     await expect(page.getByRole("navigation").getByRole("link", { name: /stories/i })).toBeVisible({ timeout: 5_000 });
   });
 
   test("TC-parent-nav-calendar-visible: Calendar link visible in sidebar", async ({ page }) => {
-    await page.locator("nav button").filter({ hasText: /JS Joy/ }).click().catch(() => {});
+    await page.locator("nav button").filter({ hasText: /Test Joy/ }).click().catch(() => {});
     await expect(page.getByRole("navigation").getByRole("link", { name: /calendar/i })).toBeVisible({ timeout: 5_000 });
   });
 
   test("TC-parent-nav-menus-visible: Menus link visible in sidebar", async ({ page }) => {
-    await page.locator("nav button").filter({ hasText: /JS Joy/ }).click().catch(() => {});
+    await page.locator("nav button").filter({ hasText: /Test Joy/ }).click().catch(() => {});
     await expect(page.getByRole("navigation").getByRole("link", { name: /menus/i })).toBeVisible({ timeout: 5_000 });
   });
 
   test("TC-parent-nav-students-visible: Students link visible in sidebar", async ({ page }) => {
-    await page.locator("nav button").filter({ hasText: /JS Joy/ }).click().catch(() => {});
+    await page.locator("nav button").filter({ hasText: /Test Joy/ }).click().catch(() => {});
     await expect(page.getByRole("navigation").getByRole("link", { name: /students/i })).toBeVisible({ timeout: 5_000 });
   });
 
@@ -116,12 +116,12 @@ test.describe("Parent portal — sidebar nav", () => {
   });
 
   test("TC-parent-nav-no-rooms: Rooms NOT visible for parent", async ({ page }) => {
-    await page.locator("nav button").filter({ hasText: /JS Joy/ }).click().catch(() => {});
+    await page.locator("nav button").filter({ hasText: /Test Joy/ }).click().catch(() => {});
     await expect(page.getByRole("navigation").getByRole("link", { name: /^rooms$/i })).not.toBeVisible();
   });
 
   test("TC-parent-nav-no-schedules: Schedules NOT visible for parent", async ({ page }) => {
-    await page.locator("nav button").filter({ hasText: /JS Joy/ }).click().catch(() => {});
+    await page.locator("nav button").filter({ hasText: /Test Joy/ }).click().catch(() => {});
     await expect(page.getByRole("navigation").getByRole("link", { name: /^schedules$/i })).not.toBeVisible();
   });
 });

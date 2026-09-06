@@ -16,9 +16,9 @@
 import { test, expect } from "@playwright/test";
 import { loginAsAdmin } from "./helpers/auth";
 
-// Jaya Bijjala manages: JS Joy Family Daycare + Sunshine
-const SCHOOL_A = "JS Joy Family Daycare";
-const SCHOOL_B = "Sunshine";
+// Jaya Bijjala manages: Test Joy Family + Sunshine
+const SCHOOL_A = "Test Joy Family";
+const SCHOOL_B = "Test Sunshine school";
 
 test.describe("Student school move — multi-school admin", () => {
   test.beforeEach(async ({ page }) => {
@@ -32,7 +32,7 @@ test.describe("Student school move — multi-school admin", () => {
     const firstRow = page.locator("tbody tr").first();
     await firstRow.waitFor({ timeout: 6_000 });
     await firstRow.locator("button[title='Edit enrollment']").click();
-    await expect(page.locator("select:has(option:has-text('Sunshine'))")).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator("select:has(option:has-text('Test Sunshine'))")).toBeVisible({ timeout: 5_000 });
     await page.getByRole("button", { name: /cancel/i }).click();
   });
 
@@ -40,21 +40,21 @@ test.describe("Student school move — multi-school admin", () => {
     const firstRow = page.locator("tbody tr").first();
     await firstRow.waitFor({ timeout: 6_000 });
     await firstRow.locator("button[title='Edit enrollment']").click();
-    await page.locator("select:has(option:has-text('Sunshine'))").waitFor({ timeout: 5_000 });
-    const options = await page.locator("select:has(option:has-text('Sunshine')) option").allInnerTexts();
+    await page.locator("select:has(option:has-text('Test Sunshine'))").waitFor({ timeout: 5_000 });
+    const options = await page.locator("select:has(option:has-text('Test Sunshine')) option").allInnerTexts();
     expect(options).toContain(SCHOOL_A);
     expect(options).toContain(SCHOOL_B);
     await page.getByRole("button", { name: /cancel/i }).click();
   });
 
   test("TC-student-school-move-current-selected: School dropdown defaults to student's current school", async ({ page }) => {
-    const firstRow = page.locator("tbody tr").filter({ hasNot: page.locator("td:has-text('Sunshine')") }).first();
+    const firstRow = page.locator("tbody tr").filter({ hasNot: page.locator("td:has-text('Test Sunshine')") }).first();
     await firstRow.waitFor({ timeout: 6_000 });
     await firstRow.locator("button[title='Edit enrollment']").click();
-    const select = page.locator("select:has(option:has-text('Sunshine'))");
+    const select = page.locator("select:has(option:has-text('Test Sunshine'))");
     await select.waitFor({ timeout: 5_000 });
     const currentVal = await select.inputValue();
-    // Should be JS Joy Family Daycare's ID (not Sunshine)
+    // Should be Test Joy Family's ID (not Sunshine)
     expect(currentVal).not.toBe("");
     await page.getByRole("button", { name: /cancel/i }).click();
   });
@@ -64,7 +64,7 @@ test.describe("Student school move — multi-school admin", () => {
     const firstRow = page.locator("tbody tr").first();
     await firstRow.waitFor({ timeout: 6_000 });
     await firstRow.locator("button[title='Edit enrollment']").click();
-    const select = page.locator("select:has(option:has-text('Sunshine'))");
+    const select = page.locator("select:has(option:has-text('Test Sunshine'))");
     await select.waitFor({ timeout: 5_000 });
     await select.selectOption({ label: SCHOOL_B });
     await expect(page.getByText(/moving to a different school will unassign/i)).toBeVisible({ timeout: 3_000 });
@@ -75,7 +75,7 @@ test.describe("Student school move — multi-school admin", () => {
     const firstRow = page.locator("tbody tr").first();
     await firstRow.waitFor({ timeout: 6_000 });
     await firstRow.locator("button[title='Edit enrollment']").click();
-    await page.locator("select:has(option:has-text('Sunshine'))").waitFor({ timeout: 5_000 });
+    await page.locator("select:has(option:has-text('Test Sunshine'))").waitFor({ timeout: 5_000 });
     // Don't change school — warning should NOT appear
     await expect(page.getByText(/moving to a different school/i)).not.toBeVisible();
     await page.getByRole("button", { name: /cancel/i }).click();
@@ -97,7 +97,7 @@ test.describe("Student school move — multi-school admin", () => {
     await row.locator("button[title='Edit enrollment']").click();
 
     // Select Sunshine school
-    const select = page.locator("select:has(option:has-text('Sunshine'))");
+    const select = page.locator("select:has(option:has-text('Test Sunshine'))");
     await select.waitFor({ timeout: 5_000 });
     await select.selectOption({ label: SCHOOL_B });
     await expect(page.getByText(/moving to a different school/i)).toBeVisible();
@@ -105,7 +105,7 @@ test.describe("Student school move — multi-school admin", () => {
     // Save
     await page.getByRole("button", { name: /save changes/i }).click();
 
-    // Student should be gone from JS Joy Family Daycare list
+    // Student should be gone from Test Joy Family list
     await expect(page.locator("tbody tr").filter({ hasText: "TC-Move SchoolTest" })).not.toBeVisible({ timeout: 6_000 });
   });
 
@@ -116,7 +116,7 @@ test.describe("Student school move — multi-school admin", () => {
     const firstRow = page.locator("tbody tr").first();
     await firstRow.waitFor({ timeout: 6_000 });
     await firstRow.locator("button[title='Edit enrollment']").click();
-    const select = page.locator("select:has(option:has-text('Sunshine'))");
+    const select = page.locator("select:has(option:has-text('Test Sunshine'))");
     await select.waitFor({ timeout: 5_000 });
     await select.selectOption({ label: SCHOOL_B });
     await page.getByRole("button", { name: /save changes/i }).click();

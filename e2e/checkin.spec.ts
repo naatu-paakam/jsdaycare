@@ -27,7 +27,7 @@ async function clearAttendance(studentId: string) {
 
 test("TC-checkin-page-loads: /checkin page loads without login and shows PIN pad", async ({ page }) => {
   await page.goto(CHECKIN_URL);
-  await expect(page.getByText("JS Joy Family Daycare")).toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText("Test Joy Family")).toBeVisible({ timeout: 8_000 });
   await expect(page.getByText("Enter your 6-digit PIN")).toBeVisible();
   await expect(page.getByText("QR Check-In / Check-Out")).toBeVisible();
   // Full keypad visible

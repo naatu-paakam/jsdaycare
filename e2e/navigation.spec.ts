@@ -175,13 +175,13 @@ test("TC-settings-school-name-change: renaming school preserves students and roo
   // Wait for school name to load into input (non-empty)
   const nameInput = page.locator('input').first();
   await expect(nameInput).not.toHaveValue("", { timeout: 8_000 });
-  const CANONICAL_NAME = "JS Joy Family Daycare"; // always restore to this
+  const CANONICAL_NAME = "Test Joy Family"; // always restore to this
 
   // Change the name — school UUID stays the same, only name changes
-  await nameInput.fill("JS Joy Family Daycare (Test Rename)");
+  await nameInput.fill("Test Joy Family (Test Rename)");
   await page.getByRole("button", { name: /save changes/i }).click();
   // Button briefly shows "Saved!" then reverts to "Save Changes"
-  await expect(nameInput).toHaveValue("JS Joy Family Daycare (Test Rename)", { timeout: 5_000 });
+  await expect(nameInput).toHaveValue("Test Joy Family (Test Rename)", { timeout: 5_000 });
 
   // Verify /students page still loads — UUID unchanged so all data is intact
   await page.goto("/students");

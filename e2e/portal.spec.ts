@@ -27,8 +27,8 @@ test("TC-portal-schools-table: portal admin sees schools table with at least 1 s
   await loginAsPortalAdmin(page);
   await expect(page.getByRole("heading", { name: /schools/i })).toBeVisible({ timeout: 8_000 });
   await expect(page.locator("table")).toBeVisible();
-  // At least JS Joy Family Daycare
-  await expect(page.getByText(/JS Joy/i)).toBeVisible({ timeout: 8_000 });
+  // At least Test Joy Family
+  await expect(page.getByText(/Test Joy/i)).toBeVisible({ timeout: 8_000 });
 });
 
 test("TC-portal-stats: portal admin dashboard shows stats (schools count)", async ({ page }) => {
@@ -136,7 +136,7 @@ test("TC-portal-users-multischool-shown: Multi-school user shows both school nam
   // Jaya Bijjala should show 2 schools (multi-school admin)
   const jayaRow = page.locator("tr").filter({ hasText: /Jaya Bijjala/i });
   await jayaRow.waitFor({ timeout: 8_000 });
-  await expect(jayaRow.getByText(/Sunshine|JS Joy/i).first()).toBeVisible();
+  await expect(jayaRow.getByText(/Test Sunshine|Test Joy/i).first()).toBeVisible();
 });
 
 test("TC-portal-users-search: Search filter narrows user list", async ({ page }) => {

@@ -74,7 +74,7 @@ test.describe("Staff persona — nav access control", () => {
   // ── School dropdown ───────────────────────────────────────────────────────
   test("TC-staff-school-no-switcher: Staff school display has no dropdown arrow (single school)", async ({ page }) => {
     // The school button should be cursor-default (not a dropdown)
-    const schoolBtn = page.locator("button").filter({ hasText: /JS Joy|Sunshine/i }).first();
+    const schoolBtn = page.locator("button").filter({ hasText: /Test Joy|Test Sunshine/i }).first();
     await expect(schoolBtn).toBeVisible({ timeout: 5_000 });
     // No ChevronRight/Down visible inside the school switcher
     await expect(page.locator("aside button[class*='cursor-default']")).toBeVisible();
@@ -83,9 +83,9 @@ test.describe("Staff persona — nav access control", () => {
   test("TC-staff-school-shows-own-school: Staff sees only their own school name", async ({ page }) => {
     await page.waitForLoadState("networkidle");
     // School name may wrap across lines — check the aside contains the school text
-    await expect(page.locator("aside").getByText(/JS Joy/i).first()).toBeVisible({ timeout: 8_000 });
+    await expect(page.locator("aside").getByText(/Test Joy/i).first()).toBeVisible({ timeout: 8_000 });
     // Should NOT show other schools staff is not a member of
-    await expect(page.locator("aside").getByText(/Sunshine/i)).not.toBeVisible();
+    await expect(page.locator("aside").getByText(/Test Sunshine/i)).not.toBeVisible();
   });
 });
 

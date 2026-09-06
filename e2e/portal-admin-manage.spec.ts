@@ -36,8 +36,8 @@ test.describe("Portal admin — Schools tab", () => {
   });
 
   test("TC-portal-schools-search-filters: Search bar filters school list", async ({ page }) => {
-    await page.getByPlaceholder(/search schools/i).fill("JS Joy");
-    await expect(page.getByText("JS Joy Family Daycare")).toBeVisible({ timeout: 5_000 });
+    await page.getByPlaceholder(/search schools/i).fill("Test Joy");
+    await expect(page.getByText("Test Joy Family")).toBeVisible({ timeout: 5_000 });
     // Other schools should not be visible if filtered
   });
 
@@ -76,8 +76,8 @@ test.describe("Portal admin — Schools tab", () => {
   });
 
   test("TC-portal-schools-active-students-badge: School with active students shows amber badge", async ({ page }) => {
-    // JS Joy Family Daycare has active students — should show amber badge
-    const jsJoyRow = page.locator("tbody tr").filter({ hasText: "JS Joy Family Daycare" }).first();
+    // Test Joy Family has active students — should show amber badge
+    const jsJoyRow = page.locator("tbody tr").filter({ hasText: "Test Joy Family" }).first();
     await jsJoyRow.waitFor({ timeout: 6_000 });
     // Either amber badge or 0 — just verify Students column cell is visible
     await expect(jsJoyRow.locator("td").nth(2)).toBeVisible();

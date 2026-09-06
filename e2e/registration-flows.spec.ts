@@ -6,7 +6,7 @@ import { test, expect, Page } from "@playwright/test";
 import { loginAsAdmin } from "./helpers/auth";
 import * as SB from "./helpers/supabase-admin";
 
-const SCHOOL_ID = "08f7413b-1aa9-4679-b80b-d59ffc1fd749"; // Test JS Joy Family Daycare
+const SCHOOL_ID = "08f7413b-1aa9-4679-b80b-d59ffc1fd749"; // Test Test Joy Family
 
 async function createInvite(role: string, email: string) {
   return SB.insert("invitations", {
