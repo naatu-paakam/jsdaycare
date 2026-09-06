@@ -647,10 +647,10 @@ export default function PortalAdmin() {
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0">
-            <img src="/favicon.webp" alt="DayCarePortal" className="w-full h-full object-cover" />
+            <img src="/favicon.webp" alt="Daycare Portal" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h1 className="font-semibold text-gray-900">DayCarePortal Admin</h1>
+            <h1 className="font-semibold text-gray-900">Daycare Portal Admin</h1>
             <p className="text-xs text-gray-500">Platform management</p>
           </div>
         </div>
@@ -1309,7 +1309,7 @@ export default function PortalAdmin() {
                   <p className="text-xs text-red-600 mt-1.5 bg-red-50 rounded px-2 py-1">{inviteError}</p>
                 ) : (
                   <p className="text-xs text-gray-400 mt-1">
-                    For existing DayCarePortal users. They keep access to their other schools.
+                    For existing Daycare Portal users. They keep access to their other schools.
                   </p>
                 )}
               </div>

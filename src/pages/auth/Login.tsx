@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { Baby } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -57,10 +56,10 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-500 rounded-2xl mb-4">
-            <Baby size={32} className="text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 overflow-hidden">
+            <img src="/favicon.webp" alt="Daycare Portal" className="w-full h-full object-cover" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">DayCarePortal</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Daycare Portal</h1>
           <p className="text-gray-500 mt-1 text-sm">Sign in to your account</p>
         </div>
 

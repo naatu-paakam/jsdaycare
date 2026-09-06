@@ -158,7 +158,7 @@ export default function Register() {
         <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center mb-4">
           <Baby size={24} className="text-white" />
         </div>
-        <h1 className="text-xl font-bold text-gray-900 mb-1">DayCarePortal</h1>
+        <h1 className="text-xl font-bold text-gray-900 mb-1">Daycare Portal</h1>
         <p className="text-sm text-gray-500 mb-6">Create your account</p>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 w-full max-w-sm text-center space-y-3">
           <p className="font-semibold text-gray-900">{msg.title}</p>
@@ -188,7 +188,7 @@ export default function Register() {
       <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center mb-4">
         <Baby size={24} className="text-white" />
       </div>
-      <h1 className="text-xl font-bold text-gray-900 mb-1">DayCarePortal</h1>
+      <h1 className="text-xl font-bold text-gray-900 mb-1">Daycare Portal</h1>
       <p className="text-sm text-gray-500 mb-6">Create your account</p>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 w-full max-w-md space-y-4">

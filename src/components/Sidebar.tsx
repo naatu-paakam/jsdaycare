@@ -144,9 +144,9 @@ export default function Sidebar() {
       <div className="px-4 py-4 border-b border-gray-100">
         <div className="flex items-center gap-2 mb-2">
           <div className="w-8 h-8 shrink-0">
-            <img src={JS_JOY_LOGO} alt={school?.name ?? "DayCarePortal"} className="w-8 h-8 object-contain rounded-full" />
+            <img src={JS_JOY_LOGO} alt={school?.name ?? "Daycare Portal"} className="w-8 h-8 object-contain rounded-full" />
           </div>
-          <span className="font-bold text-gray-900 text-sm">DayCarePortal</span>
+          <span className="font-bold text-gray-900 text-sm">Daycare Portal</span>
         </div>
 
         {/* School switcher — shown always; dropdown only if multiple schools */}
