@@ -12,7 +12,7 @@ Track who is present each day, when they arrived and departed, and who handed th
 
 ## Check-In
 - Staff-triggered: teacher marks child as checked in from room view
-- PIN-based: parent enters 4-digit family PIN on a shared tablet at the door
+- Code-based: parent or staff enters their personal check-in code (4–6 digits, stored on their profile) on a shared tablet at the door
 - QR code: parent scans a unique family QR code (future: use phone camera)
 - Records: timestamp, guardian who dropped off (selected from authorized list)
 

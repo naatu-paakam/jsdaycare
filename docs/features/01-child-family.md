@@ -94,7 +94,7 @@ Each child has up to 4 contacts. Contact type replaces "Guardian."
 | Email | Required for primary contact (used for parent login) |
 | Phone | Required |
 | Can Pickup | Yes / No — drives authorized pickup list |
-| PIN Code | 4-digit family PIN for check-in; hidden by default (Reveal button) |
+| Check-in Code | 4–6 digit code stored on the parent's profile (globally unique); Reveal button in admin contact list |
 | Signed Up | Whether the contact has created a parent portal account |
 | Billing Info | Whether this contact is the billing contact (R1) |
 

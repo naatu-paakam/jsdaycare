@@ -51,7 +51,7 @@ Click your child's name to open their profile.
 ## Check-In / Check-Out (at front desk)
 When you arrive or leave:
 1. **Scan** the QR code displayed at the front desk
-2. **Enter your 6-digit PIN** (shown in your contact record — ask admin if you don't have it)
+2. **Enter your check-in code** (shown on your Home page under "My Check-in Code" — set it yourself or ask your admin)
 3. See your child's current status (Present / Not recorded)
 4. Tap **✓ Check In** or **→ Check Out**
 

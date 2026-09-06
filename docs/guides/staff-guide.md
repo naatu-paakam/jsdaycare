@@ -105,7 +105,7 @@ Read-only view of school holidays, special events, and operating hours. Contact 
 ---
 
 ## Check-In (QR Code)
-You can use the front desk QR code to check students in/out — same as parents. Enter your 6-digit staff PIN, select the student, and tap Check In or Check Out.
+You can use the front desk QR code to check students in/out — same as parents. Enter your personal check-in code (set on your Home page under "My Check-in Code"), select the student, and tap Check In or Check Out.
 
 ---
 

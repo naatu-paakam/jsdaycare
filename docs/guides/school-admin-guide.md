@@ -119,7 +119,7 @@ Forms & compliance management (in progress, R1 full implementation).
 URL: `/checkin?school=<school-id>`  
 Available via **Settings → Front Desk QR Code**.
 
-- Parent/staff scans QR → enters their personal check-in code (4–6 digits, set by parent in portal or assigned by admin in contact record)
+- Parent/staff scans QR → enters their personal check-in code (4–6 digits, set by the user on their own Home page; globally unique across all schools)
 - Sees linked student(s) with current status (Present / Checked out / Not recorded)
 - Taps Check In or Check Out
 - Multi-kid: checkboxes to select one or all children

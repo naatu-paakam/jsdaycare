@@ -32,6 +32,7 @@ erDiagram
     string login_id
     string phone
     string avatar_url
+    string checkin_code
     timestamptz created_at
   }
 
@@ -125,6 +126,7 @@ erDiagram
     bool can_pickup
     string photo_url
     string pin_code
+    uuid profile_id FK
     string portal_status
     date pickup_valid_from
     date pickup_valid_to

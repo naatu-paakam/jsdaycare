@@ -49,7 +49,7 @@ Making the repo public would expose the key — anyone could use it to bypass al
 
 ### The fix
 1. **Rotate the JWT Secret** in Supabase → Settings → API → JWT Settings → Rotate. This immediately invalidates the old key.
-2. Move all credentials to `.env` (gitignored): `process.env.VITE_SUPABASE_SECRET_KEY`
+2. Move all credentials to `.env` (gitignored): `SUPABASE_SECRET_KEY` (no VITE_ prefix — never expose secrets to the browser build)
 3. Move test passwords to `.env`: `VITE_TEST_PASSWORD`, `VITE_TEST_PORTAL_PASSWORD`
 4. Add a **CLAUDE.md** security gate that blocks credentials from being written to any tracked file
 

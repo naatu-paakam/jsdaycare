@@ -1,7 +1,7 @@
 # JsDayCare — Feature Overview
 
 Daycare management web app for JS Joy Family Day Care.
-Stack: React + Vite + TypeScript + Tailwind + Supabase + Express
+Stack: React + Vite + TypeScript + Tailwind + Supabase + Netlify Functions
 
 ---
 
