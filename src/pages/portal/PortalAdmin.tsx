@@ -646,8 +646,8 @@ export default function PortalAdmin() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-            <Building2 size={18} className="text-white" />
+          <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0">
+            <img src="/favicon.webp" alt="DayCarePortal" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="font-semibold text-gray-900">DayCarePortal Admin</h1>
