@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daycare Portal — Modern Daycare Management</title>
+  <meta name="description" content="Daycare Portal helps small family daycares manage check-ins, daily reports, licensing compliance and parent communication — all in one place." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange: #f97316;
+      --orange-dark: #ea580c;
+      --orange-light: #fff7ed;
+      --navy: #0f172a;
+      --gray: #64748b;
+      --gray-light: #f8fafc;
+      --border: #e2e8f0;
+      --radius: 16px;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      color: var(--navy);
+      background: #fff;
+      line-height: 1.6;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.1rem; }
+    .nav-brand img { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { color: var(--gray); text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: color .2s; }
+    .nav-links a:hover { color: var(--orange); }
+    .nav-cta {
+      background: var(--orange); color: #fff; padding: 0.5rem 1.25rem;
+      border-radius: 8px; font-weight: 700; font-size: 0.9rem;
+      text-decoration: none; transition: background .2s;
+    }
+    .nav-cta:hover { background: var(--orange-dark); }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 40%, #fdf4ff 100%);
+      padding: 6rem 2rem 5rem;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #fff; border: 1px solid #fed7aa;
+      color: var(--orange-dark); font-size: 0.8rem; font-weight: 700;
+      padding: 0.3rem 0.9rem; border-radius: 999px; margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 900; line-height: 1.15;
+      max-width: 780px; margin: 0 auto 1.25rem;
+    }
+    .hero h1 span { color: var(--orange); }
+    .hero p {
+      font-size: 1.15rem; color: var(--gray);
+      max-width: 560px; margin: 0 auto 2.5rem;
+    }
+    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--orange); color: #fff;
+      padding: 0.85rem 2rem; border-radius: 10px;
+      font-weight: 800; font-size: 1rem;
+      text-decoration: none; transition: background .2s, transform .1s;
+      display: inline-block;
+    }
+    .btn-primary:hover { background: var(--orange-dark); transform: translateY(-1px); }
+    .btn-secondary {
+      background: #fff; color: var(--navy); border: 1.5px solid var(--border);
+      padding: 0.85rem 2rem; border-radius: 10px;
+      font-weight: 700; font-size: 1rem;
+      text-decoration: none; transition: border-color .2s;
+      display: inline-block;
+    }
+    .btn-secondary:hover { border-color: var(--orange); color: var(--orange); }
+    .hero-proof {
+      margin-top: 3rem; font-size: 0.85rem; color: var(--gray);
+    }
+    .hero-proof strong { color: var(--navy); }
+
+    /* ── Section ── */
+    section { padding: 5rem 2rem; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      display: inline-block; background: var(--orange-light);
+      color: var(--orange-dark); font-size: 0.75rem; font-weight: 800;
+      letter-spacing: .08em; text-transform: uppercase;
+      padding: 0.3rem 0.8rem; border-radius: 6px; margin-bottom: 1rem;
+    }
+    .section-title {
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 900; line-height: 1.2; margin-bottom: 0.75rem;
+    }
+    .section-sub {
+      font-size: 1.05rem; color: var(--gray); max-width: 560px;
+    }
+
+    /* ── Problem ── */
+    .problem { background: var(--gray-light); }
+    .problem-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem; margin-top: 3rem;
+    }
+    .problem-card {
+      background: #fff; border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.5rem;
+    }
+    .problem-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .problem-card h3 { font-weight: 800; margin-bottom: 0.5rem; }
+    .problem-card p { font-size: 0.9rem; color: var(--gray); }
+
+    /* ── Differentiators ── */
+    .diff-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem; margin-top: 3rem;
+    }
+    .diff-card {
+      border: 1.5px solid var(--border); border-radius: var(--radius);
+      padding: 2rem; transition: border-color .2s, box-shadow .2s;
+      position: relative; overflow: hidden;
+    }
+    .diff-card:hover { border-color: var(--orange); box-shadow: 0 8px 32px rgba(249,115,22,.1); }
+    .diff-card.featured {
+      border-color: var(--orange); background: var(--orange-light);
+    }
+    .diff-tag {
+      position: absolute; top: 1rem; right: 1rem;
+      background: var(--orange); color: #fff;
+      font-size: 0.65rem; font-weight: 800; letter-spacing: .06em;
+      text-transform: uppercase; padding: 0.2rem 0.6rem; border-radius: 4px;
+    }
+    .diff-emoji { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+    .diff-card h3 { font-size: 1.15rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .diff-card p { font-size: 0.9rem; color: var(--gray); margin-bottom: 1rem; }
+    .diff-card blockquote {
+      background: #fff; border-left: 3px solid var(--orange);
+      padding: 0.75rem 1rem; border-radius: 0 8px 8px 0;
+      font-size: 0.85rem; color: var(--navy); font-style: italic;
+    }
+    .diff-vs {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.78rem; font-weight: 700; color: var(--gray);
+      background: #f1f5f9; padding: 0.3rem 0.7rem; border-radius: 6px;
+      margin-top: 0.75rem;
+    }
+    .diff-vs .no { color: #ef4444; }
+    .diff-vs .yes { color: #22c55e; }
+
+    /* ── Audit spotlight ── */
+    .audit {
+      background: linear-gradient(135deg, var(--navy) 0%, #1e3a5f 100%);
+      color: #fff;
+    }
+    .audit .section-label { background: rgba(249,115,22,.2); color: #fb923c; }
+    .audit .section-title { color: #fff; }
+    .audit .section-sub { color: #94a3b8; }
+    .audit-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 3rem; margin-top: 3rem; align-items: center;
+    }
+    @media (max-width: 700px) { .audit-grid { grid-template-columns: 1fr; } }
+    .audit-steps { list-style: none; display: flex; flex-direction: column; gap: 1.25rem; }
+    .audit-steps li {
+      display: flex; gap: 1rem; align-items: flex-start;
+    }
+    .audit-step-num {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--orange); color: #fff;
+      font-weight: 800; font-size: 0.85rem;
+      display: flex; align-items: center; justify-content: center; shrink: 0;
+      flex-shrink: 0;
+    }
+    .audit-steps li h4 { font-weight: 800; margin-bottom: 0.2rem; }
+    .audit-steps li p { font-size: 0.85rem; color: #94a3b8; }
+    .audit-stat-box {
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--radius); padding: 2rem;
+      display: flex; flex-direction: column; gap: 1.5rem;
+    }
+    .audit-stat { text-align: center; }
+    .audit-stat .num { font-size: 2.8rem; font-weight: 900; color: var(--orange); }
+    .audit-stat .label { font-size: 0.85rem; color: #94a3b8; margin-top: 0.25rem; }
+
+    /* ── Pricing ── */
+    .pricing { background: var(--gray-light); }
+    .pricing-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem; margin-top: 3rem;
+    }
+    .plan {
+      background: #fff; border: 1.5px solid var(--border);
+      border-radius: var(--radius); padding: 1.75rem;
+      display: flex; flex-direction: column;
+    }
+    .plan.popular {
+      border-color: var(--orange);
+      box-shadow: 0 8px 32px rgba(249,115,22,.15);
+    }
+    .plan-badge {
+      display: inline-block; background: var(--orange); color: #fff;
+      font-size: 0.7rem; font-weight: 800; letter-spacing: .06em;
+      text-transform: uppercase; padding: 0.2rem 0.7rem; border-radius: 4px;
+      margin-bottom: 1rem; align-self: flex-start;
+    }
+    .plan-name { font-size: 1rem; font-weight: 800; margin-bottom: 0.25rem; }
+    .plan-price { font-size: 2.2rem; font-weight: 900; margin-bottom: 0.25rem; }
+    .plan-price span { font-size: 1rem; font-weight: 600; color: var(--gray); }
+    .plan-desc { font-size: 0.85rem; color: var(--gray); margin-bottom: 1.25rem; }
+    .plan-features { list-style: none; flex: 1; }
+    .plan-features li {
+      font-size: 0.88rem; padding: 0.35rem 0;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .plan-features li::before { content: '✓'; color: var(--orange); font-weight: 800; }
+    .plan-cta {
+      display: block; text-align: center; margin-top: 1.5rem;
+      padding: 0.7rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem;
+      text-decoration: none; transition: all .2s;
+    }
+    .plan-cta.primary { background: var(--orange); color: #fff; }
+    .plan-cta.primary:hover { background: var(--orange-dark); }
+    .plan-cta.outline { border: 1.5px solid var(--border); color: var(--navy); }
+    .plan-cta.outline:hover { border-color: var(--orange); color: var(--orange); }
+    .pricing-note { text-align: center; color: var(--gray); font-size: 0.85rem; margin-top: 1.5rem; }
+
+    /* ── Roadmap ── */
+    .roadmap-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem; margin-top: 3rem;
+    }
+    .roadmap-item {
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 1.5rem;
+    }
+    .roadmap-item.done { border-color: #86efac; background: #f0fdf4; }
+    .roadmap-item.next { border-color: #fcd34d; background: #fefce8; }
+    .roadmap-item.future { border-color: #c4b5fd; background: #faf5ff; }
+    .roadmap-tag {
+      display: inline-block; font-size: 0.7rem; font-weight: 800;
+      letter-spacing: .06em; text-transform: uppercase;
+      padding: 0.2rem 0.6rem; border-radius: 4px; margin-bottom: 0.75rem;
+    }
+    .done .roadmap-tag { background: #bbf7d0; color: #166534; }
+    .next .roadmap-tag { background: #fde68a; color: #92400e; }
+    .future .roadmap-tag { background: #ddd6fe; color: #5b21b6; }
+    .roadmap-item h3 { font-weight: 800; margin-bottom: 0.4rem; }
+    .roadmap-item p { font-size: 0.85rem; color: var(--gray); }
+
+    /* ── CTA ── */
+    .cta-section {
+      background: linear-gradient(135deg, var(--orange) 0%, #f59e0b 100%);
+      text-align: center; padding: 5rem 2rem; color: #fff;
+    }
+    .cta-section h2 { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 900; margin-bottom: 1rem; }
+    .cta-section p { font-size: 1.1rem; opacity: .85; margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .btn-white {
+      background: #fff; color: var(--orange-dark);
+      padding: 0.9rem 2.25rem; border-radius: 10px;
+      font-weight: 800; font-size: 1rem; text-decoration: none;
+      display: inline-block; transition: transform .1s;
+    }
+    .btn-white:hover { transform: translateY(-2px); }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--navy); color: #64748b;
+      padding: 2rem; text-align: center; font-size: 0.85rem;
+    }
+    footer a { color: #94a3b8; text-decoration: none; }
+    footer a:hover { color: var(--orange); }
+
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .hero { padding: 4rem 1.5rem 3rem; }
+      section { padding: 3.5rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-brand">
+    <img src="../public/favicon.webp" alt="Daycare Portal" />
+    Daycare Portal
+  </div>
+  <div class="nav-links">
+    <a href="#why">Why Us</a>
+    <a href="#audit">Licensing</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#roadmap">Roadmap</a>
+  </div>
+  <a href="https://usdaycare.netlify.app" class="nav-cta" target="_blank">Try it free →</a>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">🌟 Built for family-owned daycares</div>
+  <h1>Run your daycare.<br><span>Not your paperwork.</span></h1>
+  <p>Daycare Portal handles check-ins, parent communication, daily reports, and licensing compliance — so you can focus on the children.</p>
+  <div class="hero-actions">
+    <a href="https://usdaycare.netlify.app" class="btn-primary" target="_blank">Start free trial</a>
+    <a href="#why" class="btn-secondary">See what's different</a>
+  </div>
+  <p class="hero-proof">No credit card required &nbsp;·&nbsp; Setup in <strong>10 minutes</strong> &nbsp;·&nbsp; Cancel anytime</p>
+</section>
+
+<!-- Problem -->
+<section class="problem" id="problem">
+  <div class="container">
+    <div class="section-label">The Problem</div>
+    <h2 class="section-title">Running a daycare shouldn't feel like running a bureaucracy.</h2>
+    <p class="section-sub">Most daycare software was built for large chains. Small family daycares get a product that's too complex, too expensive, and missing the features they actually need.</p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="problem-icon">😤</div>
+        <h3>Forgotten PINs at drop-off</h3>
+        <p>System-generated codes nobody remembers. Parents hold up the line. Staff scramble to look up codes.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">📋</div>
+        <h3>Inspection week panic</h3>
+        <p>Days spent pulling binders, printing records, and prepping for a state inspection that takes the inspector 4 hours on-site.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">📊</div>
+        <h3>Parents want connection, not data</h3>
+        <p>"Nap: 90 min. Meal: 80%." doesn't tell a parent anything meaningful about their child's day.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">💸</div>
+        <h3>Paying for features you don't use</h3>
+        <p>The big portals charge $200–400/month for features designed for 200-child centers, not your 25-kid family home.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Differentiators -->
+<section id="why">
+  <div class="container">
+    <div class="section-label">Why Daycare Portal</div>
+    <h2 class="section-title">Three things no other portal does.</h2>
+    <p class="section-sub">Not incremental improvements. Genuinely different features that matter to small family daycares.</p>
+    <div class="diff-grid">
+
+      <div class="diff-card">
+        <span class="diff-emoji">🔑</span>
+        <h3>One code. Every school. Set by you.</h3>
+        <p>Your check-in code is tied to <em>you</em>, not a specific school or child. If your kids attend two schools, one code works at both. And you set it yourself — something you'll actually remember.</p>
+        <blockquote>"Like your ATM PIN — it's yours, it's everywhere, it doesn't change."</blockquote>
+        <div class="diff-vs"><span class="no">✗</span> Brightwheel: per-school system PINs</div>
+      </div>
+
+      <div class="diff-card featured">
+        <div class="diff-tag">Unique</div>
+        <span class="diff-emoji">✨</span>
+        <h3>AI turns activity logs into stories parents love.</h3>
+        <p>Staff tap in: nap, meals, potty, observations. Our AI turns that into a warm daily narrative — or a weekly digest email — that makes parents feel genuinely connected to their child's day.</p>
+        <blockquote>"Lily had a wonderful afternoon. She explored the sensory table, showed real focus during storytime, and napped deeply for 90 minutes."</blockquote>
+        <div class="diff-vs"><span class="no">✗</span> No competitor in the $25–99/mo range offers this</div>
+      </div>
+
+      <div class="diff-card">
+        <span class="diff-emoji">🏛️</span>
+        <h3>Remote licensing. Fewer surprise inspections.</h3>
+        <p>Give your state licensing inspector a time-limited read-only audit link. They review immunization records, staff certifications, and compliance forms from their office — saving everyone hours.</p>
+        <blockquote>"Inspection prep went from a week of binder-pulling to sharing a link."</blockquote>
+        <div class="diff-vs"><span class="no">✗</span> No portal in this segment serves licensing agencies</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Audit spotlight -->
+<section class="audit" id="audit">
+  <div class="container">
+    <div class="section-label">Licensing & Compliance</div>
+    <h2 class="section-title">The feature that changes your relationship with regulators.</h2>
+    <p class="section-sub">State licensing agencies are under-resourced. Physical inspections cost everyone time. There's a better way.</p>
+    <div class="audit-grid">
+      <ul class="audit-steps">
+        <li>
+          <div class="audit-step-num">1</div>
+          <div>
+            <h4>Generate an audit link</h4>
+            <p>One click creates a time-limited, read-only link scoped to compliance data only. No login required for the inspector.</p>
+          </div>
+        </li>
+        <li>
+          <div class="audit-step-num">2</div>
+          <div>
+            <h4>Inspector reviews remotely</h4>
+            <p>Immunization records, staff certifications, attendance logs, emergency contacts, and compliance forms — all in one view.</p>
+          </div>
+        </li>
+        <li>
+          <div class="audit-step-num">3</div>
+          <div>
+            <h4>Physical visit becomes a formality</h4>
+            <p>When the inspector does visit, the paperwork review is already done. They walk the facility, sign off, and leave in under an hour.</p>
+          </div>
+        </li>
+        <li>
+          <div class="audit-step-num">4</div>
+          <div>
+            <h4>Link expires automatically</h4>
+            <p>No permanent access granted. Every audit link has an expiry date. Security and compliance baked in.</p>
+          </div>
+        </li>
+      </ul>
+      <div class="audit-stat-box">
+        <div class="audit-stat">
+          <div class="num">3–5</div>
+          <div class="label">hours saved per inspection for the daycare owner</div>
+        </div>
+        <div class="audit-stat">
+          <div class="num">2×</div>
+          <div class="label">more inspections per day possible for licensing agencies</div>
+        </div>
+        <div class="audit-stat">
+          <div class="num">0</div>
+          <div class="label">other portals in this price segment serve licensing agencies</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="section-label">Pricing</div>
+    <h2 class="section-title">Simple, honest pricing.</h2>
+    <p class="section-sub">No per-child fees. No surprise charges. Cancel anytime.</p>
+    <div class="pricing-grid">
+
+      <div class="plan">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">$25 <span>/ month</span></div>
+        <div class="plan-desc">For small home daycares getting started</div>
+        <ul class="plan-features">
+          <li>Up to 30 children</li>
+          <li>1 location</li>
+          <li>Parent portal & check-in codes</li>
+          <li>Daily activity logs</li>
+          <li>QR code check-in kiosk</li>
+        </ul>
+        <a href="https://usdaycare.netlify.app" class="plan-cta outline" target="_blank">Start free</a>
+      </div>
+
+      <div class="plan popular">
+        <div class="plan-badge">Most Popular</div>
+        <div class="plan-name">Growth</div>
+        <div class="plan-price">$49 <span>/ month</span></div>
+        <div class="plan-desc">For established daycares ready to impress parents</div>
+        <ul class="plan-features">
+          <li>Up to 75 children</li>
+          <li>1 location</li>
+          <li>Everything in Starter</li>
+          <li>AI daily stories & narratives</li>
+          <li>Weekly digest emails to parents</li>
+          <li>Immunization tracking</li>
+        </ul>
+        <a href="https://usdaycare.netlify.app" class="plan-cta primary" target="_blank">Start free</a>
+      </div>
+
+      <div class="plan">
+        <div class="plan-name">Multi-Site</div>
+        <div class="plan-price">$99 <span>/ month</span></div>
+        <div class="plan-desc">For groups managing multiple locations</div>
+        <ul class="plan-features">
+          <li>Unlimited children</li>
+          <li>Up to 5 locations</li>
+          <li>Everything in Growth</li>
+          <li>Remote audit / licensing access</li>
+          <li>Cross-school parent codes</li>
+          <li>Priority support</li>
+        </ul>
+        <a href="https://usdaycare.netlify.app" class="plan-cta outline" target="_blank">Start free</a>
+      </div>
+
+      <div class="plan">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price" style="font-size:1.4rem;padding-top:.4rem">Custom</div>
+        <div class="plan-desc">For daycare chains and licensing agencies</div>
+        <ul class="plan-features">
+          <li>6+ locations</li>
+          <li>White-label option</li>
+          <li>Licensing agency portal</li>
+          <li>API access</li>
+          <li>Dedicated onboarding</li>
+          <li>SLA support</li>
+        </ul>
+        <a href="mailto:hello@daycareportal.com" class="plan-cta outline">Contact us</a>
+      </div>
+
+    </div>
+    <p class="pricing-note">Annual plans save 2 months &nbsp;·&nbsp; All plans include a 30-day free trial &nbsp;·&nbsp; No credit card required to start</p>
+  </div>
+</section>
+
+<!-- Roadmap -->
+<section id="roadmap">
+  <div class="container">
+    <div class="section-label">Roadmap</div>
+    <h2 class="section-title">What's built. What's next.</h2>
+    <p class="section-sub">We ship fast. Here's where we are and where we're going.</p>
+    <div class="roadmap-grid">
+      <div class="roadmap-item done">
+        <span class="roadmap-tag">Live now</span>
+        <h3>Check-in & Parent Portal</h3>
+        <p>QR kiosk, personal check-in codes, parent registration via invite, daily activity feed.</p>
+      </div>
+      <div class="roadmap-item done">
+        <span class="roadmap-tag">Live now</span>
+        <h3>School & Staff Management</h3>
+        <p>Multi-school portal admin, staff invites, rooms, schedules, immunization tracking.</p>
+      </div>
+      <div class="roadmap-item done">
+        <span class="roadmap-tag">Live now</span>
+        <h3>Compliance Forms</h3>
+        <p>Digital paperwork, document storage, compliance alerts dashboard.</p>
+      </div>
+      <div class="roadmap-item next">
+        <span class="roadmap-tag">Coming R1</span>
+        <h3>AI Daily Stories</h3>
+        <p>Activity logs → warm parent narratives. Weekly digest emails. Milestone detection.</p>
+      </div>
+      <div class="roadmap-item next">
+        <span class="roadmap-tag">Coming R1</span>
+        <h3>Remote Audit Access</h3>
+        <p>Time-limited inspector links, licensing agency portal, automated compliance reports.</p>
+      </div>
+      <div class="roadmap-item future">
+        <span class="roadmap-tag">Future</span>
+        <h3>Tuition & Invoicing</h3>
+        <p>Automated billing, payment collection, subsidy tracking, financial reports.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2>Ready to give children more of your attention?</h2>
+  <p>Join daycares already using Daycare Portal. Set up in 10 minutes — no credit card needed.</p>
+  <a href="https://usdaycare.netlify.app" class="btn-white" target="_blank">Start your free trial →</a>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p>© 2026 Daycare Portal &nbsp;·&nbsp; <a href="https://usdaycare.netlify.app">App</a> &nbsp;·&nbsp; <a href="mailto:hello@daycareportal.com">Contact</a></p>
+</footer>
+
+</body>
+</html>
