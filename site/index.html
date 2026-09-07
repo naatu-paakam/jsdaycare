@@ -266,18 +266,18 @@
 
     /* ── CTA ── */
     .cta-section {
-      background: linear-gradient(135deg, #9d174d 0%, #be185d 60%, #db2777 100%);
-      text-align: center; padding: 5rem 2rem; color: #fff;
+      background: linear-gradient(135deg, #fce7f3 0%, #fdf2f8 50%, #f0fdf4 100%);
+      text-align: center; padding: 5rem 2rem; color: var(--navy);
     }
     .cta-section h2 { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 900; margin-bottom: 1rem; }
-    .cta-section p { font-size: 1.1rem; opacity: .85; margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .cta-section p { font-size: 1.1rem; color: var(--gray); margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto; }
     .btn-white {
-      background: #fff; color: var(--orange-dark);
+      background: var(--orange); color: #fff;
       padding: 0.9rem 2.25rem; border-radius: 10px;
       font-weight: 800; font-size: 1rem; text-decoration: none;
-      display: inline-block; transition: transform .1s;
+      display: inline-block; transition: transform .1s, background .2s;
     }
-    .btn-white:hover { transform: translateY(-2px); }
+    .btn-white:hover { transform: translateY(-2px); background: var(--orange-dark); }
 
     /* ── Footer ── */
     footer {
