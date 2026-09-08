@@ -405,7 +405,7 @@ export default function Landing() {
 
         {/* Footer */}
         <footer>
-          <p>© 2026 Daycare Portal &nbsp;·&nbsp; <a href="/login">Sign In</a> &nbsp;·&nbsp; <a href="mailto:hello@daycareportal.com">Contact</a></p>
+          <p>© 2026 NaatuPaakam — built from experience of running a daycare &nbsp;·&nbsp; <a href="/login">Sign In</a> &nbsp;·&nbsp; <a href="mailto:hello@daycareportal.com">Contact</a></p>
         </footer>
 
         {/* Sign-up modal */}
