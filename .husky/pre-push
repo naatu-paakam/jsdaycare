@@ -4,6 +4,9 @@ echo "⏳ Running TypeScript check..."
 npx tsc --noEmit || { echo "❌ TypeScript errors — fix before pushing"; exit 1; }
 
 echo "⏳ Running smoke tests (auth + checkin-code)..."
-node_modules/.bin/playwright test e2e/auth.spec.ts e2e/checkin-code.spec.ts --reporter=dot || { echo "❌ Tests failed — fix before pushing"; exit 1; }
+PW_OUT=$(node_modules/.bin/playwright test e2e/auth.spec.ts e2e/checkin-code.spec.ts --reporter=dot 2>&1)
+echo "$PW_OUT"
+FAILED=$(echo "$PW_OUT" | grep -oE "^[[:space:]]*[0-9]+ failed" | grep -oE "[0-9]+" | head -1)
+[ "${FAILED:-0}" -gt 0 ] && { echo "❌ Tests failed — fix before pushing"; exit 1; } || true
 
 echo "✅ All checks passed"

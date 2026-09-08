@@ -163,7 +163,7 @@ export default function Register() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 w-full max-w-sm text-center space-y-3">
           <p className="font-semibold text-gray-900">{msg.title}</p>
           <p className="text-sm text-gray-500">{msg.body}</p>
-          <Link to="/login" className="text-sm text-orange-500 hover:underline block">Back to login</Link>
+          <Link to="/" className="text-sm text-orange-500 hover:underline block">Back to home</Link>
         </div>
       </div>
     );

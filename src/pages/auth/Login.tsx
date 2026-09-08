@@ -111,7 +111,7 @@ export default function Login() {
 
           <div className="mt-5 text-center">
             <Link to="/register" className="text-sm text-orange-500 hover:text-orange-600 hover:underline">
-              Have an invitation? Register here →
+              By invitation only, register here →
             </Link>
           </div>
         </div>

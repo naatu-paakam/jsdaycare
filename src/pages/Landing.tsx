@@ -262,7 +262,7 @@ export default function Landing() {
         {/* Differentiators */}
         <section id="why">
           <div className="container">
-            <div className="section-label">Why Daycare Portal</div>
+            <div className="section-label">Why This Daycare Portal</div>
             <h2 className="section-title">Three things that set us apart.</h2>
             <p className="section-sub">Thoughtfully designed features that make a real difference for family-owned daycares.</p>
             <div className="diff-grid">

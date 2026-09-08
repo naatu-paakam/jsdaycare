@@ -5,7 +5,7 @@ const ADMIN_EMAIL = "admin@jsdaycare.com";
 const ADMIN_PASSWORD = process.env.VITE_TEST_PASSWORD ?? "";
 
 test("TC-admin-login: navigates to /login and logs in successfully", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/login");
   await page.waitForURL("**/login", { timeout: 10_000 });
 
   await page.fill('input[type="text"], input[type="email"]', ADMIN_EMAIL);
