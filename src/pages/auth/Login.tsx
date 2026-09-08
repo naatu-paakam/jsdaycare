@@ -57,7 +57,7 @@ export default function Login() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 overflow-hidden">
-            <img src="/favicon.webp" alt="Daycare Portal" className="w-full h-full object-cover" />
+            <img src="/favicon.webp" alt="Daycare Portal" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Daycare Portal</h1>
           <p className="text-gray-500 mt-1 text-sm">Sign in to your account</p>
