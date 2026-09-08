@@ -772,23 +772,17 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
                     const isExpired = !isUsed && inv.expires_at ? new Date(inv.expires_at) < new Date() : false;
                     const isActive  = !isUsed && !isExpired;
                     return (
-                      <div key={inv.id} className={`flex items-center gap-2 rounded-lg px-3 py-2 border ${
+                      <div key={inv.id} className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 border text-xs ${
                         isUsed ? "bg-gray-50 border-gray-100" : isExpired ? "bg-gray-50 border-gray-100" : "bg-orange-50 border-orange-100"}`}>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs text-gray-600 font-mono truncate">
-                              …{inv.token.slice(-8)}
-                            </span>
-                            {isUsed    && <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-medium">✓ Used</span>}
-                            {isExpired && <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-medium">Expired</span>}
-                            {isActive  && <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-medium">Active</span>}
-                          </div>
-                          <span className="text-xs text-gray-400">
-                            {isUsed ? `Used ${new Date(inv.used_at!).toLocaleDateString()}`
-                              : inv.expires_at ? `Expires ${new Date(inv.expires_at).toLocaleDateString()}`
-                              : "No expiry"}
-                          </span>
-                        </div>
+                        <span className="font-mono text-gray-500 shrink-0">…{inv.token.slice(-8)}</span>
+                        {isUsed    && <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-medium shrink-0">✓ Used</span>}
+                        {isExpired && <span className="bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-medium shrink-0">Expired</span>}
+                        {isActive  && <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-medium shrink-0">Active</span>}
+                        <span className="text-gray-400 flex-1 truncate">
+                          {isUsed ? `${new Date(inv.used_at!).toLocaleDateString()}`
+                            : inv.expires_at ? `exp. ${new Date(inv.expires_at).toLocaleDateString()}`
+                            : ""}
+                        </span>
                         {isActive && (
                           <button type="button" onClick={() => copyLink(inv.token)}
                             className="text-xs text-orange-600 font-medium shrink-0 hover:text-orange-700">
