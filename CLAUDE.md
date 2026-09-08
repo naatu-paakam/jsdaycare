@@ -25,6 +25,7 @@ Even if the user says "yes include it" — ask a **second time** before proceedi
 4. **Impact analysis** — before closing a task, surface ripple changes (e2e, docs, types, RLS, guides) and ask user to apply
 5. **User guide updates** — when src/ changes, update the relevant docs/guides/ file
 6. **No test credentials in repo** — seed.js and e2e files must read credentials from `.env`
+7. **Theme consistency** — ALL pages (landing, login, register, authenticated app) use the warm orange theme: primary `#f97316`, background gradient `#fff7ed → #faf5ff`, never hot pink. Hot pink (`#F72585`) is reserved for other NaatuPaakam projects (one-family). When adding new pages, match the orange theme from Login.tsx.
 
 ---
 

@@ -4,13 +4,13 @@ import { useNavigate } from "react-router-dom";
 const css = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --orange: #F72585;
-    --orange-dark: #d61f6d;
-    --orange-light: #fdf2f8;
-    --navy: #111827;
-    --gray: #6b7280;
-    --gray-light: #fafafa;
-    --border: #fce7f3;
+    --orange: #f97316;
+    --orange-dark: #ea580c;
+    --orange-light: #fff7ed;
+    --navy: #1c1917;
+    --gray: #78716c;
+    --gray-light: #fafaf9;
+    --border: #e7e5e4;
     --radius: 16px;
   }
   .lp-body { font-family: 'Nunito', sans-serif; color: var(--navy); background: #fff; line-height: 1.6; }
@@ -24,13 +24,13 @@ const css = `
   .nav-cta:hover { background: var(--orange-dark); }
   .nav-signin { background: transparent; color: var(--navy); padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; text-decoration: none; border: 1.5px solid var(--border); margin-right: 0.5rem; cursor: pointer; transition: border-color .2s; }
   .nav-signin:hover { border-color: var(--orange); color: var(--orange); }
-  .hero { background: linear-gradient(135deg, #fff0f6 0%, #fce7f3 50%, #f0fdf4 100%); padding: 6rem 2rem 5rem; text-align: center; }
-  .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #fed7aa; color: var(--orange-dark); font-size: 0.8rem; font-weight: 700; padding: 0.3rem 0.9rem; border-radius: 999px; margin-bottom: 1.5rem; }
+  .hero { background: linear-gradient(135deg, #fff7ed 0%, #faf5ff 60%, #f0fdf4 100%); padding: 6rem 2rem 5rem; text-align: center; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #fdba74; color: var(--orange-dark); font-size: 0.8rem; font-weight: 700; padding: 0.3rem 0.9rem; border-radius: 999px; margin-bottom: 1.5rem; }
   .hero h1 { font-size: clamp(2.2rem, 5vw, 3.8rem); font-weight: 900; line-height: 1.15; max-width: 780px; margin: 0 auto 1.25rem; }
   .hero h1 span { color: var(--orange); }
   .hero p { font-size: 1.15rem; color: var(--gray); max-width: 560px; margin: 0 auto 2.5rem; }
   .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-  .btn-primary { background: var(--orange); color: #fff; padding: 0.85rem 2rem; border-radius: 10px; font-weight: 800; font-size: 1rem; text-decoration: none; transition: background .2s, transform .1s; display: inline-block; cursor: pointer; border: none; }
+  .btn-primary { background: var(--orange); color: #fff; padding: 0.85rem 2rem; border-radius: 8px; font-weight: 700; font-size: 1rem; text-decoration: none; transition: background .2s, transform .1s; display: inline-block; cursor: pointer; border: none; }
   .btn-primary:hover { background: var(--orange-dark); transform: translateY(-1px); }
   .btn-secondary { background: #fff; color: var(--navy); border: 1.5px solid var(--border); padding: 0.85rem 2rem; border-radius: 10px; font-weight: 700; font-size: 1rem; text-decoration: none; transition: border-color .2s; display: inline-block; }
   .btn-secondary:hover { border-color: var(--orange); color: var(--orange); }
@@ -39,7 +39,7 @@ const css = `
   section { padding: 5rem 2rem; }
   .container { max-width: 1100px; margin: 0 auto; }
   .section-label { display: inline-block; background: var(--orange-light); color: var(--orange-dark); font-size: 0.75rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 0.3rem 0.8rem; border-radius: 6px; margin-bottom: 1rem; }
-  .section-title { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 900; line-height: 1.2; margin-bottom: 0.75rem; }
+  .section-title { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 800; line-height: 1.2; margin-bottom: 0.75rem; }
   .section-sub { font-size: 1.05rem; color: var(--gray); max-width: 720px; }
   .problem { background: var(--gray-light); }
   .problem .section-sub { max-width: 100%; }
@@ -59,7 +59,7 @@ const css = `
   .diff-card blockquote { background: #fff; border-left: 3px solid var(--orange); padding: 0.75rem 1rem; border-radius: 0 8px 8px 0; font-size: 0.85rem; color: var(--navy); font-style: italic; }
   .diff-vs { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 700; color: var(--gray); background: #f1f5f9; padding: 0.3rem 0.7rem; border-radius: 6px; margin-top: 0.75rem; }
   .diff-vs .yes { color: #22c55e; }
-  .audit { background: linear-gradient(135deg, #111827 0%, #1e1b4b 100%); color: #fff; }
+  .audit { background: linear-gradient(135deg, #1c1917 0%, #292524 100%); color: #fff; }
   .audit .section-label { background: rgba(249,115,22,.2); color: #fb923c; }
   .audit .section-title { color: #fff; }
   .audit .section-sub { color: #94a3b8; }
@@ -103,10 +103,10 @@ const css = `
   .future .roadmap-tag { background: #ddd6fe; color: #5b21b6; }
   .roadmap-item h3 { font-weight: 800; margin-bottom: 0.4rem; }
   .roadmap-item p { font-size: 0.85rem; color: var(--gray); }
-  .cta-section { background: linear-gradient(135deg, #fce7f3 0%, #fdf2f8 50%, #f0fdf4 100%); text-align: center; padding: 5rem 2rem; color: var(--navy); }
+  .cta-section { background: linear-gradient(135deg, #fff7ed 0%, #faf5ff 50%, #f0fdf4 100%); text-align: center; padding: 5rem 2rem; color: var(--navy); }
   .cta-section h2 { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 900; margin-bottom: 1rem; }
   .cta-section p { font-size: 1.1rem; color: var(--gray); margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto; }
-  .btn-white { background: var(--orange); color: #fff; padding: 0.9rem 2.25rem; border-radius: 10px; font-weight: 800; font-size: 1rem; text-decoration: none; display: inline-block; transition: transform .1s, background .2s; cursor: pointer; border: none; }
+  .btn-white { background: var(--orange); color: #fff; padding: 0.9rem 2.25rem; border-radius: 8px; font-weight: 700; font-size: 1rem; text-decoration: none; display: inline-block; transition: transform .1s, background .2s; cursor: pointer; border: none; }
   .btn-white:hover { transform: translateY(-2px); background: var(--orange-dark); }
   footer { background: var(--navy); color: #64748b; padding: 2rem; text-align: center; font-size: 0.85rem; }
   footer a { color: #94a3b8; text-decoration: none; }
@@ -194,7 +194,7 @@ export default function Landing() {
         {/* Hero */}
         <section className="hero">
           <div className="hero-badge">🌟 Built for family-owned daycares</div>
-          <p style={{fontSize:'1rem',color:'#be185d',fontWeight:700,maxWidth:640,margin:'0 auto 1rem',letterSpacing:'.01em'}}>
+          <p style={{fontSize:'1rem',color:'#c2410c',fontWeight:700,maxWidth:640,margin:'0 auto 1rem',letterSpacing:'.01em'}}>
             A complete daycare management platform.
           </p>
           <h1>Run your daycare.<br /><span>Not your paperwork.</span></h1>
