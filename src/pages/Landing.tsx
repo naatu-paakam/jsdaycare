@@ -34,8 +34,6 @@ const css = `
   .btn-primary:hover { background: var(--orange-dark); transform: translateY(-1px); }
   .btn-secondary { background: #fff; color: var(--navy); border: 1.5px solid var(--border); padding: 0.85rem 2rem; border-radius: 10px; font-weight: 700; font-size: 1rem; text-decoration: none; transition: border-color .2s; display: inline-block; }
   .btn-secondary:hover { border-color: var(--orange); color: var(--orange); }
-  .hero-proof { margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border); font-size: 0.65rem; color: var(--gray); display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem 1rem; padding: 0 1rem; font-weight: 400; letter-spacing: 0.01em; }
-  .hero-proof strong { color: var(--navy); }
   section { padding: 5rem 2rem; }
   .container { max-width: 1100px; margin: 0 auto; }
   .section-label { display: inline-block; background: var(--orange-light); color: var(--orange-dark); font-size: 0.75rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 0.3rem 0.8rem; border-radius: 6px; margin-bottom: 1rem; }
@@ -203,13 +201,6 @@ export default function Landing() {
             <button className="btn-primary" onClick={() => setModalOpen(true)}>Start free trial</button>
             <a href="#why" className="btn-secondary">See what&apos;s different</a>
           </div>
-          <p className="hero-proof">
-            <span>No credit card required</span>
-            <span>·</span>
-            <span>Setup in less than 10 minutes</span>
-            <span>·</span>
-            <span>Cancel anytime</span>
-          </p>
         </section>
 
         {/* Problem */}
