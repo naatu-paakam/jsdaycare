@@ -195,7 +195,7 @@ export default function Landing() {
         <section className="hero">
           <div className="hero-badge">🌟 Built for family-owned daycares</div>
           <p style={{fontSize:'1rem',color:'#be185d',fontWeight:700,maxWidth:640,margin:'0 auto 1rem',letterSpacing:'.01em'}}>
-            A complete daycare management platform — check-ins, parent communication, staff scheduling, compliance &amp; more. All in one place, at a price that makes sense for small daycares.
+            A complete daycare management platform.
           </p>
           <h1>Run your daycare.<br /><span>Not your paperwork.</span></h1>
           <p>Daycare Portal handles check-ins, parent &amp; staff onboarding, student admissions, daily reports, parent communication, and licensing compliance — so you can focus on the children.</p>
