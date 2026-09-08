@@ -12,6 +12,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL        = process.env.VITE_SUPABASE_URL!;
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY!;
+const TURNSTILE_SECRET    = process.env.TURNSTILE_SECRET_KEY;
 
 const ALLOWED_ORIGINS = [
   "https://usdaycare.netlify.app",
@@ -47,11 +48,27 @@ export default async (req: Request) => {
     );
   }
 
-  let body: { schoolName?: string; adminEmail?: string; adminPhone?: string };
+  let body: { schoolName?: string; adminEmail?: string; adminPhone?: string; turnstileToken?: string };
   try {
     body = await req.json();
   } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON body" }), { status: 400, headers });
+  }
+
+  // Verify Turnstile token (skip if secret not configured, e.g. local dev)
+  if (TURNSTILE_SECRET) {
+    const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `secret=${TURNSTILE_SECRET}&response=${body.turnstileToken ?? ""}`,
+    });
+    const verifyData = await verifyRes.json();
+    if (!verifyData.success || (verifyData.action && verifyData.action !== "signup")) {
+      return new Response(
+        JSON.stringify({ error: "Bot check failed. Please try again." }),
+        { status: 400, headers }
+      );
+    }
   }
 
   const { schoolName, adminEmail, adminPhone } = body;

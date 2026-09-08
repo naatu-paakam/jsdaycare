@@ -1,5 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+
+// Replace with real site key from Cloudflare Turnstile dashboard
+const TURNSTILE_SITE_KEY = "0x4AAAAAAEtPFtcFljaQyis9";
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (
+        container: string | HTMLElement,
+        options: { sitekey: string; action?: string; callback: (token: string) => void }
+      ) => string;
+      reset: (widgetId?: string) => void;
+    };
+  }
+}
 
 const css = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -139,6 +154,41 @@ export default function Landing() {
   const [adminPhone, setAdminPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileWidgetId = useRef<string | null>(null);
+
+  // Load Turnstile script once
+  useEffect(() => {
+    if (document.getElementById("cf-turnstile-script")) return;
+    const script = document.createElement("script");
+    script.id = "cf-turnstile-script";
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+  }, []);
+
+  // Render Turnstile widget when modal opens
+  useEffect(() => {
+    if (!modalOpen) {
+      setTurnstileToken("");
+      turnstileWidgetId.current = null;
+      return;
+    }
+    const tryRender = () => {
+      const container = document.getElementById("turnstile-container");
+      if (container && window.turnstile) {
+        turnstileWidgetId.current = window.turnstile.render(container, {
+          sitekey: TURNSTILE_SITE_KEY,
+          action: "signup",
+          callback: (token: string) => setTurnstileToken(token),
+        });
+      } else {
+        setTimeout(tryRender, 200);
+      }
+    };
+    tryRender();
+  }, [modalOpen]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -148,11 +198,13 @@ export default function Landing() {
       const res = await fetch("/api/create-school-invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ schoolName, adminEmail, adminPhone }),
+        body: JSON.stringify({ schoolName, adminEmail, adminPhone, turnstileToken }),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
         setError(data.error ?? "Something went wrong. Please try again.");
+        setTurnstileToken("");
+        if (turnstileWidgetId.current && window.turnstile) window.turnstile.reset(turnstileWidgetId.current);
         return;
       }
       navigate(`/register?token=${data.token}`);
@@ -446,6 +498,14 @@ export default function Landing() {
                     onChange={e => setAdminPhone(e.target.value)}
                   />
                 </div>
+                <div style={{ margin: "1rem 0" }}>
+                  <div id="turnstile-container"></div>
+                  {!turnstileToken && (
+                    <p style={{ fontSize: "0.8rem", color: "var(--gray)", marginTop: "0.4rem" }}>
+                      Please complete the security check above.
+                    </p>
+                  )}
+                </div>
                 <div className="modal-actions">
                   <button
                     type="button"
@@ -455,7 +515,7 @@ export default function Landing() {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="modal-submit" disabled={loading}>
+                  <button type="submit" className="modal-submit" disabled={loading || !turnstileToken}>
                     {loading ? "Creating…" : "Continue →"}
                   </button>
                 </div>
