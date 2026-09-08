@@ -92,3 +92,28 @@ test("TC-multischool-dropdown: Clicking school switcher reveals all schools for 
   await expect(page.getByText("Test Joy Family").first()).toBeVisible({ timeout: 5_000 });
   await expect(page.getByText(/Test Joy|Test Sunshine/i).first()).toBeVisible({ timeout: 5_000 }); // At least one school visible in dropdown
 });
+
+// ─── TC-register-used-invite-blocked ──────────────────────────────────────────
+test("TC-register-used-invite-blocked: re-using an already-used invite shows error", async ({ page }) => {
+  // Arif's invite is already used (used_at is set in DB)
+  // Token: f90317bf-4b01-432e-96cd-18b703da4315
+  await page.goto("/register?token=f90317bf-4b01-432e-96cd-18b703da4315");
+  await page.waitForLoadState("networkidle");
+
+  // Fill form with a DIFFERENT login ID to bypass email duplicate check
+  await page.getByPlaceholder("e.g. jaya.bijjala").fill("arif.reregister.test");
+  await page.getByPlaceholder(/min 8 characters/i).fill("Test@12345");
+  await page.getByPlaceholder(/repeat password/i).fill("Test@12345");
+  await page.getByRole("button", { name: /create account/i }).click();
+
+  // Should show the "already used" error — not redirect to portal
+  await expect(
+    page.getByText(/invitation has already been used/i).or(
+      page.getByText(/already been used/i)
+    )
+  ).toBeVisible({ timeout: 8_000 });
+
+  // Must NOT redirect to home or parent portal
+  expect(page.url()).not.toContain("/home");
+  expect(page.url()).not.toContain("/parent");
+});
