@@ -160,7 +160,7 @@ function localCreateSchoolInvitePlugin(env: Record<string, string>): Plugin {
                   permanent: true,
                   expires_at: null,
                   invited_by: null,
-                  metadata: { admin_phone: adminPhone.trim() },
+                  metadata: { phone: adminPhone.trim() },
                 })
                 .select("token")
                 .single();

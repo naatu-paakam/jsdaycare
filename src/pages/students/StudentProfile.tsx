@@ -88,6 +88,10 @@ function activitySummary(a: Activity) {
     return `Potty — ${d.potty_type ?? ""}`;
   if (a.activity_type === "health_check")
     return d.health_temp ? `Temp: ${d.health_temp}°F` : "Health check";
+  if (a.activity_type === "name_to_face") {
+    const action = d.action === "checked_out" ? "Checked out via QR" : "Checked in via QR";
+    return a.notes?.includes("contact:") ? `${a.notes.replace("contact:", "").trim()} — ${action}` : action;
+  }
   return a.notes ? `${name}: ${a.notes.slice(0, 60)}${a.notes.length > 60 ? "…" : ""}` : name;
 }
 
