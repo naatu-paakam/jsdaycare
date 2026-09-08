@@ -43,7 +43,7 @@ const css = `
   .problem .section-sub { max-width: 100%; }
   .problem-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-top: 3rem; }
   .problem-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
-  .problem-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+  .problem-icon { width: 2.5rem; height: 2.5rem; margin-bottom: 1rem; color: var(--orange); }
   .problem-card h3 { font-weight: 800; margin-bottom: 0.5rem; }
   .problem-card p { font-size: 0.9rem; color: var(--gray); }
   .diff-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 3rem; }
@@ -211,22 +211,22 @@ export default function Landing() {
             <p className="section-sub">Family-owned daycares are the heart of early childhood care. Daycare Portal is designed specifically for you — simple enough to use on a busy morning, powerful enough to handle everything you need.</p>
             <div className="problem-grid">
               <div className="problem-card">
-                <div className="problem-icon">🚪</div>
+                <div className="problem-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg></div>
                 <h3>Drop-off that flows</h3>
                 <p>Parents set their own check-in code — something they actually remember. Mornings move faster when nobody&apos;s fumbling for a PIN.</p>
               </div>
               <div className="problem-card">
-                <div className="problem-icon">📋</div>
+                <div className="problem-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg></div>
                 <h3>Parent onboarding with the right paperwork</h3>
                 <p>Invite parents via a link, pre-fill their details, and have all the right forms signed before day one. Onboarding that&apos;s smooth for families and complete for you.</p>
               </div>
               <div className="problem-card">
-                <div className="problem-icon">✅</div>
+                <div className="problem-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg></div>
                 <h3>Inspection-ready, always</h3>
                 <p>Licensing records, immunizations, and compliance forms are organized and up to date — not scrambled together the week before an inspection.</p>
               </div>
               <div className="problem-card">
-                <div className="problem-icon">💛</div>
+                <div className="problem-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg></div>
                 <h3>Parents who feel connected</h3>
                 <p>AI turns your daily activity logs into warm, readable stories. Parents get more than data — they get a window into their child&apos;s day.</p>
               </div>
@@ -301,28 +301,28 @@ export default function Landing() {
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:'1.5rem',marginTop:'3rem'}}>
 
               <div className="problem-card">
-                <div className="problem-icon">🏫</div>
+                <div className="problem-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" /></svg></div>
                 <h3>School Management</h3>
                 <p>Rooms, staff schedules, menus, calendars, and operating hours — everything to run your day smoothly.</p>
                 <div style={{marginTop:'0.75rem',fontSize:'0.75rem',color:'var(--orange)',fontWeight:700}}>✓ Live now</div>
               </div>
 
               <div className="problem-card">
-                <div className="problem-icon">🎒</div>
+                <div className="problem-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg></div>
                 <h3>Admission Management</h3>
                 <p>Waitlist to active — manage enrolments, student profiles, contacts, immunizations, and emergency details.</p>
                 <div style={{marginTop:'0.75rem',fontSize:'0.75rem',color:'var(--orange)',fontWeight:700}}>✓ Live now</div>
               </div>
 
               <div className="problem-card">
-                <div className="problem-icon">📋</div>
+                <div className="problem-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg></div>
                 <h3>License Preparation &amp; Compliance</h3>
                 <p>Forms, paperwork, and compliance tracking organised and ready. Share a remote audit link — no binder-pulling needed before inspection day.</p>
                 <div style={{marginTop:'0.75rem',fontSize:'0.75rem',color:'#92400e',fontWeight:700}}>⏳ Coming R1</div>
               </div>
 
               <div className="problem-card">
-                <div className="problem-icon">🎨</div>
+                <div className="problem-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" /></svg></div>
                 <h3>School Activity Planning</h3>
                 <p>Plan and track daily activities, learning themes, and milestone moments. AI turns staff notes into stories parents love.</p>
                 <div style={{marginTop:'0.75rem',fontSize:'0.75rem',color:'#92400e',fontWeight:700}}>⏳ Coming R1</div>
