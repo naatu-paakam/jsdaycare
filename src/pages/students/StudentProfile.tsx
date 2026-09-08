@@ -84,14 +84,17 @@ function fmtMealType(raw: unknown): string {
   return parts.map(p => p.toUpperCase() === "AM" || p.toUpperCase() === "PM" ? p.toUpperCase() : p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
 }
 
-function activitySummary(a: Activity) {
+function activitySummary(a: Activity, contactNames?: Record<string, string>) {
   const d = a.data ?? {};
   if (a.activity_type === "food") {
-    const meal   = fmtMealType(d.meal_type);
-    const qty    = d.food_quantity ? String(d.food_quantity) : "";
-    const items  = Array.isArray(d.meal_items) && d.meal_items.length
+    const meal  = fmtMealType(d.meal_type);
+    const qty   = d.food_quantity ? String(d.food_quantity) : "";
+    // meal_items can be array, string, or absent — fall back to notes
+    const items = Array.isArray(d.meal_items) && d.meal_items.length
       ? (d.meal_items as string[]).join(", ")
-      : d.meal_item ? String(d.meal_item) : "";
+      : d.meal_items && !Array.isArray(d.meal_items) ? String(d.meal_items)
+      : d.meal_item ? String(d.meal_item)
+      : a.notes ?? "";
     const bottle = d.food_type === "bottle" ? " (bottle)" : "";
     const detail = [qty, items].filter(Boolean).join(", ");
     return `${meal}${detail ? ` — ${detail}` : ""}${bottle}`;
@@ -104,7 +107,8 @@ function activitySummary(a: Activity) {
     return d.health_temp ? `Temp: ${d.health_temp}°F` : "Health check";
   if (a.activity_type === "name_to_face") {
     const action = d.action === "checked_out" ? "Checked out via QR" : "Checked in via QR";
-    return a.notes?.includes("contact:") ? `${a.notes.replace("contact:", "").trim()} — ${action}` : action;
+    const parentName = d.contact_id && contactNames ? contactNames[String(d.contact_id)] : null;
+    return parentName ? `${parentName} — ${action}` : action;
   }
   if (a.activity_type === "meds")
     return `${d.medication ?? "Medication"}${d.dose ? ` — ${d.dose}` : ""}`;
@@ -1281,6 +1285,7 @@ export default function StudentProfile() {
   const [enrollment,   setEnrollment]   = useState<StudentEnrollmentDetails | null>(null);
   const [immunizations,setImmunizations]= useState<StudentImmunization[]>([]);
   const [activities,   setActivities]   = useState<Activity[]>([]);
+  const [contactNames, setContactNames] = useState<Record<string, string>>({});
   const [tab,          setTab]          = useState<Tab>("profile");
   const [loading,      setLoading]      = useState(true);
   const [revealPin,    setRevealPin]    = useState<Record<string, boolean>>({});
@@ -1353,12 +1358,14 @@ export default function StudentProfile() {
   }
 
   async function loadActivities(date: string) {
-    const { data } = await supabase.from("activities")
-      .select("*")
-      .eq("student_id", id!)
-      .eq("activity_date", date)
-      .order("activity_time", { ascending: false });
+    const [{ data }, { data: contacts }] = await Promise.all([
+      supabase.from("activities").select("*").eq("student_id", id!).eq("activity_date", date).order("activity_time", { ascending: false }),
+      supabase.from("student_contacts").select("id, full_name").eq("student_id", id!),
+    ]);
     setActivities(data ?? []);
+    const nameMap: Record<string, string> = {};
+    (contacts ?? []).forEach(c => { nameMap[c.id] = c.full_name; });
+    setContactNames(nameMap);
   }
 
   useEffect(() => { if (tab === "daily_report") loadActivities(feedDate); }, [tab, feedDate]);
@@ -2142,7 +2149,7 @@ export default function StudentProfile() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{activitySummary(a)}</p>
+                            <p className="text-sm font-medium text-gray-900">{activitySummary(a, contactNames)}</p>
                             {a.notes && a.activity_type !== "note" && (
                               <p className="text-xs text-gray-500 mt-0.5">{a.notes}</p>
                             )}
