@@ -34,7 +34,7 @@ const css = `
   .btn-primary:hover { background: var(--orange-dark); transform: translateY(-1px); }
   .btn-secondary { background: #fff; color: var(--navy); border: 1.5px solid var(--border); padding: 0.85rem 2rem; border-radius: 10px; font-weight: 700; font-size: 1rem; text-decoration: none; transition: border-color .2s; display: inline-block; }
   .btn-secondary:hover { border-color: var(--orange); color: var(--orange); }
-  .hero-proof { margin-top: 5rem; font-size: 0.78rem; color: var(--gray); display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem 1rem; padding: 0 1rem; font-weight: 400; letter-spacing: 0.01em; }
+  .hero-proof { margin-top: 7rem; font-size: 0.72rem; color: var(--gray); display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem 1rem; padding: 0 1rem; font-weight: 400; letter-spacing: 0.01em; }
   .hero-proof strong { color: var(--navy); }
   section { padding: 5rem 2rem; }
   .container { max-width: 1100px; margin: 0 auto; }
@@ -57,7 +57,7 @@ const css = `
   .diff-card h3 { font-size: 1.15rem; font-weight: 800; margin-bottom: 0.5rem; }
   .diff-card p { font-size: 0.9rem; color: var(--gray); margin-bottom: 1rem; }
   .diff-card blockquote { background: #fff; border-left: 3px solid var(--orange); padding: 0.75rem 1rem; border-radius: 0 8px 8px 0; font-size: 0.85rem; color: var(--navy); font-style: italic; }
-  .diff-vs { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 700; color: var(--gray); background: #f1f5f9; padding: 0.3rem 0.7rem; border-radius: 6px; margin-top: 0.75rem; }
+  .diff-vs { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 700; color: var(--gray); background: #f1f5f9; padding: 0.3rem 0.7rem; border-radius: 6px; margin-top: 0.75rem; }
   .diff-vs .yes { color: #22c55e; }
   .audit { background: linear-gradient(135deg, #1c1917 0%, #292524 100%); color: #fff; }
   .audit .section-label { background: rgba(249,115,22,.2); color: #fb923c; }
