@@ -113,3 +113,5 @@ export default async (req: Request) => {
     { status: 200, headers }
   );
 };
+
+export const config = { path: "/api/create-school-invite" };
