@@ -29,6 +29,7 @@ export default async function globalTeardown() {
     supabase.from("invitations").delete().eq("email", "tc-staff@jsdaycare.com"),
     // Test schools (TC-School- prefix) — cascade deletes rooms, students, memberships
     supabase.from("schools").delete().ilike("name", "TC-School-%"),
+    supabase.from("schools").delete().ilike("name", "TC-%"),
     // Test profiles/users created during tests (TC- login_id prefix)
     supabase.from("profiles").delete().ilike("login_id", "tc-%"),
   ]);

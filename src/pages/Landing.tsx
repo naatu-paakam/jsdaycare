@@ -2,7 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 // Replace with real site key from Cloudflare Turnstile dashboard
-const TURNSTILE_SITE_KEY = "0x4AAAAAAEtPFtcFljaQyis9";
+// Use Cloudflare's always-pass test key on localhost; real key on prod
+const TURNSTILE_SITE_KEY = typeof window !== "undefined" && window.location.hostname === "localhost"
+  ? "1x00000000000000000000AA"   // Cloudflare test key — always passes
+  : "0x4AAAAAAEtPFtcFljaQyis9";  // production site key
 
 declare global {
   interface Window {
