@@ -506,7 +506,7 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
   const isEdit = !!initial?.id;  // true only when editing an existing contact (has a real id)
 
   // Invite URL state — load existing + generate new
-  const [inviteLinks, setInviteLinks] = useState<{ id: string; token: string; expires_at: string | null }[]>([]);
+  const [inviteLinks, setInviteLinks] = useState<{ id: string; token: string; expires_at: string | null; used_at: string | null }[]>([]);
   const [generatingLink, setGeneratingLink] = useState(false);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
@@ -517,14 +517,14 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
     const email = initial?.email;
     if (!contactId && !email) return;
 
-    // Fetch all pending parent invites for this school, then filter client-side
+    // Fetch ALL parent invites (pending, used, expired) for this contact
     supabase.from("invitations")
-      .select("id, token, expires_at, email, metadata")
+      .select("id, token, expires_at, used_at, email, metadata")
       .eq("school_id", schoolId)
       .eq("role", "parent")
-      .is("used_at", null)
       .eq("permanent", false)
       .order("created_at", { ascending: false })
+      .limit(20)
       .then(({ data }) => {
         const matches = (data ?? []).filter(inv =>
           (email && inv.email === email) ||
@@ -551,8 +551,8 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
         email: form.email || null,
         metadata,
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() })
-      .select("id, token, expires_at").single();
-    if (data) setInviteLinks(prev => [data, ...prev]);
+      .select("id, token, expires_at, used_at").single();
+    if (data) setInviteLinks(prev => [{ ...data, used_at: null }, ...prev]);
     setGeneratingLink(false);
   }
 
@@ -763,41 +763,67 @@ function ContactModal({ studentId, schoolId, initial, onClose, onSaved }: {
           <p className="text-xs font-medium text-gray-600">Portal Access</p>
           {(form.type === "parent" || form.type === "guardian") ? (
             <div className="space-y-2">
-              {/* Existing pending invite links */}
-              {inviteLinks.map(inv => (
-                <div key={inv.id} className="flex items-center gap-2 bg-orange-50 border border-orange-100 rounded-lg px-3 py-2">
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs text-gray-600 font-mono truncate block">
-                      {window.location.origin}/register?token={inv.token.slice(0, 12)}…
-                    </span>
-                    {inv.expires_at && (
-                      <span className="text-xs text-gray-400">
-                        Expires {new Date(inv.expires_at).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
-                  <button type="button" onClick={() => copyLink(inv.token)}
-                    className="text-xs text-orange-600 font-medium shrink-0 hover:text-orange-700">
-                    {copiedToken === inv.token ? "✓ Copied!" : "Copy"}
-                  </button>
-                  <button type="button" onClick={() => deleteInviteLink(inv.id)}
-                    title="Invalidate this link"
-                    className="text-gray-300 hover:text-red-500 transition-colors shrink-0">
-                    <X size={13} />
-                  </button>
+              {/* All invite links — pending, used, expired */}
+              {inviteLinks.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Invite history</p>
+                  {inviteLinks.map(inv => {
+                    const isUsed    = !!inv.used_at;
+                    const isExpired = !isUsed && inv.expires_at ? new Date(inv.expires_at) < new Date() : false;
+                    const isActive  = !isUsed && !isExpired;
+                    return (
+                      <div key={inv.id} className={`flex items-center gap-2 rounded-lg px-3 py-2 border ${
+                        isUsed ? "bg-gray-50 border-gray-100" : isExpired ? "bg-gray-50 border-gray-100" : "bg-orange-50 border-orange-100"}`}>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs text-gray-600 font-mono truncate">
+                              …{inv.token.slice(-8)}
+                            </span>
+                            {isUsed    && <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-medium">✓ Used</span>}
+                            {isExpired && <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-medium">Expired</span>}
+                            {isActive  && <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-medium">Active</span>}
+                          </div>
+                          <span className="text-xs text-gray-400">
+                            {isUsed ? `Used ${new Date(inv.used_at!).toLocaleDateString()}`
+                              : inv.expires_at ? `Expires ${new Date(inv.expires_at).toLocaleDateString()}`
+                              : "No expiry"}
+                          </span>
+                        </div>
+                        {isActive && (
+                          <button type="button" onClick={() => copyLink(inv.token)}
+                            className="text-xs text-orange-600 font-medium shrink-0 hover:text-orange-700">
+                            {copiedToken === inv.token ? "✓ Copied!" : "Copy"}
+                          </button>
+                        )}
+                        {!isUsed && (
+                          <button type="button" onClick={() => deleteInviteLink(inv.id)}
+                            title="Invalidate this link"
+                            className="text-gray-300 hover:text-red-500 transition-colors shrink-0">
+                            <X size={13} />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
+              )}
 
-              {/* Generate new invite link */}
-              <div>
+              {/* Generate new invite — only show if no active pending invite */}
+              {!inviteLinks.some(i => !i.used_at && (!i.expires_at || new Date(i.expires_at) > new Date())) && (
+                <div>
+                  <button type="button" onClick={generateInviteLink} disabled={generatingLink}
+                    className="flex items-center gap-2 text-xs text-orange-600 border border-orange-200 rounded-lg px-3 py-1.5 hover:bg-orange-50 disabled:opacity-50">
+                    {generatingLink ? "Generating…" : "🔗 Generate Invite URL"}
+                  </button>
+                  <p className="text-xs text-gray-400 mt-1">Creates a 7-day registration link. Parent/guardian uses it to set up their portal login.</p>
+                </div>
+              )}
+              {inviteLinks.some(i => !i.used_at && (!i.expires_at || new Date(i.expires_at) > new Date())) && (
                 <button type="button" onClick={generateInviteLink} disabled={generatingLink}
-                  className="flex items-center gap-2 text-xs text-orange-600 border border-orange-200 rounded-lg px-3 py-1.5 hover:bg-orange-50 disabled:opacity-50">
-                  {generatingLink ? "Generating…" : "🔗 Generate Invite URL"}
+                  className="flex items-center gap-2 text-xs text-gray-400 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 disabled:opacity-50">
+                  {generatingLink ? "Generating…" : "🔗 Generate another link"}
                 </button>
-                <p className="text-xs text-gray-400 mt-1">
-                  Creates a 7-day registration link. {inviteLinks.length > 0 ? "Previous links remain valid until deleted or expired." : "Parent/guardian uses it to set up their portal login."}
-                </p>
-              </div>
+              )}
             </div>
           ) : (
             <p className="text-xs text-gray-400 italic">
