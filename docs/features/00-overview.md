@@ -15,6 +15,17 @@ Stack: React + Vite + TypeScript + Tailwind + Supabase + Netlify Functions
 
 ---
 
+## Public Onboarding (self-serve)
+
+| Feature | Status | Notes |
+|---|---|---|
+| Public landing page (`/`) | ✅ Live | Shows to unauthenticated users; authenticated users redirect to their home |
+| School self-signup | ✅ Live | "Try it free" → school name + admin email + phone → school created + invite sent |
+| Sign In from landing | ✅ Live | Nav "Sign In" button → `/login` |
+| Authenticated redirect | ✅ Live | `/` auto-routes to `/home` (admin/staff) or `/parent` (parent) |
+
+---
+
 ## MVP Features (8 areas)
 
 | # | Feature Area | Build Status | Doc |

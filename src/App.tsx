@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/lib/auth";
+import { AuthProvider, useAuth } from "@/lib/auth";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import Landing from "@/pages/Landing";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
 import Home from "@/pages/home/Home";
@@ -58,10 +59,18 @@ export default function App() {
         {/* Portal admin route */}
         <Route path="/portal" element={<ProtectedRoute allowedRoles={["portal_admin"]}><PortalAdmin /></ProtectedRoute>} />
 
-        {/* Catch-all */}
-        <Route path="/" element={<Navigate to="/home" replace />} />
-        <Route path="*" element={<Navigate to="/home" replace />} />
+        {/* Root: landing for guests, redirect for authenticated users */}
+        <Route path="/" element={<RootRedirect />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>
   );
+}
+
+function RootRedirect() {
+  const { user, profile, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Landing />;
+  if (profile?.role === "parent") return <Navigate to="/parent" replace />;
+  return <Navigate to="/home" replace />;
 }

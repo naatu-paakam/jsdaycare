@@ -114,3 +114,22 @@ A single admin can manage multiple schools:
 - **Platform:** http://localhost:5174/portal
 - **School check-in:** http://localhost:5174/checkin?school=`<school-id>`
 - **Registration:** http://localhost:5174/register?token=`<invite-token>`
+
+---
+
+## Self-signup from Landing Page
+
+New daycares can sign up directly from the public landing page without going through the portal admin.
+
+**Flow:**
+1. Visitor lands on `https://usdaycare.netlify.app/` (unauthenticated)
+2. Clicks **"Try it free →"**
+3. Fills in: School name, Admin email, Admin phone (all required)
+4. System creates the school and a permanent admin invite link
+5. Visitor is redirected to `/register?token=...` to create their account
+6. After registration they land on their school admin dashboard
+
+**Notes:**
+- Schools created via self-signup appear in the portal admin's school list immediately
+- The admin invite link is permanent (no expiry) so the admin can register at any time
+- Default timezone: America/Los_Angeles (can be changed in school settings after signup)

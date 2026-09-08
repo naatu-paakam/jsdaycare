@@ -1,6 +1,6 @@
 # TC- Test Case Index
 
-Auto-generated from e2e/\*.spec.ts — 2026-09-06 — 364 test cases
+Auto-generated from e2e/\*.spec.ts — 2026-09-07 — 371 test cases
 
 ## admissions
 - TC-admissions-add-button: Add Student button navigates to /students/add
@@ -79,6 +79,15 @@ Auto-generated from e2e/\*.spec.ts — 2026-09-06 — 364 test cases
 - TC-delete-student-confirm-dialog: Delete shows inline confirm before acting
 - TC-delete-student-rpc-no-fk-error: delete_student_safe handles form_submissions and shared_files FK
 - TC-menu-week-nav-no-errors: Navigating between menu weeks loads without errors
+
+## landing
+- TC-landing-auth-redirect-admin: authenticated admin at / redirects to /home
+- TC-landing-auth-redirect-parent: authenticated parent at / redirects to /parent
+- TC-landing-shows-unauthenticated: unauthenticated root shows landing page
+- TC-landing-signin-link: Sign In button navigates to /login
+- TC-landing-signup-flow: fill form → school created → redirected to register
+- TC-landing-signup-validation: submit with empty fields shows error
+- TC-landing-try-free-opens-modal: Try it free button opens signup modal
 
 ## menus
 - TC-menus-add-food-item: Admin can add a food item to the library with allergen

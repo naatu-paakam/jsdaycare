@@ -94,6 +94,94 @@ function localRegisterPlugin(env: Record<string, string>): Plugin {
   };
 }
 
+function localCreateSchoolInvitePlugin(env: Record<string, string>): Plugin {
+  return {
+    name: "local-create-school-invite",
+    configureServer(server) {
+      server.middlewares.use(
+        "/api/create-school-invite",
+        async (req: Connect.IncomingMessage, res: any, next: () => void) => {
+          if (req.method === "OPTIONS") {
+            res.writeHead(204, {
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Methods": "POST, OPTIONS",
+              "Access-Control-Allow-Headers": "Content-Type",
+            });
+            res.end();
+            return;
+          }
+          if (req.method !== "POST") { next(); return; }
+
+          const chunks: Buffer[] = [];
+          req.on("data", (c: Buffer) => chunks.push(c));
+          req.on("end", async () => {
+            const json = (obj: unknown, status = 200) => {
+              res.writeHead(status, { "Content-Type": "application/json" });
+              res.end(JSON.stringify(obj));
+            };
+            try {
+              const body = JSON.parse(Buffer.concat(chunks).toString());
+              const { schoolName, adminEmail, adminPhone } = body;
+              if (!schoolName?.trim() || !adminEmail?.trim() || !adminPhone?.trim()) {
+                json({ error: "School name, admin email, and admin phone are all required." }, 400);
+                return;
+              }
+
+              const { createClient } = await import("@supabase/supabase-js");
+              const SUPABASE_URL      = env.VITE_SUPABASE_URL;
+              const SUPABASE_SEC_KEY  = env.VITE_SUPABASE_SECRET_KEY;
+
+              if (!SUPABASE_SEC_KEY) {
+                json({ error: "VITE_SUPABASE_SECRET_KEY not set in .env" }, 503);
+                return;
+              }
+
+              const sbAdmin = createClient(SUPABASE_URL, SUPABASE_SEC_KEY, {
+                auth: { autoRefreshToken: false, persistSession: false },
+              });
+
+              const { data: school, error: schoolErr } = await sbAdmin
+                .from("schools")
+                .insert({ name: schoolName.trim(), timezone: "America/Los_Angeles" })
+                .select("id")
+                .single();
+
+              if (schoolErr || !school) {
+                json({ error: schoolErr?.message ?? "Failed to create school." }, 500);
+                return;
+              }
+
+              const { data: invitation, error: invErr } = await sbAdmin
+                .from("invitations")
+                .insert({
+                  school_id: school.id,
+                  role: "admin",
+                  email: adminEmail.trim(),
+                  permanent: true,
+                  expires_at: null,
+                  invited_by: null,
+                  metadata: { admin_phone: adminPhone.trim() },
+                })
+                .select("token")
+                .single();
+
+              if (invErr || !invitation) {
+                await sbAdmin.from("schools").delete().eq("id", school.id);
+                json({ error: invErr?.message ?? "Failed to create invitation." }, 500);
+                return;
+              }
+
+              json({ success: true, token: invitation.token });
+            } catch (e: any) {
+              json({ error: e.message }, 500);
+            }
+          });
+        }
+      );
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   return {
@@ -104,7 +192,7 @@ export default defineConfig(({ mode }) => {
   build: {
     outDir: "dist",
   },
-  plugins: [react(), localRegisterPlugin(env)],
+  plugins: [react(), localRegisterPlugin(env), localCreateSchoolInvitePlugin(env)],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
