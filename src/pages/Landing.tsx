@@ -194,6 +194,9 @@ export default function Landing() {
         {/* Hero */}
         <section className="hero">
           <div className="hero-badge">🌟 Built for family-owned daycares</div>
+          <p style={{fontSize:'1rem',color:'#be185d',fontWeight:700,maxWidth:640,margin:'0 auto 1rem',letterSpacing:'.01em'}}>
+            A complete daycare management platform — check-ins, parent communication, staff scheduling, compliance &amp; more. All in one place, at a price that makes sense for small daycares.
+          </p>
           <h1>Run your daycare.<br /><span>Not your paperwork.</span></h1>
           <p>Daycare Portal handles check-ins, parent &amp; staff onboarding, student admissions, daily reports, parent communication, and licensing compliance — so you can focus on the children.</p>
           <div className="hero-actions">
@@ -235,6 +238,31 @@ export default function Landing() {
                 <div className="problem-icon">💛</div>
                 <h3>Parents who feel connected</h3>
                 <p>AI turns your daily activity logs into warm, readable stories. Parents get more than data — they get a window into their child&apos;s day.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section id="how">
+          <div className="container">
+            <div className="section-label">How It Works</div>
+            <h2 className="section-title">Up and running in less than 10 minutes.</h2>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:'2rem',marginTop:'3rem'}}>
+              <div style={{textAlign:'center',padding:'1.5rem'}}>
+                <div style={{width:48,height:48,background:'var(--orange-light)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 1rem',fontSize:'1.3rem',fontWeight:900,color:'var(--orange)'}}>1</div>
+                <h3 style={{fontWeight:800,marginBottom:'0.5rem'}}>Sign up your school</h3>
+                <p style={{fontSize:'0.9rem',color:'var(--gray)'}}>Enter your school name and contact details. Your account is ready instantly — no waiting, no approval process.</p>
+              </div>
+              <div style={{textAlign:'center',padding:'1.5rem'}}>
+                <div style={{width:48,height:48,background:'var(--orange-light)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 1rem',fontSize:'1.3rem',fontWeight:900,color:'var(--orange)'}}>2</div>
+                <h3 style={{fontWeight:800,marginBottom:'0.5rem'}}>Add staff &amp; set up rooms</h3>
+                <p style={{fontSize:'0.9rem',color:'var(--gray)'}}>Invite your team via a link. Set up classrooms, schedules, and check-in codes in just a few clicks.</p>
+              </div>
+              <div style={{textAlign:'center',padding:'1.5rem'}}>
+                <div style={{width:48,height:48,background:'var(--orange-light)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 1rem',fontSize:'1.3rem',fontWeight:900,color:'var(--orange)'}}>3</div>
+                <h3 style={{fontWeight:800,marginBottom:'0.5rem'}}>Invite parents</h3>
+                <p style={{fontSize:'0.9rem',color:'var(--gray)'}}>Parents receive a personal invite link, register themselves, and can see their child's daily activity from day one.</p>
               </div>
             </div>
           </div>
