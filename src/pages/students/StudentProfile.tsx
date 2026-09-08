@@ -77,22 +77,48 @@ function fmt(d: string | null) {
   return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
+// Convert snake_case meal types to proper title case (pm_snack → PM Snack)
+function fmtMealType(raw: unknown): string {
+  if (!raw) return "Meal";
+  const parts = String(raw).split("_");
+  return parts.map(p => p.toUpperCase() === "AM" || p.toUpperCase() === "PM" ? p.toUpperCase() : p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
+}
+
 function activitySummary(a: Activity) {
   const d = a.data ?? {};
-  const name = `${a.activity_type.charAt(0).toUpperCase()}${a.activity_type.slice(1).replace(/_/g, " ")}`;
-  if (a.activity_type === "food")
-    return `${d.meal_type ? String(d.meal_type).replace(/_/g, " ") : "Meal"} — ${d.food_quantity ?? ""} ${d.food_type === "bottle" ? "(bottle)" : ""}`.trim();
+  if (a.activity_type === "food") {
+    const meal   = fmtMealType(d.meal_type);
+    const qty    = d.food_quantity ? String(d.food_quantity) : "";
+    const items  = Array.isArray(d.meal_items) && d.meal_items.length
+      ? (d.meal_items as string[]).join(", ")
+      : d.meal_item ? String(d.meal_item) : "";
+    const bottle = d.food_type === "bottle" ? " (bottle)" : "";
+    const detail = [qty, items].filter(Boolean).join(", ");
+    return `${meal}${detail ? ` — ${detail}` : ""}${bottle}`;
+  }
   if (a.activity_type === "nap")
     return d.nap_status === "started" ? "Nap started" : "Nap ended";
   if (a.activity_type === "potty")
-    return `Potty — ${d.potty_type ?? ""}`;
+    return `Potty — ${String(d.potty_type ?? "").replace(/_/g, " ")}`;
   if (a.activity_type === "health_check")
     return d.health_temp ? `Temp: ${d.health_temp}°F` : "Health check";
   if (a.activity_type === "name_to_face") {
     const action = d.action === "checked_out" ? "Checked out via QR" : "Checked in via QR";
     return a.notes?.includes("contact:") ? `${a.notes.replace("contact:", "").trim()} — ${action}` : action;
   }
-  return a.notes ? `${name}: ${a.notes.slice(0, 60)}${a.notes.length > 60 ? "…" : ""}` : name;
+  if (a.activity_type === "meds")
+    return `${d.medication ?? "Medication"}${d.dose ? ` — ${d.dose}` : ""}`;
+  if (a.activity_type === "observation")
+    return a.notes ? `Observation — ${a.notes.slice(0, 60)}${a.notes.length > 60 ? "…" : ""}` : "Observation";
+  if (a.activity_type === "incident")
+    return a.notes ? `Incident — ${a.notes.slice(0, 60)}${a.notes.length > 60 ? "…" : ""}` : "Incident report";
+  if (a.activity_type === "kudos")
+    return a.notes ? `Kudos — ${a.notes.slice(0, 60)}${a.notes.length > 60 ? "…" : ""}` : "Kudos";
+  if (a.activity_type === "note")
+    return a.notes ? a.notes.slice(0, 60) + (a.notes.length > 60 ? "…" : "") : "Note";
+  // Fallback: title-case the type
+  const name = a.activity_type.split("_").map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
+  return a.notes ? `${name} — ${a.notes.slice(0, 60)}${a.notes.length > 60 ? "…" : ""}` : name;
 }
 
 // ─── Inline editable field ────────────────────────────────────────────────────
