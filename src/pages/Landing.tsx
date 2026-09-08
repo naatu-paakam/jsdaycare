@@ -34,7 +34,7 @@ const css = `
   .btn-primary:hover { background: var(--orange-dark); transform: translateY(-1px); }
   .btn-secondary { background: #fff; color: var(--navy); border: 1.5px solid var(--border); padding: 0.85rem 2rem; border-radius: 10px; font-weight: 700; font-size: 1rem; text-decoration: none; transition: border-color .2s; display: inline-block; }
   .btn-secondary:hover { border-color: var(--orange); color: var(--orange); }
-  .hero-proof { margin-top: 5rem; font-size: 0.85rem; color: var(--gray); display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem 1rem; padding: 0 1rem; }
+  .hero-proof { margin-top: 5rem; font-size: 0.78rem; color: var(--gray); display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem 1rem; padding: 0 1rem; font-weight: 400; letter-spacing: 0.01em; }
   .hero-proof strong { color: var(--navy); }
   section { padding: 5rem 2rem; }
   .container { max-width: 1100px; margin: 0 auto; }
@@ -206,7 +206,7 @@ export default function Landing() {
           <p className="hero-proof">
             <span>No credit card required</span>
             <span>·</span>
-            <span>Setup in <strong>less than 10 minutes</strong></span>
+            <span>Setup in less than 10 minutes</span>
             <span>·</span>
             <span>Cancel anytime</span>
           </p>
