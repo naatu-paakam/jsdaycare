@@ -181,7 +181,7 @@ export default function Landing() {
           </div>
           <div className="nav-links">
             <a href="#why">Why Us</a>
-            <a href="#audit">Licensing</a>
+            <a href="#services">Services</a>
             <a href="#pricing">Pricing</a>
             <a href="#roadmap">Roadmap</a>
           </div>
@@ -302,35 +302,41 @@ export default function Landing() {
         </section>
 
         {/* Audit spotlight */}
-        <section className="audit" id="audit">
+        <section style={{background:'var(--gray-light)'}} id="services">
           <div className="container">
-            <div className="section-label">Licensing &amp; Compliance</div>
-            <h2 className="section-title">Remote Auditing. Fewer surprises.</h2>
-            <p className="section-sub">Stay inspection-ready year-round — share a time-limited audit link with your licensing agency instead of a day of binder-pulling.</p>
-            <div className="audit-grid">
-              <ul className="audit-steps">
-                <li>
-                  <div className="audit-step-num">1</div>
-                  <div><h4>Generate an audit link</h4><p>One click creates a time-limited, read-only link scoped to compliance data only. No login required for the inspector.</p></div>
-                </li>
-                <li>
-                  <div className="audit-step-num">2</div>
-                  <div><h4>Inspector reviews remotely</h4><p>Immunization records, staff certifications, attendance logs, emergency contacts, and compliance forms — all in one view.</p></div>
-                </li>
-                <li>
-                  <div className="audit-step-num">3</div>
-                  <div><h4>Physical visit becomes a formality</h4><p>When the inspector does visit, the paperwork review is already done. They walk the facility, sign off, and leave in under an hour.</p></div>
-                </li>
-                <li>
-                  <div className="audit-step-num">4</div>
-                  <div><h4>Link expires automatically</h4><p>No permanent access granted. Every audit link has an expiry date. Security and compliance baked in.</p></div>
-                </li>
-              </ul>
-              <div className="audit-stat-box">
-                <div className="audit-stat"><div className="num">3–5</div><div className="label">hours saved per inspection for the daycare owner</div></div>
-                <div className="audit-stat"><div className="num">2×</div><div className="label">more inspections per day possible for licensing agencies</div></div>
-                <div className="audit-stat"><div className="num">0</div><div className="label">other portals at this price point offer remote audit access</div></div>
+            <div className="section-label">Services</div>
+            <h2 className="section-title">Everything a daycare needs, in one place.</h2>
+            <p className="section-sub">From the first enrolment to the annual inspection — we've got it covered.</p>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:'1.5rem',marginTop:'3rem'}}>
+
+              <div className="problem-card">
+                <div className="problem-icon">🏫</div>
+                <h3>School Management</h3>
+                <p>Rooms, staff schedules, menus, calendars, and operating hours — everything to run your day smoothly.</p>
+                <div style={{marginTop:'0.75rem',fontSize:'0.75rem',color:'var(--orange)',fontWeight:700}}>✓ Live now</div>
               </div>
+
+              <div className="problem-card">
+                <div className="problem-icon">🎒</div>
+                <h3>Admission Management</h3>
+                <p>Waitlist to active — manage enrolments, student profiles, contacts, immunizations, and emergency details.</p>
+                <div style={{marginTop:'0.75rem',fontSize:'0.75rem',color:'var(--orange)',fontWeight:700}}>✓ Live now</div>
+              </div>
+
+              <div className="problem-card">
+                <div className="problem-icon">📋</div>
+                <h3>License Preparation &amp; Compliance</h3>
+                <p>Forms, paperwork, and compliance tracking organised and ready. Share a remote audit link — no binder-pulling needed before inspection day.</p>
+                <div style={{marginTop:'0.75rem',fontSize:'0.75rem',color:'#92400e',fontWeight:700}}>⏳ Coming R1</div>
+              </div>
+
+              <div className="problem-card">
+                <div className="problem-icon">🎨</div>
+                <h3>School Activity Planning</h3>
+                <p>Plan and track daily activities, learning themes, and milestone moments. AI turns staff notes into stories parents love.</p>
+                <div style={{marginTop:'0.75rem',fontSize:'0.75rem',color:'#92400e',fontWeight:700}}>⏳ Coming R1</div>
+              </div>
+
             </div>
           </div>
         </section>
