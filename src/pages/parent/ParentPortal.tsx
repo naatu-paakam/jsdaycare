@@ -18,7 +18,11 @@ function activityLabel(a: ActivityType): string {
   const d = (a.data ?? {}) as Record<string, unknown>;
   switch (a.activity_type) {
     case "name_to_face": return "Check-in via QR code";
-    case "food":         return `${String(d.meal_type ?? "Meal").replace(/_/g, " ")} — ate ${String(d.quantity ?? "—")}`;
+    case "food": {
+      const parts = String(d.meal_type ?? "Meal").split("_");
+      const meal = parts.map((p: string) => p.toUpperCase() === "AM" || p.toUpperCase() === "PM" ? p.toUpperCase() : p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
+      return `${meal} — ate ${String(d.food_quantity ?? d.quantity ?? "—")}`;
+    }
     case "nap":          return d.nap_status === "started" ? "Nap started" : "Nap ended";
     case "potty":        return `Potty — ${String(d.potty_type ?? "").replace(/_/g, " ")}`;
     case "meds":         return `Meds: ${String(d.medication ?? "")} ${String(d.dose ?? "")}`.trim();

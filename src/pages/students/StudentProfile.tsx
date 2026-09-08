@@ -88,7 +88,7 @@ function activitySummary(a: Activity, contactNames?: Record<string, string>) {
   const d = a.data ?? {};
   if (a.activity_type === "food") {
     const meal  = fmtMealType(d.meal_type);
-    const qty   = d.food_quantity ? String(d.food_quantity) : "";
+    const qty   = d.food_quantity ? String(d.food_quantity) : d.quantity ? String(d.quantity) : "";
     // meal_items can be array, string, or absent — fall back to notes
     const items = Array.isArray(d.meal_items) && d.meal_items.length
       ? (d.meal_items as string[]).join(", ")
