@@ -37,6 +37,17 @@ function localRegisterPlugin(env: Record<string, string>): Plugin {
               const { loginId, firstName, lastName, email, phone, password,
                       invitationToken, schoolId, role, permanent } = body;
 
+              // Guard: block re-registration on already-used non-permanent invites
+              if (invitationToken && !permanent) {
+                const { data: inv } = await sbAdmin.from("invitations")
+                  .select("used_at").eq("token", invitationToken).maybeSingle();
+                if (inv?.used_at) {
+                  res.writeHead(400, { "Content-Type": "application/json" });
+                  res.end(JSON.stringify({ error: "This invitation has already been used. Please contact your administrator for a new link." }));
+                  return;
+                }
+              }
+
               const authEmail = email?.trim() || `${loginId.trim().toLowerCase()}@daycareportal.internal`;
               const fullName  = `${firstName.trim()} ${lastName.trim()}`;
 
@@ -121,10 +132,25 @@ function localCreateSchoolInvitePlugin(env: Record<string, string>): Plugin {
             };
             try {
               const body = JSON.parse(Buffer.concat(chunks).toString());
-              const { schoolName, adminEmail, adminPhone } = body;
+              const { schoolName, adminEmail, adminPhone, turnstileToken } = body;
               if (!schoolName?.trim() || !adminEmail?.trim() || !adminPhone?.trim()) {
                 json({ error: "School name, admin email, and admin phone are all required." }, 400);
                 return;
+              }
+
+              // Verify Turnstile token (skip if secret not configured in local dev)
+              const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY;
+              if (TURNSTILE_SECRET) {
+                const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                  body: `secret=${TURNSTILE_SECRET}&response=${turnstileToken ?? ""}`,
+                });
+                const verifyData = await verifyRes.json();
+                if (!verifyData.success) {
+                  json({ error: "Bot check failed. Please try again." }, 400);
+                  return;
+                }
               }
 
               const { createClient } = await import("@supabase/supabase-js");

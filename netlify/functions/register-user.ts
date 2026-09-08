@@ -46,6 +46,18 @@ export default async (req: Request) => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
+  // Guard: block re-registration on non-permanent invites that are already used
+  if (invitationToken && !permanent) {
+    const { data: inv } = await supabaseAdmin.from("invitations")
+      .select("used_at").eq("token", invitationToken).maybeSingle();
+    if (inv?.used_at) {
+      return new Response(
+        JSON.stringify({ error: "This invitation has already been used. Please contact your administrator for a new link." }),
+        { status: 400 }
+      );
+    }
+  }
+
   // Determine auth email
   const authEmail = email?.trim() || `${loginId.trim().toLowerCase()}@daycareportal.internal`;
   const fullName  = `${firstName.trim()} ${lastName.trim()}`;
